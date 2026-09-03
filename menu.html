@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JAEHO ERP Suite</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root{
+    --primary:#534AB7;
+    --primary-dark:#453d99;
+    --secondary:#6366f1;
+    --accent:#10b981;
+    --bg:#f7f8fc;
+    --card-bg:#ffffff;
+    --text:#1f2937;
+    --text-light:#6b7280;
+    --border:#e5e7eb;
+  }
+
+  body{
+    font-family:'IBM Plex Sans KR','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    min-height:100vh;
+    color:var(--text);
+  }
+
+  /* ── 상단 헤더 ── */
+  header{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);
+    color:#fff;
+    padding:28px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 4px 20px rgba(83,74,183,0.25);
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-logo{
+    width:44px;height:44px;background:rgba(255,255,255,0.15);
+    border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:20px;backdrop-filter:blur(4px);
+  }
+  .brand-title{font-size:19px;font-weight:700;letter-spacing:-0.3px;}
+  .brand-sub{font-size:12px;opacity:0.85;margin-top:2px;}
+
+  .user-area{display:flex;align-items:center;gap:14px;font-size:13px;}
+  .user-chip{
+    background:rgba(255,255,255,0.15);
+    padding:7px 14px;border-radius:20px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .logout-btn{
+    background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.3);
+    color:#fff;padding:8px 16px;border-radius:8px;
+    cursor:pointer;font-size:12px;font-family:inherit;
+    transition:all 0.2s;
+  }
+  .logout-btn:hover{background:rgba(255,255,255,0.28);}
+
+  /* ── 본문 ── */
+  main{max-width:1100px;margin:0 auto;padding:48px 40px 80px;}
+  .section-title{font-size:22px;font-weight:700;margin-bottom:6px;}
+  .section-desc{font-size:14px;color:var(--text-light);margin-bottom:36px;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:22px;
+  }
+
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px 24px;
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+    transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    display:flex;flex-direction:column;
+    min-height:210px;
+  }
+  .card::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:var(--card-accent, var(--primary));
+  }
+  .card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 16px 36px rgba(83,74,183,0.14);
+    border-color:transparent;
+  }
+  .card-step{
+    font-size:11px;font-weight:700;color:var(--card-accent, var(--primary));
+    letter-spacing:0.5px;margin-bottom:10px;
+  }
+  .card-icon{
+    width:46px;height:46px;border-radius:12px;
+    background:var(--card-accent-soft, #ede9fe);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;margin-bottom:14px;
+  }
+  .card-title{font-size:17px;font-weight:700;margin-bottom:8px;}
+  .card-title-en{font-size:11px;color:var(--text-light);font-weight:500;margin-bottom:10px;}
+  .card-desc{font-size:13px;color:var(--text-light);line-height:1.55;flex:1;}
+  .card-cta{
+    margin-top:16px;font-size:13px;font-weight:600;
+    color:var(--card-accent, var(--primary));
+    display:flex;align-items:center;gap:4px;
+  }
+  .card.disabled{opacity:0.55;cursor:not-allowed;}
+  .card.disabled:hover{transform:none;box-shadow:none;border-color:var(--border);}
+  .badge-soon{
+    position:absolute;top:16px;right:16px;
+    background:#f3f4f6;color:var(--text-light);
+    font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;
+  }
+
+  footer{
+    text-align:center;padding:24px;color:var(--text-light);font-size:12px;
+  }
+
+  @media (max-width:640px){
+    header{padding:20px;}
+    main{padding:32px 20px 60px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo">J</div>
+    <div>
+      <div class="brand-title">JAEHO ERP Suite</div>
+      <div class="brand-sub">ERP 도입 사전단계 통합 플랫폼</div>
+    </div>
+  </div>
+  <div class="user-area">
+    <div class="user-chip">👤 <span id="username">-</span></div>
+    <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+  </div>
+</header>
+
+<main>
+  <div class="section-title">도구를 선택하세요</div>
+  <div class="section-desc">ERP 도입 전 단계별 설계·시뮬레이션 도구입니다.</div>
+
+  <div class="grid" id="toolGrid"></div>
+</main>
+
+<footer>© 2026 JAEHO ERP Lab</footer>
+
+<script>
+  // ── 로그인 검증 ──
+  if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = './index.html';
+  }
+  const username = sessionStorage.getItem('username');
+  if (username) document.getElementById('username').textContent = username;
+
+  function handleLogout() {
+    if (confirm('로그아웃하시겠습니까?')) {
+      sessionStorage.removeItem('isLoggedIn');
+      sessionStorage.removeItem('username');
+      sessionStorage.removeItem('loginTime');
+      window.location.href = './index.html';
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // 도구 목록 (여기만 수정하면 카드가 자동 생성/증감됨)
+  // ══════════════════════════════════════════════
+  const TOOLS = [
+    {
+      step: 'STEP 1',
+      titleKo: 'Process Discovery',
+      titleEn: '현행 업무프로세스 분석·설계',
+      desc: '노드를 추가해 현재 업무 흐름과 데이터 참조 관계를 설계하고 검증합니다.',
+      icon: '⬡',
+      link: './tool1/',
+      accent: '#534AB7',
+      accentSoft: '#ede9fe',
+      enabled: true
+    },
+    {
+      step: 'STEP 2',
+      titleKo: 'Process Design',
+      titleEn: '미래 업무프로세스 고도화 설계',
+      desc: 'AS-IS 흐름을 기반으로 최적화된 TO-BE 프로세스를 설계하는 고급 버전입니다.',
+      icon: '🎯',
+      link: './tool2/',
+      accent: '#6366f1',
+      accentSoft: '#e0e7ff',
+      enabled: true
+    },
+    {
+      step: 'STEP 3',
+      titleKo: 'Organization Design',
+      titleEn: '조직구조·역할 가상 구현',
+      desc: '가상의 조직도와 업무를 에이전트로 구현해 조직 구조를 시뮬레이션합니다.',
+      icon: '🏢',
+      link: './tool3/',
+      accent: '#10b981',
+      accentSoft: '#d1fae5',
+      enabled: true
+    },
+    {
+      step: 'STEP 4',
+      titleKo: 'Data Simulation',
+      titleEn: '자본·물류 흐름 에이전트 시뮬레이션',
+      desc: '가상회사에 데이터를 입력해 자본과 물류 흐름을 에이전트 기반으로 시뮬레이션합니다.',
+      icon: '💹',
+      link: './tool4/',
+      accent: '#d97706',
+      accentSoft: '#fef3c7',
+      enabled: true
+    }
+  ];
+
+  function renderTools() {
+    const grid = document.getElementById('toolGrid');
+    grid.innerHTML = '';
+    TOOLS.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'card' + (t.enabled === false ? ' disabled' : '');
+      card.style.setProperty('--card-accent', t.accent);
+      card.style.setProperty('--card-accent-soft', t.accentSoft);
+      card.innerHTML = `
+        ${t.enabled === false ? '<div class="badge-soon">준비중</div>' : ''}
+        <div class="card-step">${t.step}</div>
+        <div class="card-icon">${t.icon}</div>
+        <div class="card-title">${t.titleKo}</div>
+        <div class="card-title-en">${t.titleEn}</div>
+        <div class="card-desc">${t.desc}</div>
+        <div class="card-cta">${t.enabled === false ? '준비 중입니다' : '시작하기 →'}</div>
+      `;
+      if (t.enabled !== false) {
+        card.addEventListener('click', () => window.location.href = t.link);
+      }
+      grid.appendChild(card);
+    });
+  }
+  renderTools();
+</script>
+</body>
+</html>

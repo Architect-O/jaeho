@@ -176,8 +176,8 @@
 
         <div class="info-box">
             <strong>테스트 계정</strong>
-            아이디: <code>재호 아이디</code><br>
-            패스워드: <code>재호 패스워드</code>
+            아이디: <code>demo</code><br>
+            비번: <code>1234</code>
         </div>
     </div>
 
@@ -186,9 +186,9 @@
         // 로그인 계정 관리 (하드코딩)
         // ──────────────────────────────────────
         const VALID_ACCOUNTS = {
-            'jaeho': '1234321',
-            'admin': 'admin1234321',
-            'test': 'test1234321'
+            'demo': '1234',
+            'admin': 'admin123',
+            'test': 'test123'
         };
 
         function handleLogin(event) {
@@ -214,10 +214,10 @@
                 sessionStorage.setItem('username', userId);
                 sessionStorage.setItem('loginTime', new Date().toISOString());
                 
-                // tool.html로 리다이렉트 (2초 후)
+                // menu.html로 리다이렉트
                 setTimeout(() => {
-                    window.location.href = './tool.html';
-                }, 500);
+                    window.location.href = './menu.html';
+                }, 300);
             } else {
                 // 로그인 실패
                 errorMsg.textContent = '아이디 또는 비밀번호가 일치하지 않습니다.';
@@ -233,9 +233,9 @@
             }
         });
 
-        // 이미 로그인한 상태면 tool.html로 자동 리다이렉트
+        // 이미 로그인한 상태면 menu.html로 자동 리다이렉트
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = './tool.html';
+            window.location.href = './menu.html';
         }
     </script>
 </body>
