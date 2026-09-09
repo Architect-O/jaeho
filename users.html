@@ -31,13 +31,12 @@
   .tab.on{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
   .view{display:none;}
   .view.on{display:block;}
+  .view-badge{display:inline-block;font-size:10.5px;font-weight:700;color:var(--text-light);background:#f1f5f9;padding:3px 9px;border-radius:20px;margin-bottom:14px;}
 
   table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
   th, td{padding:11px 13px;text-align:left;font-size:12.5px;border-bottom:1px solid var(--border);}
   th{background:#fafafa;color:var(--text-light);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;}
   tr:last-child td{border-bottom:none;}
-  tr.clickable{cursor:pointer;}
-  tr.clickable:hover{background:#fafbff;}
   .role-tag, .status-tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block;}
   .role-admin{background:#ede9fe;color:#5b21b6;}
   .role-user{background:#f1f5f9;color:#475569;}
@@ -49,8 +48,10 @@
   .refresh-bar button{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12.5px;cursor:pointer;font-family:inherit;}
   .empty{text-align:center;padding:40px;color:var(--text-light);font-size:13px;}
 
-  /* 설정 탭 */
-  .settings-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;}
+  /* 정책설정 탭 */
+  .settings-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+  .settings-card h3{font-size:13.5px;font-weight:700;margin-bottom:4px;}
+  .settings-card .card-desc{font-size:11.5px;color:var(--text-light);margin-bottom:14px;}
   .settings-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--border);}
   .settings-row:last-child{border-bottom:none;}
   .settings-label{font-size:13px;font-weight:600;}
@@ -64,23 +65,16 @@
   input:checked + .slider{background:var(--primary);}
   input:checked + .slider::before{transform:translateX(18px);}
   .save-hint{font-size:11px;color:var(--text-light);margin-top:10px;}
+  .save-btn{width:100%;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;}
 
-  /* 모달 */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
-  .modal-backdrop.open{display:flex;}
-  .modal{background:#fff;border-radius:14px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;}
-  .modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-  .modal-head .mtitle{font-size:15px;font-weight:700;}
-  .modal-close{border:none;background:transparent;font-size:16px;cursor:pointer;color:var(--text-light);}
-  .modal-body{padding:20px 22px;}
-  .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f1f1;font-size:12.5px;}
+  select#execUserSelect{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:14px;}
+  .detail-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f1f1;font-size:12.5px;}
   .detail-row .k{color:var(--text-light);}
   .detail-row .v{font-weight:600;}
-  .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px;}
-  .action-grid button{
-    padding:10px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;
-  }
+  .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
+  .action-grid button{padding:10px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;}
   .action-grid button:hover{background:#f9fafb;}
+  .action-grid button:disabled{opacity:0.4;cursor:not-allowed;}
   .action-grid button.danger{color:#dc2626;border-color:#fecaca;}
   .action-grid button.danger:hover{background:#fef2f2;}
   .action-grid button.warn{color:#b45309;border-color:#fde68a;}
@@ -88,6 +82,7 @@
   .action-grid button.full{grid-column:1/-1;}
   .pw-reveal{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:14px;font-size:12.5px;}
   .pw-reveal code{display:block;font-size:15px;font-weight:700;background:#fff;padding:8px 10px;border-radius:6px;margin:8px 0;border:1px solid #bbf7d0;letter-spacing:0.5px;}
+  .exec-msg{font-size:11.5px;color:var(--text-light);margin-top:10px;}
 </style>
 </head>
 <body>
@@ -95,7 +90,7 @@
 <header>
   <div>
     <div class="brand">👥 유저 관리</div>
-    <div class="brand-sub">유저 목록·정책 설정·감사기록을 관리합니다</div>
+    <div class="brand-sub">유저 목록·감사기록은 조회 전용, 모든 설정·실행은 정책 설정에서</div>
   </div>
   <div class="hbtns"><a href="./menu.html">← 메뉴로</a></div>
 </header>
@@ -103,11 +98,13 @@
 <main id="mainArea">
   <div class="tabs">
     <button id="tabUsers" class="tab on">👤 유저 목록</button>
-    <button id="tabSettings" class="tab">⚙ 정책 설정</button>
     <button id="tabAudit" class="tab">📜 감사기록</button>
+    <button id="tabSettings" class="tab">⚙ 정책 설정</button>
   </div>
 
+  <!-- ══════ 유저 목록: 조회 전용 ══════ -->
   <div id="viewUsers" class="view on">
+    <div class="view-badge">조회 전용 — 변경/실행은 정책 설정 탭에서</div>
     <div class="refresh-bar">
       <div style="font-size:13px;color:var(--text-light);" id="summaryLine">불러오는 중...</div>
       <button onclick="loadUsers()">↻ 새로고침</button>
@@ -115,8 +112,22 @@
     <div id="tableWrap"></div>
   </div>
 
+  <!-- ══════ 감사기록: 조회 전용 ══════ -->
+  <div id="viewAudit" class="view">
+    <div class="view-badge">조회 전용 — 보관기간·정리 실행은 정책 설정 탭에서</div>
+    <div class="refresh-bar">
+      <div style="font-size:13px;color:var(--text-light);" id="auditSummary">불러오는 중...</div>
+      <button onclick="loadAuditLogs()">↻ 새로고침</button>
+    </div>
+    <div id="auditWrap"></div>
+  </div>
+
+  <!-- ══════ 정책 설정: 모든 설정값 + 모든 실행버튼 ══════ -->
   <div id="viewSettings" class="view">
+
     <div class="settings-card">
+      <h3>정책 설정</h3>
+      <div class="card-desc">값을 바꾸고 저장하면 전체 시스템에 즉시 반영됩니다.</div>
       <div class="settings-row">
         <div>
           <div class="settings-label">신규 가입 허용</div>
@@ -127,28 +138,35 @@
       <div class="settings-row">
         <div>
           <div class="settings-label">최대 가입자 수</div>
-          <div class="settings-desc">현재 가입자 <b id="curUserCount">-</b>명 / 0 = 무제한. 정원을 채우면 가입이 자동 차단됩니다.</div>
+          <div class="settings-desc">현재 가입자 <b id="curUserCount">-</b>명 / 0 = 무제한.</div>
         </div>
         <div><input type="number" id="setMaxUsers" min="0"> 명</div>
       </div>
       <div class="settings-row">
         <div>
           <div class="settings-label">삭제 유예기간</div>
-          <div class="settings-desc">계정 삭제 예약 후, 완전히 삭제되기까지 기다리는 기간입니다 (일 단위).</div>
+          <div class="settings-desc">계정 삭제 예약 후 완전히 삭제되기까지 기다리는 기간 (일)</div>
         </div>
         <div><input type="number" id="setGraceDays" min="1" max="90"> 일</div>
       </div>
       <div class="settings-row">
         <div>
           <div class="settings-label">감사기록 남기기</div>
-          <div class="settings-desc">로그인/가입/관리자 조치 등을 감사기록 탭에 남길지 여부입니다.</div>
+          <div class="settings-desc">로그인/가입/관리자 조치 등을 기록할지 여부입니다.</div>
         </div>
         <label class="switch"><input type="checkbox" id="setAuditEnabled"><span class="slider"></span></label>
       </div>
       <div class="settings-row">
         <div>
+          <div class="settings-label">감사기록 보관일수</div>
+          <div class="settings-desc">이 기간이 지난 기록은 자동으로 정리되어 DB 용량을 절약합니다. 0 = 영구보관.</div>
+        </div>
+        <div><input type="number" id="setAuditRetention" min="0"> 일</div>
+      </div>
+      <div class="settings-row">
+        <div>
           <div class="settings-label">해외접속 차단</div>
-          <div class="settings-desc">허용 국가 외 접속을 로그인 단계에서 막습니다. (클라이언트 조회 기반 — 억제책 수준입니다)</div>
+          <div class="settings-desc">허용 국가 외 접속을 로그인 단계에서 막습니다 (억제책 수준).</div>
         </div>
         <label class="switch"><input type="checkbox" id="setBlockForeign"><span class="slider"></span></label>
       </div>
@@ -159,30 +177,28 @@
         </div>
         <div><input type="text" id="setAllowedCountry" maxlength="2"></div>
       </div>
-      <button onclick="saveSettings()" style="margin-top:16px;width:100%;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button class="save-btn" onclick="saveSettings()">저장</button>
       <div class="save-hint" id="settingsMsg"></div>
     </div>
-  </div>
 
-  <div id="viewAudit" class="view">
-    <div class="refresh-bar">
-      <div style="font-size:13px;color:var(--text-light);" id="auditSummary">불러오는 중...</div>
-      <button onclick="loadAuditLogs()">↻ 새로고침</button>
+    <div class="settings-card">
+      <h3>감사기록 관리 (실행)</h3>
+      <div class="card-desc">보관일수를 넘긴 기록을 지금 즉시 정리하거나, 전체를 비울 수 있습니다.</div>
+      <div class="action-grid">
+        <button onclick="doPurgeAudit('retention')">🧹 보관기간 지난 기록 정리</button>
+        <button class="danger" onclick="doPurgeAudit('all')">🗑 전체 감사기록 삭제</button>
+      </div>
+      <div class="exec-msg" id="auditPurgeMsg"></div>
     </div>
-    <div id="auditWrap"></div>
+
+    <div class="settings-card">
+      <h3>유저 관리 (실행)</h3>
+      <div class="card-desc">대상 유저를 선택하고 실행할 작업을 눌러주세요.</div>
+      <select id="execUserSelect" onchange="onExecUserChange()"></select>
+      <div id="execDetailArea"></div>
+    </div>
   </div>
 </main>
-
-<!-- 유저 상세 모달 -->
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="mtitle" id="modalTitle">유저 상세</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
 
 <script>
   if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
@@ -204,16 +220,16 @@
   }
 
   // ── 탭 전환 ──
-  const tabs = { users: document.getElementById('tabUsers'), settings: document.getElementById('tabSettings'), audit: document.getElementById('tabAudit') };
-  const views = { users: document.getElementById('viewUsers'), settings: document.getElementById('viewSettings'), audit: document.getElementById('viewAudit') };
+  const tabs = { users: document.getElementById('tabUsers'), audit: document.getElementById('tabAudit'), settings: document.getElementById('tabSettings') };
+  const views = { users: document.getElementById('viewUsers'), audit: document.getElementById('viewAudit'), settings: document.getElementById('viewSettings') };
   function switchTab(name){
     Object.keys(tabs).forEach(k=>{ tabs[k].classList.toggle('on', k===name); views[k].classList.toggle('on', k===name); });
-    if (name==='settings') loadSettings();
     if (name==='audit') loadAuditLogs();
+    if (name==='settings') loadSettings();
   }
   tabs.users.onclick = ()=>switchTab('users');
-  tabs.settings.onclick = ()=>switchTab('settings');
   tabs.audit.onclick = ()=>switchTab('audit');
+  tabs.settings.onclick = ()=>switchTab('settings');
 
   function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function fmtDate(iso){
@@ -223,7 +239,7 @@
   }
   const STATUS_LABEL = { active:'활성', blocked:'차단됨', delete_pending:'삭제예약' };
 
-  // ── 유저 목록 ──
+  // ══════ 유저 목록 (조회 전용) ══════
   let usersCache = [];
   async function loadUsers(){
     if (myRole !== 'admin') return;
@@ -246,16 +262,17 @@
 
       wrap.innerHTML = `
         <table>
-          <thead><tr><th>아이디</th><th>역할</th><th>상태</th><th>로그인</th><th>가입일</th><th>마지막 로그인</th></tr></thead>
+          <thead><tr><th>아이디</th><th>역할</th><th>상태</th><th>로그인</th><th>가입일</th><th>마지막 로그인</th><th>삭제예정일</th></tr></thead>
           <tbody>
             ${usersCache.map(u => `
-              <tr class="clickable" onclick="openDetail('${esc(u.username)}')">
+              <tr>
                 <td>${esc(u.username)}</td>
                 <td><span class="role-tag ${u.role==='admin'?'role-admin':'role-user'}">${u.role==='admin'?'관리자':'사용자'}</span></td>
                 <td><span class="status-tag status-${u.status}">${STATUS_LABEL[u.status]||u.status}</span></td>
                 <td class="count">${u.login_count}회</td>
                 <td>${fmtDate(u.created_at)}</td>
                 <td>${fmtDate(u.last_login)}</td>
+                <td>${u.delete_at ? fmtDate(u.delete_at) : '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -267,150 +284,7 @@
     }
   }
 
-  // ── 유저 상세 모달 ──
-  const backdrop = document.getElementById('modalBackdrop');
-  function closeModal(){ backdrop.classList.remove('open'); }
-  backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeModal(); });
-
-  async function openDetail(username){
-    try {
-      const { data, error } = await sb.rpc('admin_get_user_detail', {
-        p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username
-      });
-      if (error) throw error;
-      if (!data.success) { alert(data.message||'조회 실패'); return; }
-      renderDetail(data);
-      backdrop.classList.add('open');
-    } catch(err){ console.error(err); alert('상세 정보를 불러오지 못했습니다.'); }
-  }
-
-  function renderDetail(d){
-    document.getElementById('modalTitle').textContent = d.username + ' 상세';
-    const isSelf = d.username === myUsername;
-    const isBlocked = d.status === 'blocked';
-    const isPending = d.status === 'delete_pending';
-
-    let deleteInfo = '';
-    if (isPending) {
-      deleteInfo = `<div class="detail-row"><span class="k">삭제 예정일</span><span class="v">${fmtDate(d.deleteAt)} (${d.remainingDays}일 남음)</span></div>`;
-    }
-
-    document.getElementById('modalBody').innerHTML = `
-      <div class="detail-row"><span class="k">역할</span><span class="v">${d.role==='admin'?'관리자':'사용자'}</span></div>
-      <div class="detail-row"><span class="k">상태</span><span class="v"><span class="status-tag status-${d.status}">${STATUS_LABEL[d.status]||d.status}</span></span></div>
-      <div class="detail-row"><span class="k">가입일</span><span class="v">${fmtDate(d.createdAt)}</span></div>
-      <div class="detail-row"><span class="k">누적 이용일수</span><span class="v">${d.daysAccumulated}일</span></div>
-      <div class="detail-row"><span class="k">로그인 횟수</span><span class="v">${d.loginCount}회</span></div>
-      <div class="detail-row"><span class="k">마지막 로그인</span><span class="v">${fmtDate(d.lastLogin)}</span></div>
-      ${deleteInfo}
-      <div id="pwRevealArea"></div>
-      <div class="action-grid">
-        <button onclick="doResetPassword('${esc(d.username)}')">🔑 비밀번호 초기화</button>
-        <button onclick="doResetLoginCount('${esc(d.username)}')">↺ 로그인횟수 초기화</button>
-        ${isSelf ? '' : `<button class="${isBlocked?'':'warn'}" onclick="doToggleBlock('${esc(d.username)}', ${!isBlocked})">${isBlocked?'🔓 차단 해제':'⛔ 계정 차단'}</button>`}
-        ${isSelf ? '' : (isPending
-          ? `<button onclick="doCancelDelete('${esc(d.username)}')">↩ 삭제예약 취소</button>`
-          : `<button class="danger" onclick="doReserveDelete('${esc(d.username)}')">🗑 삭제 예약 (유예기간 후 삭제)</button>`)}
-        ${isSelf ? '<div style="grid-column:1/-1;font-size:11px;color:var(--text-light);text-align:center;">본인 계정은 차단·삭제할 수 없습니다.</div>' : ''}
-      </div>
-    `;
-  }
-
-  async function doResetPassword(username){
-    if(!confirm(`"${username}"의 비밀번호를 랜덤 값으로 초기화할까요?`)) return;
-    try{
-      const { data, error } = await sb.rpc('admin_reset_password', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
-      if(error) throw error;
-      if(!data.success){ alert(data.message||'실패'); return; }
-      document.getElementById('pwRevealArea').innerHTML = `
-        <div class="pw-reveal">
-          🔑 새 비밀번호가 생성되었습니다. <b>이 화면을 벗어나면 다시 볼 수 없으니</b> 신뢰할 수 있는 방법으로 본인에게 직접 전달해주세요.
-          <code>${esc(data.newPassword)}</code>
-        </div>`;
-      loadUsers();
-    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
-  }
-
-  async function doResetLoginCount(username){
-    if(!confirm(`"${username}"의 로그인 횟수를 0으로 초기화할까요?`)) return;
-    try{
-      const { data, error } = await sb.rpc('admin_reset_login_count', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
-      if(error) throw error;
-      if(!data.success){ alert(data.message||'실패'); return; }
-      openDetail(username); loadUsers();
-    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
-  }
-
-  async function doToggleBlock(username, block){
-    if(!confirm(`"${username}" 계정을 ${block?'차단':'차단 해제'}할까요?`)) return;
-    try{
-      const { data, error } = await sb.rpc('admin_toggle_block', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username, p_block: block });
-      if(error) throw error;
-      if(!data.success){ alert(data.message||'실패'); return; }
-      openDetail(username); loadUsers();
-    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
-  }
-
-  async function doReserveDelete(username){
-    if(!confirm(`"${username}" 계정을 삭제 예약할까요?\n예약 즉시 로그인이 정지되고, 유예기간 후 완전히 삭제됩니다.`)) return;
-    try{
-      const { data, error } = await sb.rpc('admin_reserve_delete', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
-      if(error) throw error;
-      if(!data.success){ alert(data.message||'실패'); return; }
-      openDetail(username); loadUsers();
-    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
-  }
-
-  async function doCancelDelete(username){
-    if(!confirm(`"${username}"의 삭제 예약을 취소할까요?`)) return;
-    try{
-      const { data, error } = await sb.rpc('admin_cancel_delete', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
-      if(error) throw error;
-      if(!data.success){ alert(data.message||'실패'); return; }
-      openDetail(username); loadUsers();
-    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
-  }
-
-  // ── 정책 설정 ──
-  async function loadSettings(){
-    try{
-      const { data, error } = await sb.rpc('admin_get_settings', { p_admin_username: myUsername, p_admin_password: myPw });
-      if(error) throw error;
-      document.getElementById('setRegEnabled').checked = data.registration_enabled === 'true';
-      document.getElementById('setMaxUsers').value = data.max_users || 0;
-      document.getElementById('setGraceDays').value = data.grace_period_days || 7;
-      document.getElementById('setAuditEnabled').checked = data.audit_log_enabled === 'true';
-      document.getElementById('setBlockForeign').checked = data.block_foreign_login === 'true';
-      document.getElementById('setAllowedCountry').value = data.allowed_country || 'KR';
-
-      // 현재 가입자 수 표시 (참고용)
-      const { data: users } = await sb.rpc('admin_list_users', { p_admin_username: myUsername, p_admin_password: myPw });
-      document.getElementById('curUserCount').textContent = users ? users.length : '-';
-    }catch(err){ console.error(err); }
-  }
-
-  async function saveSettings(){
-    const entries = [
-      ['registration_enabled', document.getElementById('setRegEnabled').checked ? 'true' : 'false'],
-      ['max_users', String(Math.max(0, parseInt(document.getElementById('setMaxUsers').value)||0))],
-      ['grace_period_days', String(Math.max(1, parseInt(document.getElementById('setGraceDays').value)||7))],
-      ['audit_log_enabled', document.getElementById('setAuditEnabled').checked ? 'true' : 'false'],
-      ['block_foreign_login', document.getElementById('setBlockForeign').checked ? 'true' : 'false'],
-      ['allowed_country', (document.getElementById('setAllowedCountry').value||'KR').toUpperCase()]
-    ];
-    const msgEl = document.getElementById('settingsMsg');
-    msgEl.textContent = '저장 중...';
-    try{
-      for (const [key, value] of entries) {
-        const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
-        if(error) throw error;
-        if(!data.success){ msgEl.textContent = data.message||'저장 실패'; return; }
-      }
-      msgEl.textContent = '✅ 저장되었습니다. 즉시 전체 시스템에 반영됩니다.';
-    }catch(err){ console.error(err); msgEl.textContent = '저장 중 오류가 발생했습니다.'; }
-  }
-
-  // ── 감사기록 ──
+  // ══════ 감사기록 (조회 전용) ══════
   const ACTION_LABEL = {
     login_success:'로그인 성공', login_failed:'로그인 실패', login_blocked_account:'차단계정 로그인시도',
     login_blocked_delete_pending:'삭제예약계정 로그인시도', login_blocked_foreign:'해외접속 차단',
@@ -446,6 +320,169 @@
         </table>
       `;
     }catch(err){ console.error(err); wrap.innerHTML = '<div class="empty">기록을 불러오지 못했습니다.</div>'; }
+  }
+
+  // ══════ 정책 설정 (모든 설정 + 모든 실행) ══════
+  async function loadSettings(){
+    try{
+      const { data, error } = await sb.rpc('admin_get_settings', { p_admin_username: myUsername, p_admin_password: myPw });
+      if(error) throw error;
+      document.getElementById('setRegEnabled').checked = data.registration_enabled === 'true';
+      document.getElementById('setMaxUsers').value = data.max_users || 0;
+      document.getElementById('setGraceDays').value = data.grace_period_days || 7;
+      document.getElementById('setAuditEnabled').checked = data.audit_log_enabled === 'true';
+      document.getElementById('setAuditRetention').value = data.audit_retention_days ?? 90;
+      document.getElementById('setBlockForeign').checked = data.block_foreign_login === 'true';
+      document.getElementById('setAllowedCountry').value = data.allowed_country || 'KR';
+
+      const { data: users } = await sb.rpc('admin_list_users', { p_admin_username: myUsername, p_admin_password: myPw });
+      usersCache = users || [];
+      document.getElementById('curUserCount').textContent = usersCache.length;
+      populateExecUserSelect();
+    }catch(err){ console.error(err); }
+  }
+
+  async function saveSettings(){
+    const entries = [
+      ['registration_enabled', document.getElementById('setRegEnabled').checked ? 'true' : 'false'],
+      ['max_users', String(Math.max(0, parseInt(document.getElementById('setMaxUsers').value)||0))],
+      ['grace_period_days', String(Math.max(1, parseInt(document.getElementById('setGraceDays').value)||7))],
+      ['audit_log_enabled', document.getElementById('setAuditEnabled').checked ? 'true' : 'false'],
+      ['audit_retention_days', String(Math.max(0, parseInt(document.getElementById('setAuditRetention').value)||0))],
+      ['block_foreign_login', document.getElementById('setBlockForeign').checked ? 'true' : 'false'],
+      ['allowed_country', (document.getElementById('setAllowedCountry').value||'KR').toUpperCase()]
+    ];
+    const msgEl = document.getElementById('settingsMsg');
+    msgEl.textContent = '저장 중...';
+    try{
+      for (const [key, value] of entries) {
+        const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
+        if(error) throw error;
+        if(!data.success){ msgEl.textContent = data.message||'저장 실패'; return; }
+      }
+      msgEl.textContent = '✅ 저장되었습니다. 즉시 전체 시스템에 반영됩니다.';
+    }catch(err){ console.error(err); msgEl.textContent = '저장 중 오류가 발생했습니다.'; }
+  }
+
+  // ── 감사기록 정리 실행 ──
+  async function doPurgeAudit(mode){
+    const confirmMsg = mode==='all' ? '감사기록 전체를 삭제할까요? 되돌릴 수 없습니다.' : '보관기간(설정값)이 지난 기록을 지금 정리할까요?';
+    if(!confirm(confirmMsg)) return;
+    const msgEl = document.getElementById('auditPurgeMsg');
+    msgEl.textContent = '처리 중...';
+    try{
+      const { data, error } = await sb.rpc('admin_purge_audit_logs', { p_admin_username: myUsername, p_admin_password: myPw, p_mode: mode });
+      if(error) throw error;
+      if(!data.success){ msgEl.textContent = data.message||'실패'; return; }
+      msgEl.textContent = `✅ ${data.deleted}건 삭제되었습니다.` + (data.message ? ' '+data.message : '');
+    }catch(err){ console.error(err); msgEl.textContent = '처리 중 오류가 발생했습니다.'; }
+  }
+
+  // ── 유저 관리 실행 (대상 선택형) ──
+  function populateExecUserSelect(){
+    const sel = document.getElementById('execUserSelect');
+    const prevVal = sel.value;
+    sel.innerHTML = usersCache.map(u=>`<option value="${esc(u.username)}">${esc(u.username)} (${STATUS_LABEL[u.status]||u.status}${u.username===myUsername?' · 본인':''})</option>`).join('');
+    if (usersCache.some(u=>u.username===prevVal)) sel.value = prevVal;
+    onExecUserChange();
+  }
+
+  async function onExecUserChange(){
+    const username = document.getElementById('execUserSelect').value;
+    const area = document.getElementById('execDetailArea');
+    if (!username) { area.innerHTML = ''; return; }
+    try{
+      const { data, error } = await sb.rpc('admin_get_user_detail', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
+      if(error) throw error;
+      if(!data.success){ area.innerHTML = `<div class="empty">${esc(data.message||'조회 실패')}</div>`; return; }
+      renderExecDetail(data);
+    }catch(err){ console.error(err); area.innerHTML = '<div class="empty">상세 정보를 불러오지 못했습니다.</div>'; }
+  }
+
+  function renderExecDetail(d){
+    const area = document.getElementById('execDetailArea');
+    const isSelf = d.username === myUsername;
+    const isBlocked = d.status === 'blocked';
+    const isPending = d.status === 'delete_pending';
+
+    let deleteInfo = '';
+    if (isPending) {
+      deleteInfo = `<div class="detail-row"><span class="k">삭제 예정일</span><span class="v">${fmtDate(d.deleteAt)} (${d.remainingDays}일 남음)</span></div>`;
+    }
+
+    area.innerHTML = `
+      <div class="detail-row"><span class="k">역할</span><span class="v">${d.role==='admin'?'관리자':'사용자'}</span></div>
+      <div class="detail-row"><span class="k">상태</span><span class="v"><span class="status-tag status-${d.status}">${STATUS_LABEL[d.status]||d.status}</span></span></div>
+      <div class="detail-row"><span class="k">가입일</span><span class="v">${fmtDate(d.createdAt)}</span></div>
+      <div class="detail-row"><span class="k">누적 이용일수</span><span class="v">${d.daysAccumulated}일</span></div>
+      <div class="detail-row"><span class="k">로그인 횟수</span><span class="v">${d.loginCount}회</span></div>
+      <div class="detail-row"><span class="k">마지막 로그인</span><span class="v">${fmtDate(d.lastLogin)}</span></div>
+      ${deleteInfo}
+      <div id="pwRevealArea"></div>
+      <div class="action-grid">
+        <button onclick="doResetPassword('${esc(d.username)}')">🔑 비밀번호 초기화</button>
+        <button onclick="doResetLoginCount('${esc(d.username)}')">↺ 로그인횟수 초기화</button>
+        ${isSelf ? '' : `<button class="${isBlocked?'':'warn'}" onclick="doToggleBlock('${esc(d.username)}', ${!isBlocked})">${isBlocked?'🔓 차단 해제':'⛔ 계정 차단'}</button>`}
+        ${isSelf ? '' : (isPending
+          ? `<button onclick="doCancelDelete('${esc(d.username)}')">↩ 삭제예약 취소</button>`
+          : `<button class="danger" onclick="doReserveDelete('${esc(d.username)}')">🗑 삭제 예약 (유예기간 후 삭제)</button>`)}
+        ${isSelf ? '<div style="grid-column:1/-1;font-size:11px;color:var(--text-light);text-align:center;">본인 계정은 차단·삭제할 수 없습니다.</div>' : ''}
+      </div>
+    `;
+  }
+
+  async function doResetPassword(username){
+    if(!confirm(`"${username}"의 비밀번호를 랜덤 값으로 초기화할까요?`)) return;
+    try{
+      const { data, error } = await sb.rpc('admin_reset_password', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
+      if(error) throw error;
+      if(!data.success){ alert(data.message||'실패'); return; }
+      document.getElementById('pwRevealArea').innerHTML = `
+        <div class="pw-reveal">
+          🔑 새 비밀번호가 생성되었습니다. <b>이 화면을 벗어나면 다시 볼 수 없으니</b> 신뢰할 수 있는 방법으로 본인에게 직접 전달해주세요.
+          <code>${esc(data.newPassword)}</code>
+        </div>`;
+    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
+  }
+
+  async function doResetLoginCount(username){
+    if(!confirm(`"${username}"의 로그인 횟수를 0으로 초기화할까요?`)) return;
+    try{
+      const { data, error } = await sb.rpc('admin_reset_login_count', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
+      if(error) throw error;
+      if(!data.success){ alert(data.message||'실패'); return; }
+      onExecUserChange();
+    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
+  }
+
+  async function doToggleBlock(username, block){
+    if(!confirm(`"${username}" 계정을 ${block?'차단':'차단 해제'}할까요?`)) return;
+    try{
+      const { data, error } = await sb.rpc('admin_toggle_block', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username, p_block: block });
+      if(error) throw error;
+      if(!data.success){ alert(data.message||'실패'); return; }
+      onExecUserChange();
+    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
+  }
+
+  async function doReserveDelete(username){
+    if(!confirm(`"${username}" 계정을 삭제 예약할까요?\n예약 즉시 로그인이 정지되고, 유예기간 후 완전히 삭제됩니다.`)) return;
+    try{
+      const { data, error } = await sb.rpc('admin_reserve_delete', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
+      if(error) throw error;
+      if(!data.success){ alert(data.message||'실패'); return; }
+      onExecUserChange();
+    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
+  }
+
+  async function doCancelDelete(username){
+    if(!confirm(`"${username}"의 삭제 예약을 취소할까요?`)) return;
+    try{
+      const { data, error } = await sb.rpc('admin_cancel_delete', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username });
+      if(error) throw error;
+      if(!data.success){ alert(data.message||'실패'); return; }
+      onExecUserChange();
+    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
   }
 </script>
 </body>
