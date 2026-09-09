@@ -961,6 +961,7 @@ body.connect-mode .anchor{display:block;}
   </div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:12px;padding-right:16px;font-size:12px;color:#888;">
     <span id="userInfo" style="display:none;">👤 <span id="username"></span></span>
+    <button id="teamSyncBtn" onclick="loadTeamProject(true)" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit;" title="같은 폴더의 index1config.json을 다시 불러옵니다">☁ 팀 버전 불러오기</button>
     <button onclick="window.location.href='../menu.html'" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit;">☰ 메뉴</button>
     <button id="logoutBtn" onclick="handleLogout()" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit;">로그아웃</button>
   </div>
@@ -8240,6 +8241,42 @@ document.getElementById('diagOptPanel')?.classList.add('active');
 setMsg('Welcome to Architect-LAB v6 · Load a catalog or drag nodes from palette');
 /* HTML embed auto-load */
 if(window.__D__){try{const d=window.__D__;if(d.catalog){applyCatalog(d.catalog);setCatFile(d.catFile||'embedded',d.catalog.catalog);}nodes=d.nodes||[];edges=d.edges||[];nid=d.nid||nid;eid=d.eid||eid;if(d.erpSelected){erpSelected=new Set(d.erpSelected);updSpBadge();renderSpTree('');}if(d.appName)appName=d.appName;if(d.appLogo)appLogo=d.appLogo;if(d.logoMode)gLogoMode=d.logoMode;applyBranding();setFile(d._file||'');renderAll();updBtns();dirty=false;setMsg('Loaded: '+(d._file||''));}catch(e){console.error(e);}}
+
+/* ══════════════════════════════════════════════
+   팀 공용 프로젝트 자동 동기화
+   같은 폴더(tool1/)에 있는 index1config.json을 페이지 로드 시 자동으로 불러옵니다.
+   파일이 없으면(아직 아무도 저장 안 함) 기존처럼 기본 화면 그대로 실행됩니다.
+   팀에 공유하려면: 저장 패널에서 JSON으로 내보내기 → 파일명을 index1config.json으로 바꿔서
+   GitHub의 tool1/index1config.json에 덮어쓰기 업로드하면 됩니다.
+══════════════════════════════════════════════ */
+async function loadTeamProject(isManualClick){
+  // embed된 데이터로 이미 로드된 경우(파일을 직접 열어서 보는 중)엔 자동으로 덮어쓰지 않음
+  if(window.__D__ && !isManualClick) return;
+  if(isManualClick && dirty){
+    if(!confirm('저장하지 않은 변경사항이 있습니다. 팀 버전을 불러오면 사라집니다. 계속할까요?')) return;
+  }
+  const btn=document.getElementById('teamSyncBtn');
+  if(btn){btn.disabled=true;btn.textContent='☁ 불러오는 중...';}
+  try{
+    const res=await fetch('./index1config.json',{cache:'no-store'});
+    if(!res.ok){
+      // 파일이 없으면(404 등) 조용히 기본 화면 유지 — 자동 실행 시엔 메시지도 띄우지 않음
+      if(isManualClick)setMsg('팀 공용 설정 파일이 아직 없습니다 (tool1/index1config.json)');
+      return;
+    }
+    const text=await res.text();
+    const fakeFile=new File([text],'index1config.json',{type:'application/json'});
+    loadAnyFile(fakeFile);
+  }catch(e){
+    console.error(e);
+    if(isManualClick)setMsg('팀 버전을 불러오지 못했습니다');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='☁ 팀 버전 불러오기';}
+  }
+}
+/* 페이지 최초 진입 시 자동 실행 (embed로 열린 경우는 위에서 이미 처리했으므로 제외) */
+if(!window.__D__) loadTeamProject(false);
+
 </script>
 </body>
 </html>
