@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>메뉴 설정 - JAEHO ERP Suite</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --primary:#534AB7; --secondary:#6366f1; --bg:#f7f8fc;
+    --card-bg:#ffffff; --text:#1f2937; --text-light:#6b7280; --border:#e5e7eb;
+  }
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  header{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:#fff;
+    padding:22px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+  }
+  .brand{font-size:17px;font-weight:700;}
+  .brand-sub{font-size:12px;opacity:0.85;}
+  .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .hbtns button, .hbtns a{
+    background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;
+    padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;
+    text-decoration:none;display:inline-flex;align-items:center;gap:5px;
+  }
+  .hbtns button:hover, .hbtns a:hover{background:rgba(255,255,255,0.28);}
+  .hbtns .primary{background:#fff;color:var(--primary);border-color:#fff;font-weight:700;}
+  .hbtns .primary:hover{background:#f3f4f6;}
+
+  main{max-width:900px;margin:0 auto;padding:32px 24px 100px;}
+  .notice{
+    background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:12.5px;
+    padding:12px 16px;border-radius:10px;margin-bottom:24px;line-height:1.6;
+  }
+  .site-meta{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:12px;
+    padding:18px 20px;margin-bottom:24px;
+  }
+  .site-meta .row{display:flex;gap:12px;margin-bottom:10px;}
+  .site-meta label{font-size:11px;color:var(--text-light);display:block;margin-bottom:4px;}
+  .site-meta input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;}
+
+  .item-card{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:12px;
+    margin-bottom:16px;overflow:hidden;
+  }
+  .item-head{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fafafa;
+    border-bottom:1px solid var(--border);cursor:pointer;
+  }
+  .item-head .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+  .item-head .name{font-size:13.5px;font-weight:600;flex:1;}
+  .item-head .meta{font-size:11px;color:var(--text-light);}
+  .item-head .arrow{font-size:11px;color:var(--text-light);transition:transform .2s;}
+  .item-head.collapsed .arrow{transform:rotate(-90deg);}
+  .item-body{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .item-body.collapsed{display:none;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:11px;color:var(--text-light);font-weight:600;}
+  .field input[type=text], .field textarea{
+    padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;
+  }
+  .field textarea{resize:vertical;min-height:50px;}
+  .field.color-field{flex-direction:row;align-items:center;gap:8px;}
+  .field.color-field input[type=color]{width:44px;height:32px;border:1px solid var(--border);border-radius:7px;padding:2px;cursor:pointer;}
+  .field.color-field input[type=text]{flex:1;}
+  .toggle-row{display:flex;align-items:center;gap:8px;font-size:13px;}
+  .item-actions{display:flex;justify-content:flex-end;gap:8px;padding:0 16px 16px;}
+  .item-actions button{
+    padding:6px 12px;border-radius:7px;font-size:12px;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:#fff;
+  }
+  .item-actions .del{color:#dc2626;border-color:#fecaca;}
+  .item-actions .del:hover{background:#fef2f2;}
+  .item-actions .move{color:var(--text-light);}
+
+  .add-btn{
+    width:100%;padding:14px;border:2px dashed var(--border);border-radius:12px;background:transparent;
+    color:var(--text-light);font-size:13.5px;font-family:inherit;cursor:pointer;margin-top:6px;
+  }
+  .add-btn:hover{border-color:var(--primary);color:var(--primary);}
+
+  .bottom-bar{
+    position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
+    padding:14px 24px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,0.05);
+  }
+  .bottom-bar button{
+    padding:10px 18px;border-radius:9px;font-size:13px;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:#fff;
+  }
+  .bottom-bar .save{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
+  .bottom-bar .download{background:#10b981;color:#fff;border-color:#10b981;font-weight:600;}
+  .msg{font-size:12px;color:var(--text-light);text-align:center;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">⚙ 메뉴 설정</div>
+    <div class="brand-sub">도구·문서 카드를 추가/수정하고 팀에 공유할 설정 파일을 만듭니다</div>
+  </div>
+  <div class="hbtns">
+    <a href="./menu.html">← 메뉴로</a>
+    <button class="primary" onclick="promptUploadConfig()">📂 JSON 불러오기</button>
+  </div>
+</header>
+
+<main>
+  <div class="notice">
+    ℹ️ 여기서 편집한 내용은 우선 <b>이 브라우저에만</b> "미리보기"로 저장됩니다.<br>
+    팀 전체(다른 접속자)에게 반영하려면 <b>① JSON 다운로드</b> → <b>② GitHub 저장소의 <code>data/menuConfig.json</code> 파일에 덮어쓰기 업로드</b>까지 완료해야 합니다.
+  </div>
+
+  <div class="site-meta">
+    <div class="row">
+      <div class="field" style="flex:1;">
+        <label>사이트 타이틀</label>
+        <input type="text" id="siteTitle" placeholder="JAEHO ERP Suite">
+      </div>
+    </div>
+    <div class="field">
+      <label>사이트 부제</label>
+      <input type="text" id="siteSubtitle" placeholder="ERP 도입 사전단계 통합 플랫폼">
+    </div>
+  </div>
+
+  <div id="itemList"></div>
+
+  <button class="add-btn" onclick="addItem()">＋ 새 항목 추가 (도구 / 문서 / 링크)</button>
+</main>
+
+<div class="bottom-bar">
+  <div style="width:100%;">
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <button onclick="resetToTeamVersion()">팀 버전으로 초기화</button>
+      <button class="save" onclick="savePreview()">💾 미리보기 저장 (내 브라우저만)</button>
+      <button class="download" onclick="downloadConfig()">⬇ JSON 다운로드 (팀 반영용)</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+  if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+  const DRAFT_KEY = 'menuConfigDraft';
+
+  /* 외부 파일에 의존하지 않는 자체 저장/다운로드/업로드 기능 (안정성 확보) */
+  const manager = {
+    saveToMemory(data){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); return true; }catch(e){ console.error(e); return false; } },
+    loadFromMemory(){ try{ const raw = localStorage.getItem(DRAFT_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } },
+    downloadAsJSON(data, filename){
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = (filename||'menuConfig') + '.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+    promptUpload(onLoaded){
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'application/json';
+      input.onchange = (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev)=>{
+          try{ const data = JSON.parse(ev.target.result); if(typeof onLoaded==='function') onLoaded(data); }
+          catch(err){ alert('올바른 JSON 파일이 아닙니다.'); console.error(err); }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+  };
+
+  let config = { siteTitle:'', siteSubtitle:'', items:[] };
+  let _uid = 1;
+
+  const PALETTE = ['#534AB7','#6366f1','#10b981','#d97706','#dc2626','#0891b2','#7c3aed','#475569'];
+
+  async function init(){
+    const draft = manager.loadFromMemory();
+    if (draft) { config = draft; setMsg('이 브라우저의 미리보기 초안을 불러왔습니다.'); }
+    else {
+      try{
+        const res = await fetch('./data/menuConfig.json', {cache:'no-store'});
+        if(res.ok) config = await res.json();
+      }catch(e){}
+    }
+    config.items = (config.items||[]).map(it=>({...it, _uid: _uid++}));
+    render();
+  }
+
+  function setMsg(t){ document.getElementById('msg').textContent = t; setTimeout(()=>{ if(document.getElementById('msg').textContent===t) document.getElementById('msg').textContent=''; }, 4000); }
+
+  function render(){
+    document.getElementById('siteTitle').value = config.siteTitle || '';
+    document.getElementById('siteSubtitle').value = config.siteSubtitle || '';
+
+    const list = document.getElementById('itemList');
+    list.innerHTML = '';
+    config.items.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-head" data-uid="${item._uid}">
+          <div class="dot" style="background:${item.color||'#534AB7'}"></div>
+          <div class="name">${item.titleKo || '(제목 없음)'} <span class="meta">${item.category||''}</span></div>
+          <div class="arrow">▾</div>
+        </div>
+        <div class="item-body">
+          <div class="field">
+            <label>카테고리 라벨 (예: STEP 1, 공유문서)</label>
+            <input type="text" data-f="category" value="${esc(item.category)}">
+          </div>
+          <div class="field">
+            <label>아이콘 (이모지 1글자)</label>
+            <input type="text" data-f="icon" value="${esc(item.icon)}" maxlength="4">
+          </div>
+          <div class="field">
+            <label>제목 (한글)</label>
+            <input type="text" data-f="titleKo" value="${esc(item.titleKo)}">
+          </div>
+          <div class="field">
+            <label>부제 / 설명 한 줄</label>
+            <input type="text" data-f="titleEn" value="${esc(item.titleEn)}">
+          </div>
+          <div class="field full">
+            <label>상세 설명</label>
+            <textarea data-f="desc">${esc(item.desc)}</textarea>
+          </div>
+          <div class="field full">
+            <label>연결 링크 (상대경로: ./tool5/index.html · 외부주소: https://...)</label>
+            <input type="text" data-f="link" value="${esc(item.link)}" placeholder="./tool5/index5.html 또는 https://...">
+          </div>
+          <div class="field color-field">
+            <input type="color" data-f="color" value="${item.color||'#534AB7'}">
+            <input type="text" data-f="color" value="${item.color||'#534AB7'}">
+          </div>
+          <div class="field toggle-row">
+            <input type="checkbox" data-f="enabled" ${item.enabled!==false?'checked':''} style="width:16px;height:16px;">
+            <label style="font-size:13px;color:var(--text);font-weight:500;">활성화 (해제 시 "준비중"으로 표시)</label>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="move" data-act="up">↑ 위로</button>
+          <button class="move" data-act="down">↓ 아래로</button>
+          <button class="del" data-act="del">🗑 삭제</button>
+        </div>
+      `;
+      list.appendChild(card);
+
+      // 접기/펼치기
+      const head = card.querySelector('.item-head');
+      const body = card.querySelector('.item-body');
+      head.addEventListener('click', ()=>{ head.classList.toggle('collapsed'); body.classList.toggle('collapsed'); });
+
+      // 필드 변경 반영
+      card.querySelectorAll('[data-f]').forEach(inp=>{
+        const field = inp.dataset.f;
+        inp.addEventListener('input', ()=>{
+          if (field==='enabled') item.enabled = inp.checked;
+          else if (field==='color') {
+            item.color = inp.value;
+            card.querySelectorAll('[data-f="color"]').forEach(x=>x.value=inp.value);
+            card.querySelector('.dot').style.background = inp.value;
+          } else item[field] = inp.value;
+          if (field==='titleKo' || field==='category') {
+            card.querySelector('.name').innerHTML = (item.titleKo||'(제목 없음)') + ' <span class="meta">'+(item.category||'')+'</span>';
+          }
+        });
+      });
+
+      card.querySelector('[data-act="del"]').onclick = ()=>{
+        if(confirm('이 항목을 삭제할까요?')){
+          config.items = config.items.filter(x=>x._uid!==item._uid);
+          render();
+        }
+      };
+      card.querySelector('[data-act="up"]').onclick = ()=>{
+        if(idx>0){ [config.items[idx-1],config.items[idx]]=[config.items[idx],config.items[idx-1]]; render(); }
+      };
+      card.querySelector('[data-act="down"]').onclick = ()=>{
+        if(idx<config.items.length-1){ [config.items[idx+1],config.items[idx]]=[config.items[idx],config.items[idx+1]]; render(); }
+      };
+    });
+  }
+
+  function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function addItem(){
+    const n = config.items.length + 1;
+    const color = PALETTE[(n-1) % PALETTE.length];
+    config.items.push({
+      _uid: _uid++,
+      category: 'STEP ' + n,
+      titleKo: '새 항목',
+      titleEn: '',
+      desc: '',
+      icon: '📄',
+      color,
+      link: '',
+      enabled: true
+    });
+    render();
+  }
+
+  document.getElementById('siteTitle').addEventListener('input', e=> config.siteTitle = e.target.value);
+  document.getElementById('siteSubtitle').addEventListener('input', e=> config.siteSubtitle = e.target.value);
+
+  function cleanConfig(){
+    return {
+      siteTitle: config.siteTitle,
+      siteSubtitle: config.siteSubtitle,
+      items: config.items.map(({_uid, ...rest})=>rest)
+    };
+  }
+
+  function savePreview(){
+    manager.saveToMemory(cleanConfig());
+    setMsg('✅ 이 브라우저에 미리보기로 저장했습니다. 메뉴 화면에서 확인해보세요.');
+  }
+
+  function downloadConfig(){
+    manager.downloadAsJSON(cleanConfig(), 'menuConfig');
+    setMsg('⬇ menuConfig.json 다운로드 완료 — GitHub의 data/menuConfig.json에 덮어쓰기 업로드하세요.');
+  }
+
+  function resetToTeamVersion(){
+    if(!confirm('이 브라우저의 미리보기 초안을 지우고 팀 공용 버전(data/menuConfig.json)을 다시 불러올까요?')) return;
+    localStorage.removeItem(DRAFT_KEY);
+    init();
+  }
+
+  function promptUploadConfig(){
+    manager.promptUpload((data)=>{
+      config = data;
+      config.items = (config.items||[]).map(it=>({...it, _uid: _uid++}));
+      render();
+      setMsg('📂 JSON 파일을 불러왔습니다. 확인 후 저장하세요.');
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
