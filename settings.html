@@ -80,6 +80,28 @@
   }
   .add-btn:hover{border-color:var(--primary);color:var(--primary);}
 
+  .tabs{display:flex;gap:8px;margin-bottom:20px;}
+  .tab{padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:13px;font-family:inherit;cursor:pointer;color:var(--text-light);}
+  .tab.on{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
+  .view{display:none;}
+  .view.on{display:block;}
+
+  .preview-hint{font-size:12px;color:var(--text-light);margin-bottom:14px;}
+  .preview-frame{background:#f7f8fc;border:1px solid var(--border);border-radius:14px;padding:28px;}
+  .preview-header{margin-bottom:20px;}
+  .preview-title{font-size:18px;font-weight:700;color:var(--text);}
+  .preview-sub{font-size:12.5px;color:var(--text-light);margin-top:2px;}
+  .preview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
+  .pv-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;min-height:170px;}
+  .pv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--pv-accent,#534AB7);}
+  .pv-card.disabled{opacity:0.55;}
+  .pv-step{font-size:10.5px;font-weight:700;color:var(--pv-accent,#534AB7);letter-spacing:0.5px;margin-bottom:8px;}
+  .pv-icon{width:38px;height:38px;border-radius:10px;background:var(--pv-accent-soft,#ede9fe);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px;}
+  .pv-title{font-size:14.5px;font-weight:700;margin-bottom:5px;color:var(--text);}
+  .pv-en{font-size:10.5px;color:var(--text-light);margin-bottom:8px;}
+  .pv-desc{font-size:11.5px;color:var(--text-light);line-height:1.5;}
+  .pv-badge{position:absolute;top:12px;right:12px;background:#f3f4f6;color:var(--text-light);font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;}
+
   .bottom-bar{
     position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
     padding:14px 24px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,0.05);
@@ -107,33 +129,51 @@
 
 <main>
   <div class="notice">
-    ℹ️ 여기서 편집한 내용은 우선 <b>이 브라우저에만</b> "미리보기"로 저장됩니다.<br>
-    팀 전체(다른 접속자)에게 반영하려면 <b>① JSON 다운로드</b> → <b>② GitHub 저장소의 <code>data/menuConfig.json</code> 파일에 덮어쓰기 업로드</b>까지 완료해야 합니다.
+    ℹ️ 이 화면에서 편집하는 동안 <b>메뉴 화면(menu.html)은 전혀 바뀌지 않습니다.</b>
+    아래 <b>"미리보기"</b> 탭에서 결과를 먼저 확인하고, 팀 전체에 실제로 반영하려면
+    <b>① JSON 다운로드</b> → <b>② GitHub 저장소의 <code>data/menuConfig.json</code> 파일에 덮어쓰기 업로드</b>까지 완료해야 합니다.
   </div>
 
-  <div class="site-meta">
-    <div class="row">
-      <div class="field" style="flex:1;">
-        <label>사이트 타이틀</label>
-        <input type="text" id="siteTitle" placeholder="JAEHO ERP Suite">
+  <div class="tabs">
+    <button id="tabEdit" class="tab on">✏ 편집</button>
+    <button id="tabPreview" class="tab">👁 미리보기</button>
+  </div>
+
+  <div id="viewEdit" class="view on">
+    <div class="site-meta">
+      <div class="row">
+        <div class="field" style="flex:1;">
+          <label>사이트 타이틀</label>
+          <input type="text" id="siteTitle" placeholder="JAEHO ERP Suite">
+        </div>
+      </div>
+      <div class="field">
+        <label>사이트 부제</label>
+        <input type="text" id="siteSubtitle" placeholder="ERP 도입 사전단계 통합 플랫폼">
       </div>
     </div>
-    <div class="field">
-      <label>사이트 부제</label>
-      <input type="text" id="siteSubtitle" placeholder="ERP 도입 사전단계 통합 플랫폼">
-    </div>
+
+    <div id="itemList"></div>
+
+    <button class="add-btn" onclick="addItem()">＋ 새 항목 추가 (도구 / 문서 / 링크)</button>
   </div>
 
-  <div id="itemList"></div>
-
-  <button class="add-btn" onclick="addItem()">＋ 새 항목 추가 (도구 / 문서 / 링크)</button>
+  <div id="viewPreview" class="view">
+    <div class="preview-hint">실제 menu.html과 동일한 모습으로 렌더링됩니다. (이 화면은 미리보기 전용이며 저장되지 않습니다)</div>
+    <div class="preview-frame">
+      <div class="preview-header">
+        <div class="preview-title" id="pvSiteTitle">JAEHO ERP Suite</div>
+        <div class="preview-sub" id="pvSiteSubtitle">ERP 도입 사전단계 통합 플랫폼</div>
+      </div>
+      <div class="preview-grid" id="pvGrid"></div>
+    </div>
+  </div>
 </main>
 
 <div class="bottom-bar">
   <div style="width:100%;">
     <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
-      <button onclick="resetToTeamVersion()">팀 버전으로 초기화</button>
-      <button class="save" onclick="savePreview()">💾 미리보기 저장 (내 브라우저만)</button>
+      <button onclick="resetToTeamVersion()">↺ 깃허브 버전으로 되돌리기</button>
       <button class="download" onclick="downloadConfig()">⬇ JSON 다운로드 (팀 반영용)</button>
     </div>
     <div class="msg" id="msg"></div>
@@ -143,57 +183,73 @@
 <script>
   if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
 
-  const DRAFT_KEY = 'menuConfigDraft';
+  /* 이 키는 "menu.html에 영향을 주는 초안"이 아니라, 편집 중 실수로 새로고침해도
+     입력하던 내용이 사라지지 않도록 하는 "이 화면만을 위한 임시 저장"입니다. */
+  const EDITOR_AUTOSAVE_KEY = 'menuSettingsAutosave';
 
-  /* 외부 파일에 의존하지 않는 자체 저장/다운로드/업로드 기능 (안정성 확보) */
-  const manager = {
-    saveToMemory(data){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); return true; }catch(e){ console.error(e); return false; } },
-    loadFromMemory(){ try{ const raw = localStorage.getItem(DRAFT_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } },
-    downloadAsJSON(data, filename){
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = (filename||'menuConfig') + '.json';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    },
-    promptUpload(onLoaded){
-      const input = document.createElement('input');
-      input.type = 'file'; input.accept = 'application/json';
-      input.onchange = (e)=>{
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev)=>{
-          try{ const data = JSON.parse(ev.target.result); if(typeof onLoaded==='function') onLoaded(data); }
-          catch(err){ alert('올바른 JSON 파일이 아닙니다.'); console.error(err); }
-        };
-        reader.readAsText(file);
+  function downloadJSON(data, filename){
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = (filename||'menuConfig') + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function promptUploadJSON(onLoaded){
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'application/json';
+    input.onchange = (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        try{ const data = JSON.parse(ev.target.result); if(typeof onLoaded==='function') onLoaded(data); }
+        catch(err){ alert('올바른 JSON 파일이 아닙니다.'); console.error(err); }
       };
-      input.click();
-    }
-  };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
 
   let config = { siteTitle:'', siteSubtitle:'', items:[] };
   let _uid = 1;
-
   const PALETTE = ['#534AB7','#6366f1','#10b981','#d97706','#dc2626','#0891b2','#7c3aed','#475569'];
 
+  /* 편집 시작은 항상 GitHub의 data/menuConfig.json 기준.
+     단, 이 화면에서 편집하다 실수로 새로고침한 경우를 대비해 자동저장분이 있으면 복구 제안. */
   async function init(){
-    const draft = manager.loadFromMemory();
-    if (draft) { config = draft; setMsg('이 브라우저의 미리보기 초안을 불러왔습니다.'); }
-    else {
+    let fromGit = { siteTitle:'', siteSubtitle:'', items:[] };
+    try{
+      const res = await fetch('./data/menuConfig.json', {cache:'no-store'});
+      if(res.ok) fromGit = await res.json();
+    }catch(e){}
+
+    const autosave = localStorage.getItem(EDITOR_AUTOSAVE_KEY);
+    if (autosave) {
       try{
-        const res = await fetch('./data/menuConfig.json', {cache:'no-store'});
-        if(res.ok) config = await res.json();
-      }catch(e){}
+        const parsed = JSON.parse(autosave);
+        if (confirm('편집하다 만 내용이 남아있습니다. 이어서 편집할까요?\n(취소하면 GitHub의 최신 버전으로 새로 시작합니다)')) {
+          config = parsed;
+        } else {
+          localStorage.removeItem(EDITOR_AUTOSAVE_KEY);
+          config = fromGit;
+        }
+      }catch(e){ config = fromGit; }
+    } else {
+      config = fromGit;
     }
+
     config.items = (config.items||[]).map(it=>({...it, _uid: _uid++}));
     render();
+    renderPreview();
   }
 
   function setMsg(t){ document.getElementById('msg').textContent = t; setTimeout(()=>{ if(document.getElementById('msg').textContent===t) document.getElementById('msg').textContent=''; }, 4000); }
+
+  function autosave(){
+    try{ localStorage.setItem(EDITOR_AUTOSAVE_KEY, JSON.stringify(cleanConfig())); }catch(e){}
+  }
 
   function render(){
     document.getElementById('siteTitle').value = config.siteTitle || '';
@@ -252,12 +308,10 @@
       `;
       list.appendChild(card);
 
-      // 접기/펼치기
       const head = card.querySelector('.item-head');
       const body = card.querySelector('.item-body');
       head.addEventListener('click', ()=>{ head.classList.toggle('collapsed'); body.classList.toggle('collapsed'); });
 
-      // 필드 변경 반영
       card.querySelectorAll('[data-f]').forEach(inp=>{
         const field = inp.dataset.f;
         inp.addEventListener('input', ()=>{
@@ -270,25 +324,64 @@
           if (field==='titleKo' || field==='category') {
             card.querySelector('.name').innerHTML = (item.titleKo||'(제목 없음)') + ' <span class="meta">'+(item.category||'')+'</span>';
           }
+          autosave();
+          renderPreview();
         });
       });
 
       card.querySelector('[data-act="del"]').onclick = ()=>{
         if(confirm('이 항목을 삭제할까요?')){
           config.items = config.items.filter(x=>x._uid!==item._uid);
-          render();
+          render(); autosave(); renderPreview();
         }
       };
       card.querySelector('[data-act="up"]').onclick = ()=>{
-        if(idx>0){ [config.items[idx-1],config.items[idx]]=[config.items[idx],config.items[idx-1]]; render(); }
+        if(idx>0){ [config.items[idx-1],config.items[idx]]=[config.items[idx],config.items[idx-1]]; render(); autosave(); renderPreview(); }
       };
       card.querySelector('[data-act="down"]').onclick = ()=>{
-        if(idx<config.items.length-1){ [config.items[idx+1],config.items[idx]]=[config.items[idx],config.items[idx+1]]; render(); }
+        if(idx<config.items.length-1){ [config.items[idx+1],config.items[idx]]=[config.items[idx],config.items[idx+1]]; render(); autosave(); renderPreview(); }
       };
     });
   }
 
   function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function hexToSoft(hex){
+    try{
+      const h = (hex||'#534AB7').replace('#','');
+      const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+      const mix = (c)=>Math.round(c + (255-c)*0.86);
+      return 'rgb('+mix(r)+','+mix(g)+','+mix(b)+')';
+    }catch(e){ return '#ede9fe'; }
+  }
+
+  /* menu.html과 동일한 룰로 카드를 그리는 미리보기 (이 화면 안에서만 보이며 저장되지 않음) */
+  function renderPreview(){
+    document.getElementById('pvSiteTitle').textContent = config.siteTitle || 'JAEHO ERP Suite';
+    document.getElementById('pvSiteSubtitle').textContent = config.siteSubtitle || '';
+    const grid = document.getElementById('pvGrid');
+    grid.innerHTML = '';
+    if (!config.items.length) {
+      grid.innerHTML = '<div style="color:#9ca3af;font-size:13px;">등록된 항목이 없습니다.</div>';
+      return;
+    }
+    config.items.forEach(t=>{
+      const enabled = t.enabled !== false;
+      const card = document.createElement('div');
+      card.className = 'pv-card' + (enabled ? '' : ' disabled');
+      card.style.setProperty('--pv-accent', t.color || '#534AB7');
+      card.style.setProperty('--pv-accent-soft', hexToSoft(t.color));
+      card.innerHTML = `
+        ${!enabled ? '<div class="pv-badge">준비중</div>' : ''}
+        <div class="pv-step">${esc(t.category)}</div>
+        <div class="pv-icon">${t.icon||'📄'}</div>
+        <div class="pv-title">${esc(t.titleKo)||'(제목 없음)'}</div>
+        <div class="pv-en">${esc(t.titleEn)}</div>
+        <div class="pv-desc">${esc(t.desc)}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
 
   function addItem(){
     const n = config.items.length + 1;
@@ -304,11 +397,11 @@
       link: '',
       enabled: true
     });
-    render();
+    render(); autosave(); renderPreview();
   }
 
-  document.getElementById('siteTitle').addEventListener('input', e=> config.siteTitle = e.target.value);
-  document.getElementById('siteSubtitle').addEventListener('input', e=> config.siteSubtitle = e.target.value);
+  document.getElementById('siteTitle').addEventListener('input', e=>{ config.siteTitle = e.target.value; autosave(); renderPreview(); });
+  document.getElementById('siteSubtitle').addEventListener('input', e=>{ config.siteSubtitle = e.target.value; autosave(); renderPreview(); });
 
   function cleanConfig(){
     return {
@@ -318,30 +411,33 @@
     };
   }
 
-  function savePreview(){
-    manager.saveToMemory(cleanConfig());
-    setMsg('✅ 이 브라우저에 미리보기로 저장했습니다. 메뉴 화면에서 확인해보세요.');
-  }
-
   function downloadConfig(){
-    manager.downloadAsJSON(cleanConfig(), 'menuConfig');
-    setMsg('⬇ menuConfig.json 다운로드 완료 — GitHub의 data/menuConfig.json에 덮어쓰기 업로드하세요.');
+    downloadJSON(cleanConfig(), 'menuConfig');
+    setMsg('⬇ menuConfig.json 다운로드 완료 — GitHub의 data/menuConfig.json에 덮어쓰기 업로드해야 팀에 반영됩니다.');
   }
 
   function resetToTeamVersion(){
-    if(!confirm('이 브라우저의 미리보기 초안을 지우고 팀 공용 버전(data/menuConfig.json)을 다시 불러올까요?')) return;
-    localStorage.removeItem(DRAFT_KEY);
+    if(!confirm('편집 중인 내용을 버리고 GitHub의 최신 menuConfig.json으로 다시 시작할까요?')) return;
+    localStorage.removeItem(EDITOR_AUTOSAVE_KEY);
     init();
   }
 
   function promptUploadConfig(){
-    manager.promptUpload((data)=>{
+    promptUploadJSON((data)=>{
       config = data;
       config.items = (config.items||[]).map(it=>({...it, _uid: _uid++}));
-      render();
-      setMsg('📂 JSON 파일을 불러왔습니다. 확인 후 저장하세요.');
+      render(); autosave(); renderPreview();
+      setMsg('📂 JSON 파일을 불러왔습니다. 확인 후 다운로드하세요.');
     });
   }
+
+  // 탭 전환
+  const tabEdit = document.getElementById('tabEdit');
+  const tabPreview = document.getElementById('tabPreview');
+  const viewEdit = document.getElementById('viewEdit');
+  const viewPreview = document.getElementById('viewPreview');
+  tabEdit.onclick = ()=>{ tabEdit.classList.add('on'); tabPreview.classList.remove('on'); viewEdit.classList.add('on'); viewPreview.classList.remove('on'); };
+  tabPreview.onclick = ()=>{ tabPreview.classList.add('on'); tabEdit.classList.remove('on'); viewPreview.classList.add('on'); viewEdit.classList.remove('on'); renderPreview(); };
 
   init();
 </script>
