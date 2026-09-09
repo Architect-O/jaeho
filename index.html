@@ -2,10 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23534AB7%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27Arial,sans-serif%27 font-size=%2718%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3EJ%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JAEHO ERP Suite - 로그인</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabaseClient.js"></script>
+<script src="./js/geoClient.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body{
@@ -137,7 +139,22 @@
 
     btn.disabled = true; btn.textContent = '확인 중...';
     try {
-      const { data, error } = await sb.rpc('login_user', { p_username: username, p_password: password });
+      const meta = await collectLoginMeta();
+
+      // 해외접속차단이 켜져있으면, 서버까지 가기 전에 먼저 안내 (서버에서도 이중 확인함)
+      try {
+        const { data: settings } = await sb.rpc('get_public_settings');
+        if (settings && settings.blockForeignLogin && meta.country && meta.country !== settings.allowedCountry) {
+          msgEl.className = 'msg err'; msgEl.textContent = '해외 접속이 제한되어 있습니다.';
+          btn.disabled = false; btn.textContent = '로그인';
+          return;
+        }
+      } catch (e) { /* 정책 조회 실패해도 로그인 자체는 계속 진행 */ }
+
+      const { data, error } = await sb.rpc('login_user', {
+        p_username: username, p_password: password,
+        p_ip: meta.ip, p_device: meta.device, p_browser: meta.browser, p_country: meta.country
+      });
       if (error) throw error;
       if (!data.success) {
         msgEl.className = 'msg err'; msgEl.textContent = data.message || '로그인 실패';
@@ -175,7 +192,11 @@
 
     btn.disabled = true; btn.textContent = '처리 중...';
     try {
-      const { data, error } = await sb.rpc('register_user', { p_username: username, p_password: pw });
+      const meta = await collectLoginMeta();
+      const { data, error } = await sb.rpc('register_user', {
+        p_username: username, p_password: pw,
+        p_ip: meta.ip, p_device: meta.device, p_browser: meta.browser, p_country: meta.country
+      });
       if (error) throw error;
       if (!data.success) {
         msgEl.className = 'msg err'; msgEl.textContent = data.message;
