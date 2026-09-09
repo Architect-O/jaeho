@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
   :root{
     --primary:#534AB7;
-    --primary-dark:#453d99;
     --secondary:#6366f1;
-    --accent:#10b981;
     --bg:#f7f8fc;
     --card-bg:#ffffff;
     --text:#1f2937;
@@ -26,7 +26,6 @@
     color:var(--text);
   }
 
-  /* ── 상단 헤더 ── */
   header{
     background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);
     color:#fff;
@@ -45,22 +44,21 @@
   .brand-title{font-size:19px;font-weight:700;letter-spacing:-0.3px;}
   .brand-sub{font-size:12px;opacity:0.85;margin-top:2px;}
 
-  .user-area{display:flex;align-items:center;gap:14px;font-size:13px;}
+  .user-area{display:flex;align-items:center;gap:10px;font-size:13px;}
   .user-chip{
     background:rgba(255,255,255,0.15);
     padding:7px 14px;border-radius:20px;
     display:flex;align-items:center;gap:6px;
   }
-  .logout-btn{
+  .icon-btn, .logout-btn{
     background:rgba(255,255,255,0.15);
     border:1px solid rgba(255,255,255,0.3);
-    color:#fff;padding:8px 16px;border-radius:8px;
+    color:#fff;padding:8px 14px;border-radius:8px;
     cursor:pointer;font-size:12px;font-family:inherit;
-    transition:all 0.2s;
+    transition:all 0.2s; text-decoration:none; display:inline-flex; align-items:center; gap:5px;
   }
-  .logout-btn:hover{background:rgba(255,255,255,0.28);}
+  .icon-btn:hover, .logout-btn:hover{background:rgba(255,255,255,0.28);}
 
-  /* ── 본문 ── */
   main{max-width:1100px;margin:0 auto;padding:48px 40px 80px;}
   .section-title{font-size:22px;font-weight:700;margin-bottom:6px;}
   .section-desc{font-size:14px;color:var(--text-light);margin-bottom:36px;}
@@ -118,13 +116,20 @@
     background:#f3f4f6;color:var(--text-light);
     font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;
   }
-
-  footer{
-    text-align:center;padding:24px;color:var(--text-light);font-size:12px;
+  .draft-banner{
+    max-width:1100px;margin:20px auto 0;padding:10px 18px;background:#fff7ed;
+    border:1px solid #fed7aa;color:#9a3412;font-size:12.5px;border-radius:10px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .draft-banner button{
+    background:#fff;border:1px solid #fdba74;color:#9a3412;padding:5px 10px;
+    border-radius:6px;font-size:11.5px;cursor:pointer;font-family:inherit;
   }
 
+  footer{ text-align:center;padding:24px;color:var(--text-light);font-size:12px; }
+
   @media (max-width:640px){
-    header{padding:20px;}
+    header{padding:20px;flex-wrap:wrap;gap:12px;}
     main{padding:32px 20px 60px;}
   }
 </style>
@@ -133,118 +138,127 @@
 
 <header>
   <div class="brand">
-    <div class="brand-logo">J</div>
+    <div class="brand-logo" id="brandLogo">J</div>
     <div>
-      <div class="brand-title">JAEHO ERP Suite</div>
-      <div class="brand-sub">ERP 도입 사전단계 통합 플랫폼</div>
+      <div class="brand-title" id="siteTitle">JAEHO ERP Suite</div>
+      <div class="brand-sub" id="siteSubtitle">ERP 도입 사전단계 통합 플랫폼</div>
     </div>
   </div>
   <div class="user-area">
-    <div class="user-chip">👤 <span id="username">-</span></div>
+    <div class="user-chip">👤 <span id="username">-</span><span id="roleBadge" style="display:none;font-size:10px;background:rgba(255,255,255,0.25);padding:2px 7px;border-radius:10px;margin-left:2px;">관리자</span></div>
+    <a class="icon-btn" id="userMgmtBtn" href="./users.html" style="display:none;" title="유저 관리">👥 유저 관리</a>
+    <a class="icon-btn" href="./settings.html" title="메뉴 항목 설정">⚙ 설정</a>
     <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
   </div>
 </header>
 
+<div id="draftBanner" class="draft-banner" style="display:none;">
+  <span>⚠ 지금 보이는 메뉴는 <b>이 브라우저에서만 보이는 미리보기(초안)</b>입니다. 팀 전체에 반영하려면 설정에서 JSON을 다운로드해 GitHub에 업로드하세요.</span>
+  <button onclick="clearDraft()">초안 지우고 팀 버전 보기</button>
+</div>
+
 <main>
   <div class="section-title">도구를 선택하세요</div>
-  <div class="section-desc">ERP 도입 전 단계별 설계·시뮬레이션 도구입니다.</div>
+  <div class="section-desc">ERP 도입 전 단계별 설계·시뮬레이션 도구와 공유 문서입니다.</div>
 
-  <div class="grid" id="toolGrid"></div>
+  <div class="grid" id="toolGrid"><div style="color:#9ca3af;font-size:13px;">불러오는 중...</div></div>
 </main>
 
 <footer>© 2026 JAEHO ERP Lab</footer>
 
 <script>
-  // ── 로그인 검증 ──
   if (sessionStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = './index.html';
   }
   const username = sessionStorage.getItem('username');
   if (username) document.getElementById('username').textContent = username;
+  const role = sessionStorage.getItem('role');
+  if (role === 'admin') {
+    document.getElementById('roleBadge').style.display = 'inline-block';
+    document.getElementById('userMgmtBtn').style.display = 'inline-flex';
+  }
 
   function handleLogout() {
     if (confirm('로그아웃하시겠습니까?')) {
       sessionStorage.removeItem('isLoggedIn');
       sessionStorage.removeItem('username');
       sessionStorage.removeItem('loginTime');
+      sessionStorage.removeItem('role');
+      sessionStorage.removeItem('pw');
+      sessionStorage.removeItem('loginCount');
       window.location.href = './index.html';
     }
   }
 
-  // ══════════════════════════════════════════════
-  // 도구 목록 (여기만 수정하면 카드가 자동 생성/증감됨)
-  // ══════════════════════════════════════════════
-  const TOOLS = [
-    {
-      step: 'STEP 1',
-      titleKo: 'Process Discovery',
-      titleEn: '현행 업무프로세스 분석·설계',
-      desc: '노드를 추가해 현재 업무 흐름과 데이터 참조 관계를 설계하고 검증합니다.',
-      icon: '⬡',
-      link: './tool1/index1.html',
-      accent: '#534AB7',
-      accentSoft: '#ede9fe',
-      enabled: true
-    },
-    {
-      step: 'STEP 2',
-      titleKo: 'Process Design',
-      titleEn: '미래 업무프로세스 고도화 설계',
-      desc: 'AS-IS 흐름을 기반으로 최적화된 TO-BE 프로세스를 설계하는 고급 버전입니다.',
-      icon: '🎯',
-      link: './tool2/index2.html',
-      accent: '#6366f1',
-      accentSoft: '#e0e7ff',
-      enabled: true
-    },
-    {
-      step: 'STEP 3',
-      titleKo: 'Organization Design',
-      titleEn: '조직구조·역할 가상 구현',
-      desc: '가상의 조직도와 업무를 에이전트로 구현해 조직 구조를 시뮬레이션합니다.',
-      icon: '🏢',
-      link: './tool3/index3.html',
-      accent: '#10b981',
-      accentSoft: '#d1fae5',
-      enabled: true
-    },
-    {
-      step: 'STEP 4',
-      titleKo: 'Data Simulation',
-      titleEn: '자본·물류 흐름 에이전트 시뮬레이션',
-      desc: '가상회사에 데이터를 입력해 자본과 물류 흐름을 에이전트 기반으로 시뮬레이션합니다.',
-      icon: '💹',
-      link: './tool4/index4.html',
-      accent: '#d97706',
-      accentSoft: '#fef3c7',
-      enabled: true
-    }
-  ];
+  const DRAFT_KEY = 'menuConfigDraft';
+  function clearDraft(){ localStorage.removeItem(DRAFT_KEY); loadConfig(); }
 
-  function renderTools() {
+  function hexToSoft(hex){
+    try{
+      const h = hex.replace('#','');
+      const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+      const mix = (c)=>Math.round(c + (255-c)*0.86);
+      return 'rgb('+mix(r)+','+mix(g)+','+mix(b)+')';
+    }catch(e){ return '#ede9fe'; }
+  }
+
+  async function loadConfig(){
+    let config = null;
+    let isDraft = false;
+
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      try { config = JSON.parse(draft); isDraft = true; } catch(e){}
+    }
+    if (!config) {
+      try {
+        const res = await fetch('./data/menuConfig.json', {cache:'no-store'});
+        if (res.ok) config = await res.json();
+      } catch(e){ console.warn('menuConfig.json 로드 실패', e); }
+    }
+    if (!config) config = { siteTitle:'JAEHO ERP Suite', siteSubtitle:'ERP 도입 사전단계 통합 플랫폼', items:[] };
+
+    document.getElementById('siteTitle').textContent = config.siteTitle || 'JAEHO ERP Suite';
+    document.getElementById('siteSubtitle').textContent = config.siteSubtitle || '';
+    document.getElementById('draftBanner').style.display = isDraft ? 'flex' : 'none';
+
+    renderTools(config.items || []);
+  }
+
+  function renderTools(items) {
     const grid = document.getElementById('toolGrid');
     grid.innerHTML = '';
-    TOOLS.forEach(t => {
+    if (!items.length) {
+      grid.innerHTML = '<div style="color:#9ca3af;font-size:13px;">등록된 항목이 없습니다. 우측 상단 "⚙ 설정"에서 추가하세요.</div>';
+      return;
+    }
+    items.forEach(t => {
+      const enabled = t.enabled !== false;
       const card = document.createElement('div');
-      card.className = 'card' + (t.enabled === false ? ' disabled' : '');
-      card.style.setProperty('--card-accent', t.accent);
-      card.style.setProperty('--card-accent-soft', t.accentSoft);
+      card.className = 'card' + (enabled ? '' : ' disabled');
+      card.style.setProperty('--card-accent', t.color || '#534AB7');
+      card.style.setProperty('--card-accent-soft', hexToSoft(t.color || '#534AB7'));
       card.innerHTML = `
-        ${t.enabled === false ? '<div class="badge-soon">준비중</div>' : ''}
-        <div class="card-step">${t.step}</div>
-        <div class="card-icon">${t.icon}</div>
-        <div class="card-title">${t.titleKo}</div>
-        <div class="card-title-en">${t.titleEn}</div>
-        <div class="card-desc">${t.desc}</div>
-        <div class="card-cta">${t.enabled === false ? '준비 중입니다' : '시작하기 →'}</div>
+        ${!enabled ? '<div class="badge-soon">준비중</div>' : ''}
+        <div class="card-step">${t.category || ''}</div>
+        <div class="card-icon">${t.icon || '📄'}</div>
+        <div class="card-title">${t.titleKo || ''}</div>
+        <div class="card-title-en">${t.titleEn || ''}</div>
+        <div class="card-desc">${t.desc || ''}</div>
+        <div class="card-cta">${enabled ? '시작하기 →' : '준비 중입니다'}</div>
       `;
-      if (t.enabled !== false) {
-        card.addEventListener('click', () => window.location.href = t.link);
+      if (enabled && t.link) {
+        card.addEventListener('click', () => {
+          const isExternal = /^https?:\/\//i.test(t.link);
+          if (isExternal) window.open(t.link, '_blank');
+          else window.location.href = t.link;
+        });
       }
       grid.appendChild(card);
     });
   }
-  renderTools();
+
+  loadConfig();
 </script>
 </body>
 </html>

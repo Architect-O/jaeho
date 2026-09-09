@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>유저 관리 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{ --primary:#534AB7; --secondary:#6366f1; --bg:#f7f8fc; --text:#1f2937; --text-light:#6b7280; --border:#e5e7eb; }
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  header{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:#fff;
+    padding:22px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+  }
+  .brand{font-size:17px;font-weight:700;}
+  .brand-sub{font-size:12px;opacity:0.85;}
+  .hbtns a, .hbtns button{
+    background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;
+    padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;text-decoration:none;
+  }
+  .hbtns a:hover, .hbtns button:hover{background:rgba(255,255,255,0.28);}
+
+  main{max-width:900px;margin:0 auto;padding:32px 24px 60px;}
+  .denied{max-width:480px;margin:80px auto;text-align:center;color:var(--text-light);}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+  th, td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);}
+  th{background:#fafafa;color:var(--text-light);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:0.4px;}
+  tr:last-child td{border-bottom:none;}
+  .role-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .role-admin{background:#ede9fe;color:#5b21b6;}
+  .role-user{background:#f1f5f9;color:#475569;}
+  .count{font-weight:700;color:var(--primary);}
+  .role-btn{
+    font-size:11.5px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-family:inherit;
+  }
+  .role-btn:hover{background:#f9fafb;}
+  .refresh-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .refresh-bar button{
+    padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12.5px;cursor:pointer;font-family:inherit;
+  }
+  .empty{text-align:center;padding:40px;color:var(--text-light);font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">👥 유저 관리</div>
+    <div class="brand-sub">전체 유저 목록과 로그인 횟수를 확인하고 역할을 관리합니다</div>
+  </div>
+  <div class="hbtns"><a href="./menu.html">← 메뉴로</a></div>
+</header>
+
+<main id="mainArea">
+  <div class="refresh-bar">
+    <div style="font-size:13px;color:var(--text-light);" id="summaryLine">불러오는 중...</div>
+    <button onclick="loadUsers()">↻ 새로고침</button>
+  </div>
+  <div id="tableWrap"></div>
+</main>
+
+<script>
+  if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+  const myRole = sessionStorage.getItem('role');
+  const myUsername = sessionStorage.getItem('username');
+  const myPw = sessionStorage.getItem('pw'); // 관리자 재인증용 (내부 데모용 보안 수준)
+
+  const sb = getSupabase();
+
+  if (myRole !== 'admin') {
+    document.getElementById('mainArea').innerHTML = `
+      <div class="denied">
+        <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px;">관리자만 접근할 수 있습니다.</div>
+        <div style="font-size:13px;">현재 계정: ${myUsername || '-'} (일반 사용자)</div>
+      </div>`;
+  } else {
+    loadUsers();
+  }
+
+  async function loadUsers(){
+    if (myRole !== 'admin') return;
+    const wrap = document.getElementById('tableWrap');
+    const summary = document.getElementById('summaryLine');
+    if (!sb) { wrap.innerHTML = '<div class="empty">Supabase 설정이 필요합니다.</div>'; return; }
+
+    try {
+      const { data, error } = await sb.rpc('admin_list_users', { p_admin_username: myUsername, p_admin_password: myPw });
+      if (error) throw error;
+
+      if (!data || !data.length) {
+        wrap.innerHTML = '<div class="empty">등록된 유저가 없습니다.</div>';
+        summary.textContent = '유저 0명';
+        return;
+      }
+
+      summary.textContent = `유저 ${data.length}명 · 총 로그인 ${data.reduce((s,u)=>s+u.login_count,0)}회`;
+
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>아이디</th><th>역할</th><th>로그인 횟수</th><th>가입일</th><th>마지막 로그인</th><th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(u => `
+              <tr>
+                <td>${esc(u.username)}</td>
+                <td><span class="role-tag ${u.role==='admin'?'role-admin':'role-user'}">${u.role==='admin'?'관리자':'사용자'}</span></td>
+                <td class="count">${u.login_count}회</td>
+                <td>${fmtDate(u.created_at)}</td>
+                <td>${u.last_login ? fmtDate(u.last_login) : '-'}</td>
+                <td>
+                  ${u.username === myUsername
+                    ? '<span style="color:#9ca3af;font-size:11.5px;">본인</span>'
+                    : `<button class="role-btn" onclick="toggleRole('${esc(u.username)}','${u.role}')">${u.role==='admin'?'일반으로 변경':'관리자로 지정'}</button>`
+                  }
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (err) {
+      console.error(err);
+      wrap.innerHTML = '<div class="empty">목록을 불러오지 못했습니다.</div>';
+    }
+  }
+
+  async function toggleRole(targetUsername, currentRole){
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    if (!confirm(`"${targetUsername}" 계정을 ${newRole==='admin'?'관리자로':'일반 사용자로'} 변경할까요?`)) return;
+    try {
+      const { data, error } = await sb.rpc('admin_set_role', {
+        p_admin_username: myUsername, p_admin_password: myPw,
+        p_target_username: targetUsername, p_new_role: newRole
+      });
+      if (error) throw error;
+      if (!data.success) { alert(data.message || '변경 실패'); return; }
+      loadUsers();
+    } catch(err){ console.error(err); alert('변경 중 오류가 발생했습니다.'); }
+  }
+
+  function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtDate(iso){
+    const d = new Date(iso);
+    return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+</script>
+</body>
+</html>

@@ -1,242 +1,201 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architect-LAB - 로그인</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JAEHO ERP Suite - 로그인</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:'IBM Plex Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:linear-gradient(135deg,#534AB7 0%,#6366f1 100%);
+    min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px;
+  }
+  .box{
+    background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    width:100%; max-width:400px; padding:40px;
+  }
+  .logo-wrap{text-align:center;margin-bottom:32px;}
+  .logo{width:56px;height:56px;background:#534AB7;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px;font-weight:700;color:#fff;}
+  .logo-title{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:6px;}
+  .logo-sub{font-size:12.5px;color:#666;}
 
-        body {
-            font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #534AB7 0%, #6366f1 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+  .tabs{display:flex;border:1px solid #e5e7eb;border-radius:9px;overflow:hidden;margin-bottom:22px;}
+  .tabs button{flex:1;padding:10px;border:none;background:#f9fafb;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .tabs button.on{background:#534AB7;color:#fff;}
 
-        .login-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
-            padding: 40px;
-        }
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:#333;margin-bottom:6px;}
+  .field input{width:100%;padding:11px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;}
+  .field input:focus{outline:none;border-color:#534AB7;box-shadow:0 0 0 3px rgba(83,74,183,0.1);}
 
-        .logo-section {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+  .submit-btn{
+    width:100%;padding:12px;background:linear-gradient(135deg,#534AB7 0%,#6366f1 100%);
+    color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;
+  }
+  .submit-btn:hover{opacity:0.92;}
+  .submit-btn:disabled{opacity:0.6;cursor:default;}
 
-        .logo {
-            width: 60px;
-            height: 60px;
-            background: #534AB7;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-        }
+  .msg{font-size:12.5px;margin-top:10px;text-align:center;min-height:16px;}
+  .msg.err{color:#e53e3e;}
+  .msg.ok{color:#059669;}
 
-        .logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
+  .panel{display:none;}
+  .panel.on{display:block;}
 
-        .logo-desc {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 6px;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            outline: none;
-            border-color: #534AB7;
-            box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.1);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #534AB7 0%, #6366f1 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(83, 74, 183, 0.2);
-        }
-
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .error-msg {
-            color: #e53e3e;
-            font-size: 13px;
-            margin-top: 8px;
-            text-align: center;
-            min-height: 18px;
-        }
-
-        .info-box {
-            background: #f0f4ff;
-            border-left: 4px solid #534AB7;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #534AB7;
-            line-height: 1.5;
-        }
-
-        .info-box strong {
-            display: block;
-            margin-bottom: 4px;
-        }
-    </style>
+  .setup-warning{
+    background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:12px;line-height:1.6;
+    padding:12px 14px;border-radius:9px;margin-bottom:18px;
+  }
+  .setup-warning code{background:#fff;padding:1px 5px;border-radius:4px;}
+</style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo-section">
-            <div class="logo">J</div>
-            <div class="logo-text">JAEHO-ERP</div>
-            <div class="logo-desc">ERP Architecture Design Tool</div>
-        </div>
-
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            <div class="form-group">
-                <label for="userId">아이디</label>
-                <input 
-                    type="text" 
-                    id="userId" 
-                    placeholder="아이디 입력" 
-                    required
-                    autocomplete="username"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="userPassword">비밀번호</label>
-                <input 
-                    type="password" 
-                    id="userPassword" 
-                    placeholder="비밀번호 입력" 
-                    required
-                    autocomplete="current-password"
-                >
-            </div>
-
-            <button type="submit" class="login-btn">로그인</button>
-            <div class="error-msg" id="errorMsg"></div>
-        </form>
-
-        <div class="info-box">
-            <strong>테스트 계정</strong>
-            아이디: <code>재호 계정</code><br>
-            비번: <code>재호 패스워드</code>
-        </div>
+  <div class="box">
+    <div class="logo-wrap">
+      <div class="logo">J</div>
+      <div class="logo-title">JAEHO ERP Suite</div>
+      <div class="logo-sub">ERP 도입 사전단계 통합 플랫폼</div>
     </div>
 
-    <script>
-        // ──────────────────────────────────────
-        // 로그인 계정 관리 (하드코딩)
-        // ──────────────────────────────────────
-        const VALID_ACCOUNTS = {
-            'jaeho': '1234321',
-            'admin': 'admin123',
-            'test': 'test123'
-        };
+    <div id="setupWarning" class="setup-warning" style="display:none;">
+      ⚠️ Supabase 연결이 설정되지 않았습니다. <code>js/supabaseClient.js</code>에서
+      SUPABASE_URL / SUPABASE_ANON_KEY 값을 채워주세요.
+    </div>
 
-        function handleLogin(event) {
-            event.preventDefault();
-            
-            const userId = document.getElementById('userId').value.trim();
-            const userPassword = document.getElementById('userPassword').value;
-            const errorMsg = document.getElementById('errorMsg');
+    <div class="tabs">
+      <button id="tabLogin" class="on">로그인</button>
+      <button id="tabRegister">회원가입</button>
+    </div>
 
-            // 입력값 검증
-            if (!userId || !userPassword) {
-                errorMsg.textContent = '아이디와 비밀번호를 입력해주세요.';
-                return;
-            }
+    <!-- 로그인 폼 -->
+    <div id="panelLogin" class="panel on">
+      <form id="loginForm">
+        <div class="field">
+          <label>아이디</label>
+          <input type="text" id="loginId" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label>비밀번호</label>
+          <input type="password" id="loginPw" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="submit-btn" id="loginBtn">로그인</button>
+        <div class="msg" id="loginMsg"></div>
+      </form>
+    </div>
 
-            // 계정 검증
-            if (VALID_ACCOUNTS[userId] && VALID_ACCOUNTS[userId] === userPassword) {
-                // 로그인 성공
-                errorMsg.textContent = '';
-                
-                // 로그인 상태 저장 (sessionStorage 사용 - 브라우저 종료 시 삭제)
-                sessionStorage.setItem('isLoggedIn', 'true');
-                sessionStorage.setItem('username', userId);
-                sessionStorage.setItem('loginTime', new Date().toISOString());
-                
-                // menu.html로 리다이렉트
-                setTimeout(() => {
-                    window.location.href = './menu.html';
-                }, 300);
-            } else {
-                // 로그인 실패
-                errorMsg.textContent = '아이디 또는 비밀번호가 일치하지 않습니다.';
-                document.getElementById('userPassword').value = '';
-                document.getElementById('userPassword').focus();
-            }
-        }
+    <!-- 회원가입 폼 -->
+    <div id="panelRegister" class="panel">
+      <form id="registerForm">
+        <div class="field">
+          <label>사용할 아이디 (2자 이상)</label>
+          <input type="text" id="regId" required>
+        </div>
+        <div class="field">
+          <label>비밀번호 (4자 이상)</label>
+          <input type="password" id="regPw" required>
+        </div>
+        <div class="field">
+          <label>비밀번호 확인</label>
+          <input type="password" id="regPw2" required>
+        </div>
+        <button type="submit" class="submit-btn" id="registerBtn">가입하기</button>
+        <div class="msg" id="registerMsg"></div>
+      </form>
+    </div>
+  </div>
 
-        // 엔터 키로 로그인 (자동)
-        document.getElementById('userPassword').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-            }
-        });
+<script>
+  // ── 탭 전환 ──
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const panelLogin = document.getElementById('panelLogin');
+  const panelRegister = document.getElementById('panelRegister');
+  tabLogin.onclick = () => { tabLogin.classList.add('on'); tabRegister.classList.remove('on'); panelLogin.classList.add('on'); panelRegister.classList.remove('on'); };
+  tabRegister.onclick = () => { tabRegister.classList.add('on'); tabLogin.classList.remove('on'); panelRegister.classList.add('on'); panelLogin.classList.remove('on'); };
 
-        // 이미 로그인한 상태면 menu.html로 자동 리다이렉트
-        if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = './menu.html';
-        }
-    </script>
+  // ── Supabase 설정 확인 ──
+  const sb = getSupabase();
+  if (!sb) {
+    document.getElementById('setupWarning').style.display = 'block';
+  }
+
+  // ── 로그인 ──
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msgEl = document.getElementById('loginMsg');
+    const btn = document.getElementById('loginBtn');
+    msgEl.className = 'msg'; msgEl.textContent = '';
+
+    if (!sb) { msgEl.className='msg err'; msgEl.textContent='Supabase 설정이 필요합니다.'; return; }
+
+    const username = document.getElementById('loginId').value.trim();
+    const password = document.getElementById('loginPw').value;
+    if (!username || !password) { msgEl.className='msg err'; msgEl.textContent='아이디와 비밀번호를 입력해주세요.'; return; }
+
+    btn.disabled = true; btn.textContent = '확인 중...';
+    try {
+      const { data, error } = await sb.rpc('login_user', { p_username: username, p_password: password });
+      if (error) throw error;
+      if (!data.success) {
+        msgEl.className = 'msg err'; msgEl.textContent = data.message || '로그인 실패';
+        return;
+      }
+      sessionStorage.setItem('isLoggedIn', 'true');
+      sessionStorage.setItem('username', data.username);
+      sessionStorage.setItem('role', data.role);
+      sessionStorage.setItem('loginCount', data.loginCount);
+      // 관리자 재인증(유저 관리 페이지)용으로만 세션에 보관 — 내부 데모용 보안수준
+      sessionStorage.setItem('pw', password);
+      window.location.href = './menu.html';
+    } catch (err) {
+      console.error(err);
+      msgEl.className = 'msg err'; msgEl.textContent = '연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    } finally {
+      btn.disabled = false; btn.textContent = '로그인';
+    }
+  });
+
+  // ── 회원가입 ──
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msgEl = document.getElementById('registerMsg');
+    const btn = document.getElementById('registerBtn');
+    msgEl.className = 'msg'; msgEl.textContent = '';
+
+    if (!sb) { msgEl.className='msg err'; msgEl.textContent='Supabase 설정이 필요합니다.'; return; }
+
+    const username = document.getElementById('regId').value.trim();
+    const pw = document.getElementById('regPw').value;
+    const pw2 = document.getElementById('regPw2').value;
+
+    if (pw !== pw2) { msgEl.className='msg err'; msgEl.textContent='비밀번호가 일치하지 않습니다.'; return; }
+
+    btn.disabled = true; btn.textContent = '처리 중...';
+    try {
+      const { data, error } = await sb.rpc('register_user', { p_username: username, p_password: pw });
+      if (error) throw error;
+      if (!data.success) {
+        msgEl.className = 'msg err'; msgEl.textContent = data.message;
+        return;
+      }
+      msgEl.className = 'msg ok'; msgEl.textContent = data.message;
+      document.getElementById('registerForm').reset();
+      setTimeout(() => { tabLogin.click(); }, 1200);
+    } catch (err) {
+      console.error(err);
+      msgEl.className = 'msg err'; msgEl.textContent = '연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    } finally {
+      btn.disabled = false; btn.textContent = '가입하기';
+    }
+  });
+
+  // 이미 로그인된 상태면 바로 메뉴로
+  if (sessionStorage.getItem('isLoggedIn') === 'true') {
+    window.location.href = './menu.html';
+  }
+</script>
 </body>
 </html>
