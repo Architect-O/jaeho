@@ -119,6 +119,20 @@
     <div class="settings-card">
       <div class="settings-row">
         <div>
+          <div class="settings-label">신규 가입 허용</div>
+          <div class="settings-desc">꺼두면 회원가입 시도 시 "관리자에게 문의하세요" 문구가 표시됩니다.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="setRegEnabled"><span class="slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">최대 가입자 수</div>
+          <div class="settings-desc">현재 가입자 <b id="curUserCount">-</b>명 / 0 = 무제한. 정원을 채우면 가입이 자동 차단됩니다.</div>
+        </div>
+        <div><input type="number" id="setMaxUsers" min="0"> 명</div>
+      </div>
+      <div class="settings-row">
+        <div>
           <div class="settings-label">삭제 유예기간</div>
           <div class="settings-desc">계정 삭제 예약 후, 완전히 삭제되기까지 기다리는 기간입니다 (일 단위).</div>
         </div>
@@ -362,15 +376,23 @@
     try{
       const { data, error } = await sb.rpc('admin_get_settings', { p_admin_username: myUsername, p_admin_password: myPw });
       if(error) throw error;
+      document.getElementById('setRegEnabled').checked = data.registration_enabled === 'true';
+      document.getElementById('setMaxUsers').value = data.max_users || 0;
       document.getElementById('setGraceDays').value = data.grace_period_days || 7;
       document.getElementById('setAuditEnabled').checked = data.audit_log_enabled === 'true';
       document.getElementById('setBlockForeign').checked = data.block_foreign_login === 'true';
       document.getElementById('setAllowedCountry').value = data.allowed_country || 'KR';
+
+      // 현재 가입자 수 표시 (참고용)
+      const { data: users } = await sb.rpc('admin_list_users', { p_admin_username: myUsername, p_admin_password: myPw });
+      document.getElementById('curUserCount').textContent = users ? users.length : '-';
     }catch(err){ console.error(err); }
   }
 
   async function saveSettings(){
     const entries = [
+      ['registration_enabled', document.getElementById('setRegEnabled').checked ? 'true' : 'false'],
+      ['max_users', String(Math.max(0, parseInt(document.getElementById('setMaxUsers').value)||0))],
       ['grace_period_days', String(Math.max(1, parseInt(document.getElementById('setGraceDays').value)||7))],
       ['audit_log_enabled', document.getElementById('setAuditEnabled').checked ? 'true' : 'false'],
       ['block_foreign_login', document.getElementById('setBlockForeign').checked ? 'true' : 'false'],
@@ -392,7 +414,8 @@
   const ACTION_LABEL = {
     login_success:'로그인 성공', login_failed:'로그인 실패', login_blocked_account:'차단계정 로그인시도',
     login_blocked_delete_pending:'삭제예약계정 로그인시도', login_blocked_foreign:'해외접속 차단',
-    register:'회원가입', set_role:'역할변경', password_reset:'비밀번호초기화',
+    register:'회원가입', register_blocked_disabled:'가입차단(가입중지)', register_blocked_maxusers:'가입차단(정원초과)',
+    set_role:'역할변경', password_reset:'비밀번호초기화',
     block:'계정차단', unblock:'차단해제', reserve_delete:'삭제예약', cancel_delete:'삭제예약취소',
     reset_login_count:'로그인횟수초기화', update_setting:'정책설정변경'
   };
