@@ -8,7 +8,7 @@
         {
           "id": "context",
           "title": "프로젝트 컨텍스트",
-          "file": "./docs/PROJECT_CONTEXT.md",
+          "file": "./PROJECT_CONTEXT.md",
           "desc": "전체 맥락 요약본",
           "badge": "내부"
         }
@@ -20,7 +20,7 @@
         {
           "id": "menu-v2",
           "title": "메뉴구조도 v2.0 확정",
-          "file": "./docs/JAEHO_ERP_메뉴구조도_v2_0_확정.svg",
+          "file": "./JAEHO_ERP_메뉴구조도_v2_0_확정.svg",
           "desc": "실제 화면 캡처 기반",
           "badge": "확정"
         }
