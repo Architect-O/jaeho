@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Process Design 내용</title>
+
+<!-- ══════════════════════════════════════════════════════════════
+     이 파일 = 내용물. index2.html(껍데기) 안에 통째로 얹힙니다.
+
+     ▶ 헤더·메뉴·로그아웃 버튼은 껍데기가 이미 그립니다.
+        여기서는 본문만 쓰세요.
+     ▶ 완전히 독립된 HTML이라 이 파일만 따로 열어도 잘 보입니다.
+        (스타일·스크립트를 자유롭게 넣어도 껍데기와 충돌하지 않습니다)
+     ▶ 다른 파일로 바꾸려면 index2.html 상단 CONTENT 한 줄만 수정.
+     ══════════════════════════════════════════════════════════════ -->
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:#f7f8fc;color:#1f2937;padding:48px 24px 80px;}
+  .wrap{max-width:720px;margin:0 auto;}
+  .hero{text-align:center;margin-bottom:44px;}
+  .hero .ic{font-size:54px;margin-bottom:18px;}
+  .hero h1{font-size:23px;margin-bottom:10px;}
+  .hero p{color:#6b7280;font-size:14px;line-height:1.7;}
+  .tag{display:inline-block;margin-top:18px;background:#e0e7ff;color:#4338ca;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;}
+
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px 22px;margin-bottom:14px;}
+  .card h2{font-size:14px;font-weight:700;margin-bottom:4px;}
+  .card .desc{font-size:12px;color:#6b7280;margin-bottom:14px;}
+  .card ol{margin-left:20px;font-size:13.5px;line-height:1.9;}
+  .card code{background:#eef0f6;border-radius:4px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="ic">🎯</div>
+    <h1>Process Design</h1>
+    <p>미래 업무프로세스 고도화 설계 도구입니다.<br>현재 개발 중이며 곧 만나보실 수 있습니다.</p>
+    <div class="tag">STEP 2 · 준비중</div>
+  </div>
+
+  <div class="card">
+    <h2>이 화면을 바꾸는 방법</h2>
+    <div class="desc">껍데기(index2.html)는 그대로 두고 내용물만 갈아끼웁니다.</div>
+    <ol>
+      <li>보여주고 싶은 파일을 <code>tool2/</code> 폴더에 올립니다. (.html / .md / .txt)</li>
+      <li><code>index2.html</code> 맨 위의 <code>CONTENT</code> 한 줄을 그 파일명으로 바꿉니다.</li>
+      <li>끝. 헤더·메뉴·로그인 검증은 껍데기가 알아서 유지합니다.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>바꾸기 전에 미리 보기</h2>
+    <div class="desc">파일을 확정하기 전에 임시로만 띄워볼 수 있습니다.</div>
+    <ol>
+      <li>주소 뒤에 <code>?c=파일명</code>을 붙여 접속합니다.</li>
+      <li>예: <code>index2.html?c=설계안.md</code></li>
+      <li>이 방식은 <code>CONTENT</code>를 건드리지 않으므로 팀원에게는 영향이 없습니다.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>같은 구조를 tool3 · tool4에도</h2>
+    <div class="desc">파일명 규칙만 맞추면 동일하게 동작합니다.</div>
+    <ol>
+      <li><code>tool3/index3.html</code> + <code>tool3/index3-1.html</code></li>
+      <li><code>tool4/index4.html</code> + <code>tool4/index4-1.html</code></li>
+      <li>껍데기 안의 <code>CONTENT</code> · <code>TITLE</code> · <code>ICON</code> 세 줄만 맞춰주면 됩니다.</li>
+    </ol>
+  </div>
+
+</div>
+
+</body>
+</html>
