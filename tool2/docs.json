@@ -23,18 +23,13 @@
           "file": "./JAEHO_ERP_메뉴구조도_v2_0_확정.svg",
           "desc": "실제 화면 캡처 기반",
           "badge": "확정"
-        }
-      ]
-    },
-    {
-      "name": "구조도",
-      "docs": [
+        },
         {
-          "id": "menu-v2",
+          "id": "menu-v1",
           "title": "메뉴구조도 v1.0 추정",
-          "file": "./JAEHO_ERP_메뉴구조도_v1_0_추정.svg",
-          "desc": "실제 화면 캡처 기반",
-          "badge": "확정"
+          "file": "./JAEHO_ERP_메뉴구조도_v1.0_추정.svg",
+          "desc": "DLL 기반 초기 추정안",
+          "badge": "참고용"
         }
       ]
     }
