@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1400" height="1600" viewBox="0 0 1400 1600" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+<title>JAEHO ERP 실제 메뉴 구조도 v2.0 확정판</title>
+<desc>화면메뉴 트리 캡처 기반 실제 메뉴 구조. 기준관리/영업관리/무역관리/생산관리공통/자재관리 5개 대분류.</desc>
+
+<rect width="1400" height="1600" fill="#FAFAFA"/>
+
+<text x="700" y="36" text-anchor="middle" font-size="20" font-weight="bold" fill="#1F4E79">JAEHO ERP 실제 메뉴 구조도</text>
+<text x="700" y="58" text-anchor="middle" font-size="13" fill="#808080">v2.0 확정판 — 화면메뉴 트리 캡처 기반 (DLL 추정 아님, 실제 메뉴)</text>
+
+<!-- 5개 대분류 헤더 -->
+<rect x="20"   y="80" width="260" height="44" rx="8" fill="#9FE1CB" stroke="#1D9E75" stroke-width="1.5"/>
+<text x="150" y="98"  text-anchor="middle" font-size="14" font-weight="bold" fill="#085041">기준관리</text>
+<text x="150" y="114" text-anchor="middle" font-size="11" fill="#0F6E56">기초정보·기준정보</text>
+
+<rect x="300" y="80" width="260" height="44" rx="8" fill="#F5C4B3" stroke="#993C1D" stroke-width="1.5"/>
+<text x="430" y="98"  text-anchor="middle" font-size="14" font-weight="bold" fill="#4A1B0C">영업관리</text>
+<text x="430" y="114" text-anchor="middle" font-size="11" fill="#712B13">견적·수주·출고·채권</text>
+
+<rect x="580" y="80" width="260" height="44" rx="8" fill="#B5D4F4" stroke="#185FA5" stroke-width="1.5"/>
+<text x="710" y="98"  text-anchor="middle" font-size="14" font-weight="bold" fill="#042C53">무역관리</text>
+<text x="710" y="114" text-anchor="middle" font-size="11" fill="#0C447C">PI/BL·USANCE 신용장</text>
+
+<rect x="860" y="80" width="260" height="44" rx="8" fill="#FAC775" stroke="#BA7517" stroke-width="1.5"/>
+<text x="990" y="98"  text-anchor="middle" font-size="14" font-weight="bold" fill="#412402">생산관리공통</text>
+<text x="990" y="114" text-anchor="middle" font-size="11" fill="#633806">계획·지시·실적</text>
+
+<rect x="1140" y="80" width="240" height="44" rx="8" fill="#F4C0D1" stroke="#993556" stroke-width="1.5"/>
+<text x="1260" y="98"  text-anchor="middle" font-size="14" font-weight="bold" fill="#4B1528">자재관리</text>
+<text x="1260" y="114" text-anchor="middle" font-size="11" fill="#72243E">발주·입고·채무·이동</text>
+
+<!-- ============ 기준관리 ============ -->
+<rect x="20" y="140" width="260" height="22" rx="3" fill="#E1F5EE" stroke="#9FE1CB" stroke-width="0.8"/>
+<text x="30" y="156" font-size="12" font-weight="bold" fill="#085041">▾ 기초정보관리</text>
+<rect x="30" y="166" width="240" height="18" fill="none"/><text x="40" y="179" font-size="11" fill="#444441">공통코드관리</text>
+<rect x="30" y="186" width="240" height="18" fill="none"/><text x="40" y="199" font-size="11" fill="#444441">은행코드관리</text>
+<rect x="30" y="206" width="240" height="18" fill="none"/><text x="40" y="219" font-size="11" fill="#444441">은행별계좌관리</text>
+<rect x="30" y="226" width="240" height="18" fill="none"/><text x="40" y="239" font-size="11" fill="#444441">결제조건관리</text>
+<rect x="30" y="246" width="240" height="18" fill="none"/><text x="40" y="259" font-size="11" fill="#444441">회사관리</text>
+<rect x="30" y="266" width="240" height="18" fill="none"/><text x="40" y="279" font-size="11" fill="#444441">사업장 등록</text>
+
+<rect x="20" y="292" width="260" height="22" rx="3" fill="#E1F5EE" stroke="#9FE1CB" stroke-width="0.8"/>
+<text x="30" y="308" font-size="12" font-weight="bold" fill="#085041">▾ 기준정보관리</text>
+<rect x="30" y="318" width="240" height="18" fill="none"/><text x="40" y="331" font-size="11" fill="#444441">자금관리</text>
+<rect x="30" y="338" width="240" height="18" fill="none"/><text x="40" y="351" font-size="11" fill="#444441">거래처관리</text>
+<rect x="30" y="358" width="240" height="18" fill="none"/><text x="40" y="371" font-size="11" fill="#444441">거래처별 담당자현황</text>
+<rect x="30" y="378" width="240" height="18" fill="none"/><text x="40" y="391" font-size="11" fill="#444441">거래처관리-무역</text>
+<rect x="30" y="398" width="240" height="18" fill="none"/><text x="40" y="411" font-size="11" fill="#444441">거래처현황</text>
+<rect x="30" y="418" width="240" height="18" fill="none"/><text x="40" y="431" font-size="11" fill="#444441">품목관리</text>
+<rect x="30" y="438" width="240" height="18" fill="none"/><text x="40" y="451" font-size="11" fill="#444441">품목현황</text>
+<rect x="30" y="458" width="240" height="18" fill="none"/><text x="40" y="471" font-size="11" fill="#444441">장소/위치등록</text>
+<rect x="30" y="478" width="240" height="18" fill="none"/><text x="40" y="491" font-size="11" fill="#444441">장소/위치 현황</text>
+<rect x="30" y="498" width="240" height="18" fill="none"/><text x="40" y="511" font-size="11" fill="#444441">품목별 기본장소등록</text>
+<rect x="30" y="518" width="240" height="18" fill="none"/><text x="40" y="531" font-size="11" fill="#444441">기초재고 등록</text>
+<rect x="30" y="538" width="240" height="18" fill="none"/><text x="40" y="551" font-size="11" fill="#444441">기초재고 현황</text>
+<rect x="30" y="558" width="240" height="18" fill="none"/><text x="40" y="571" font-size="11" fill="#444441">품목재고현황</text>
+<rect x="30" y="578" width="240" height="18" fill="none"/><text x="40" y="591" font-size="11" fill="#444441">품목재고현황(실시간)</text>
+<rect x="30" y="598" width="240" height="18" fill="#FFF6D9"/><text x="40" y="611" font-size="11" font-weight="bold" fill="#412402">원자재 BOM등록</text>
+<rect x="30" y="618" width="240" height="18" fill="#FFF6D9"/><text x="40" y="631" font-size="11" font-weight="bold" fill="#412402">원자재 BOM전개</text>
+<rect x="22" y="142" width="256" height="496" rx="6" fill="none" stroke="#9FE1CB" stroke-width="1"/>
+
+<!-- ============ 영업관리 ============ -->
+<rect x="300" y="140" width="260" height="22" rx="3" fill="#FAECE7" stroke="#F5C4B3" stroke-width="0.8"/>
+<text x="310" y="156" font-size="12" font-weight="bold" fill="#4A1B0C">▾ 견적서관리</text>
+<rect x="310" y="166" width="240" height="18" fill="none"/><text x="320" y="179" font-size="11" fill="#444441">견적서 작성</text>
+<rect x="310" y="186" width="240" height="18" fill="none"/><text x="320" y="199" font-size="11" fill="#444441">견적서 현황</text>
+
+<rect x="300" y="212" width="260" height="22" rx="3" fill="#FAECE7" stroke="#F5C4B3" stroke-width="0.8"/>
+<text x="310" y="228" font-size="12" font-weight="bold" fill="#4A1B0C">▾ 수주 관리</text>
+<rect x="310" y="238" width="240" height="18" fill="none"/><text x="320" y="251" font-size="11" fill="#444441">기초채권등록(거래처별)</text>
+<rect x="310" y="258" width="240" height="18" fill="none"/><text x="320" y="271" font-size="11" fill="#444441">기초채권현황</text>
+<rect x="310" y="278" width="240" height="18" fill="none"/><text x="320" y="291" font-size="11" fill="#444441">수금등록</text>
+<rect x="310" y="298" width="240" height="18" fill="none"/><text x="320" y="311" font-size="11" fill="#444441">주문서 작성</text>
+<rect x="310" y="318" width="240" height="18" fill="#E6F1FB"/><text x="320" y="331" font-size="11" fill="#042C53">주문서 현황 ✓</text>
+<rect x="310" y="338" width="240" height="18" fill="none"/><text x="320" y="351" font-size="11" fill="#444441">주문서-일괄처리</text>
+<rect x="310" y="358" width="240" height="18" fill="none"/><text x="320" y="371" font-size="11" fill="#444441">출고지시등록</text>
+<rect x="310" y="378" width="240" height="18" fill="none"/><text x="320" y="391" font-size="11" fill="#444441">출고등록-예외</text>
+<rect x="310" y="398" width="240" height="18" fill="none"/><text x="320" y="411" font-size="11" fill="#444441">유통이력 신고목록</text>
+<rect x="310" y="418" width="240" height="18" fill="none"/><text x="320" y="431" font-size="11" fill="#444441">현금출납장</text>
+<rect x="310" y="438" width="240" height="18" fill="none"/><text x="320" y="451" font-size="11" fill="#444441">결재내역조회</text>
+<rect x="310" y="458" width="240" height="18" fill="none"/><text x="320" y="471" font-size="11" fill="#444441">출고지시서</text>
+<rect x="310" y="478" width="240" height="18" fill="none"/><text x="320" y="491" font-size="11" fill="#444441">출고현황</text>
+<rect x="310" y="498" width="240" height="18" fill="none"/><text x="320" y="511" font-size="11" fill="#444441">출고반품현황</text>
+<rect x="310" y="518" width="240" height="18" fill="none"/><text x="320" y="531" font-size="11" fill="#444441">출고예외현황</text>
+<rect x="310" y="538" width="240" height="18" fill="none"/><text x="320" y="551" font-size="11" fill="#444441">매출원장-거래처</text>
+<rect x="310" y="558" width="240" height="18" fill="none"/><text x="320" y="571" font-size="11" fill="#444441">품목별수불대장</text>
+<rect x="310" y="578" width="240" height="18" fill="none"/><text x="320" y="591" font-size="11" fill="#444441">매출원장</text>
+<rect x="310" y="598" width="240" height="18" fill="none"/><text x="320" y="611" font-size="11" fill="#444441">출고반품등록</text>
+<rect x="302" y="142" width="256" height="496" rx="6" fill="none" stroke="#F5C4B3" stroke-width="1"/>
+
+<!-- ============ 무역관리 ============ -->
+<rect x="580" y="140" width="260" height="22" rx="3" fill="#E6F1FB" stroke="#B5D4F4" stroke-width="0.8"/>
+<text x="590" y="156" font-size="12" font-weight="bold" fill="#042C53">▾ 기준정보</text>
+<rect x="590" y="166" width="240" height="18" fill="none"/><text x="600" y="179" font-size="11" fill="#444441">PI현황</text>
+<rect x="590" y="186" width="240" height="18" fill="none"/><text x="600" y="199" font-size="11" fill="#444441">BL등록</text>
+
+<rect x="580" y="212" width="260" height="22" rx="3" fill="#E6F1FB" stroke="#B5D4F4" stroke-width="0.8"/>
+<text x="590" y="228" font-size="12" font-weight="bold" fill="#042C53">▾ USANCE 관리</text>
+<rect x="590" y="238" width="240" height="18" fill="#FFF6D9"/><text x="600" y="251" font-size="11" font-weight="bold" fill="#042C53">Usance한도등록-N</text>
+<rect x="590" y="258" width="240" height="18" fill="none"/><text x="600" y="271" font-size="11" fill="#444441">은행별한도조회</text>
+<rect x="590" y="278" width="240" height="18" fill="none"/><text x="600" y="291" font-size="11" fill="#444441">은행별Usance사용내역</text>
+<rect x="590" y="298" width="240" height="18" fill="none"/><text x="600" y="311" font-size="11" fill="#444441">Usance만기일조회</text>
+<rect x="582" y="142" width="256" height="184" rx="6" fill="none" stroke="#B5D4F4" stroke-width="1"/>
+
+<!-- 무역관리 주석 -->
+<rect x="582" y="345" width="256" height="68" rx="6" fill="#FFF8E1" stroke="#FAC775" stroke-width="1"/>
+<text x="710" y="362" text-anchor="middle" font-size="11" font-weight="bold" fill="#412402">⚠ 핵심 발견</text>
+<text x="592" y="378" font-size="10" fill="#633806">USANCE(외상수입신용장) 존재</text>
+<text x="592" y="392" font-size="10" fill="#633806">= 해외 원자재 수입 기반 제조업</text>
+<text x="592" y="404" font-size="10" fill="#633806">신규 SaaS 무역금융 연동 검토 필요</text>
+
+<!-- ============ 생산관리공통 ============ -->
+<rect x="860" y="140" width="260" height="22" rx="3" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.8"/>
+<text x="870" y="156" font-size="12" font-weight="bold" fill="#412402">▾ 생산계획</text>
+<rect x="870" y="166" width="240" height="18" fill="none"/><text x="880" y="179" font-size="11" fill="#444441">생산계획등록</text>
+
+<rect x="860" y="192" width="260" height="22" rx="3" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.8"/>
+<text x="870" y="208" font-size="12" font-weight="bold" fill="#412402">▾ 작업지시</text>
+<rect x="870" y="218" width="240" height="18" fill="none"/><text x="880" y="231" font-size="11" fill="#444441">작업지시등록</text>
+<rect x="870" y="238" width="240" height="18" fill="none"/><text x="880" y="251" font-size="11" fill="#444441">작업지시등록(확정)</text>
+<rect x="870" y="258" width="240" height="18" fill="none"/><text x="880" y="271" font-size="11" fill="#444441">작업지시현황</text>
+
+<rect x="860" y="284" width="260" height="22" rx="3" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.8"/>
+<text x="870" y="300" font-size="12" font-weight="bold" fill="#412402">▾ 작업실적</text>
+<rect x="870" y="310" width="240" height="18" fill="none"/><text x="880" y="323" font-size="11" fill="#444441">생산실적등록</text>
+<rect x="870" y="330" width="240" height="18" fill="none"/><text x="880" y="343" font-size="11" fill="#444441">생산실적현황</text>
+<rect x="862" y="142" width="256" height="216" rx="6" fill="none" stroke="#FAC775" stroke-width="1"/>
+
+<!-- ============ 자재관리 ============ -->
+<rect x="1140" y="140" width="240" height="22" rx="3" fill="#FBEAF0" stroke="#F4C0D1" stroke-width="0.8"/>
+<text x="1150" y="156" font-size="12" font-weight="bold" fill="#4B1528">▾ 매입발주서 관리</text>
+<rect x="1150" y="166" width="220" height="18" fill="none"/><text x="1160" y="179" font-size="11" fill="#444441">기초채무등록(거래처별)</text>
+<rect x="1150" y="186" width="220" height="18" fill="none"/><text x="1160" y="199" font-size="11" fill="#444441">기초채무현황</text>
+<rect x="1150" y="206" width="220" height="18" fill="none"/><text x="1160" y="219" font-size="11" fill="#444441">지급등록</text>
+<rect x="1150" y="226" width="220" height="18" fill="none"/><text x="1160" y="239" font-size="11" fill="#444441">품목별 기준가 변동현황</text>
+<rect x="1150" y="246" width="220" height="18" fill="none"/><text x="1160" y="259" font-size="11" fill="#444441">품목별 매입가 변동현황</text>
+<rect x="1150" y="266" width="220" height="18" fill="none"/><text x="1160" y="279" font-size="11" fill="#444441">구매발주서 작성</text>
+<rect x="1150" y="286" width="220" height="18" fill="none"/><text x="1160" y="299" font-size="11" fill="#444441">구매발주서 현황</text>
+<rect x="1150" y="306" width="220" height="18" fill="none"/><text x="1160" y="319" font-size="11" fill="#444441">구매발주서-일괄처리</text>
+<rect x="1150" y="326" width="220" height="18" fill="#E6F1FB"/><text x="1160" y="339" font-size="11" fill="#042C53">입고등록-New</text>
+<rect x="1150" y="346" width="220" height="18" fill="none"/><text x="1160" y="359" font-size="11" fill="#444441">입고등록-예외</text>
+<rect x="1150" y="366" width="220" height="18" fill="none"/><text x="1160" y="379" font-size="11" fill="#444441">입고현황</text>
+<rect x="1150" y="386" width="220" height="18" fill="none"/><text x="1160" y="399" font-size="11" fill="#444441">입고반품현황</text>
+<rect x="1150" y="406" width="220" height="18" fill="none"/><text x="1160" y="419" font-size="11" fill="#444441">입고예외현황</text>
+<rect x="1150" y="426" width="220" height="18" fill="none"/><text x="1160" y="439" font-size="11" fill="#444441">매입원장-거래처</text>
+<rect x="1150" y="446" width="220" height="18" fill="none"/><text x="1160" y="459" font-size="11" fill="#444441">매입원장</text>
+
+<rect x="1140" y="472" width="240" height="22" rx="3" fill="#FBEAF0" stroke="#F4C0D1" stroke-width="0.8"/>
+<text x="1150" y="488" font-size="12" font-weight="bold" fill="#4B1528">▾ 재고이동 관리</text>
+<rect x="1150" y="498" width="220" height="18" fill="none"/><text x="1160" y="511" font-size="11" fill="#444441">재고이동(내부)등록</text>
+<rect x="1150" y="518" width="220" height="18" fill="none"/><text x="1160" y="531" font-size="11" fill="#444441">재고이동(사업장)등록</text>
+<rect x="1150" y="538" width="220" height="18" fill="none"/><text x="1160" y="551" font-size="11" fill="#444441">재고이동(사업장)입고등록</text>
+<rect x="1150" y="558" width="220" height="18" fill="none"/><text x="1160" y="571" font-size="11" fill="#444441">재고이동(사업장)입고현황</text>
+<rect x="1142" y="142" width="256" height="446" rx="6" fill="none" stroke="#F4C0D1" stroke-width="1"/>
+
+<!-- ===== 업무 흐름 화살표 (대분류간 연결) ===== -->
+<line x1="280" y1="380" x2="298" y2="380" stroke="#888780" stroke-width="1.2" marker-end="url(#arr)"/>
+<line x1="560" y1="380" x2="578" y2="380" stroke="#888780" stroke-width="1.2" marker-end="url(#arr2)" stroke-dasharray="4 3"/>
+<line x1="840" y1="380" x2="858" y2="380" stroke="#888780" stroke-width="1.2" marker-end="url(#arr2)" stroke-dasharray="4 3"/>
+<line x1="1120" y1="380" x2="1138" y2="380" stroke="#888780" stroke-width="1.2" marker-end="url(#arr2)" stroke-dasharray="4 3"/>
+
+<!-- ===== 업무 흐름 설명 영역 ===== -->
+<rect x="20" y="660" width="1360" height="120" rx="8" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="1"/>
+<text x="700" y="684" text-anchor="middle" font-size="13" font-weight="bold" fill="#2C2C2A">실제 메뉴 기반 핵심 업무 흐름 (확정)</text>
+
+<text x="40" y="710" font-size="12" font-weight="bold" fill="#4A1B0C">영업 사이클</text>
+<text x="40" y="728" font-size="11" fill="#444441">견적서작성 → 주문서작성 → 출고지시등록 → 출고현황 → 매출원장 → 수금등록</text>
+
+<text x="40" y="752" font-size="12" font-weight="bold" fill="#4B1528">자재 사이클</text>
+<text x="40" y="770" font-size="11" fill="#444441">구매발주서작성 → 입고등록-New → 입고현황 → 매입원장 → 지급등록 (+사업장간 재고이동)</text>
+
+<text x="720" y="710" font-size="12" font-weight="bold" fill="#412402">생산 사이클</text>
+<text x="720" y="728" font-size="11" fill="#444441">생산계획등록 → 작업지시등록(확정) → 생산실적등록 → 생산실적현황</text>
+
+<text x="720" y="752" font-size="12" font-weight="bold" fill="#042C53">무역 사이클</text>
+<text x="720" y="770" font-size="11" fill="#444441">PI현황(계약) → BL등록(선적) → Usance한도등록(신용장) → 만기일조회(결제관리)</text>
+
+<!-- ===== BOM 연계 강조 ===== -->
+<rect x="20" y="800" width="1360" height="70" rx="8" fill="#FFF6D9" stroke="#FAC775" stroke-width="1.5"/>
+<text x="700" y="822" text-anchor="middle" font-size="13" font-weight="bold" fill="#412402">⚠ 핵심 연계: 원자재 BOM (기준관리) → 구매발주(자재관리) → 작업지시(생산관리) → 생산실적</text>
+<text x="700" y="842" text-anchor="middle" font-size="11" fill="#633806">BOM 전개 결과가 자재 소요량을 결정하고, 이는 구매발주서·생산계획 수립의 기준 데이터가 됨</text>
+<text x="700" y="858" text-anchor="middle" font-size="10" fill="#808080">신규 SaaS 설계 시 BOM 엔진을 별도 마이크로서비스로 분리하여 자재/생산/원가계산이 공통 참조하도록 설계 권고</text>
+
+<!-- ===== 비교: 1차 추정 vs 2차 확정 ===== -->
+<text x="700" y="900" text-anchor="middle" font-size="13" font-weight="bold" fill="#444441">1차 DLL 추정 대비 변경 사항</text>
+
+<rect x="20" y="915" width="660" height="110" rx="6" fill="#FAECE7" stroke="#F5C4B3" stroke-width="1"/>
+<text x="40" y="935" font-size="12" font-weight="bold" fill="#4A1B0C">v1.0 추정 (DLL 파일명 기반)</text>
+<text x="40" y="955" font-size="11" fill="#5F5E5A">GEN / BIZ / MAT / PRD / SAL / TRA / TS</text>
+<text x="40" y="973" font-size="11" fill="#5F5E5A">7개 모듈 코드 기반 추정 분류</text>
+<text x="40" y="991" font-size="11" fill="#5F5E5A">무역(USANCE) 기능 존재 여부 미확인</text>
+<text x="40" y="1009" font-size="11" fill="#5F5E5A">BOM 기능 존재 여부 미확인</text>
+
+<rect x="700" y="915" width="680" height="110" rx="6" fill="#E1F5EE" stroke="#9FE1CB" stroke-width="1"/>
+<text x="720" y="935" font-size="12" font-weight="bold" fill="#085041">v2.0 확정 (실제 메뉴 트리 기반)</text>
+<text x="720" y="955" font-size="11" fill="#0F6E56">기준관리 / 영업관리 / 무역관리 / 생산관리공통 / 자재관리</text>
+<text x="720" y="973" font-size="11" fill="#0F6E56">5개 대분류, 11개 중분류, 70개+ 화면메뉴 확정</text>
+<text x="720" y="991" font-size="11" fill="#0F6E56">무역관리(USANCE) 별도 대분류로 확정 — 수입 원자재 기반</text>
+<text x="720" y="1009" font-size="11" fill="#0F6E56">원자재 BOM등록/전개 확정 — 제조원가 핵심 기능</text>
+
+<!-- ===== 범례 ===== -->
+<line x1="20" y1="1045" x2="1380" y2="1045" stroke="#EEEEEE" stroke-width="0.5"/>
+<text x="700" y="1066" text-anchor="middle" font-size="12" font-weight="bold" fill="#444441">범례</text>
+<rect x="40" y="1078" width="14" height="14" fill="#FFF6D9" stroke="#FAC775"/>
+<text x="60" y="1090" font-size="11" fill="#444441">신규 SaaS 설계 시 핵심 검토 대상 메뉴</text>
+<rect x="320" y="1078" width="14" height="14" fill="#E6F1FB" stroke="#B5D4F4"/>
+<text x="340" y="1090" font-size="11" fill="#444441">신규(New) 또는 현재 사용중 표시 메뉴</text>
+
+<!-- ===== 하단 추정/확정 표시 ===== -->
+<rect x="20" y="1115" width="1360" height="34" rx="6" fill="none" stroke="#1D9E75" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="700" y="1136" text-anchor="middle" font-size="12" fill="#0F6E56">✓ 본 구조도는 실제 화면메뉴 트리 캡처 기반 확정본입니다 (v1.0 DLL 추정 대비 신뢰도 상승)</text>
+
+<text x="1380" y="1580" text-anchor="end" font-size="10" fill="#AAAAAA">JAEHO ERP 메뉴구조도 v2.0 확정 | 2026-06</text>
+
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+<marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+</svg>
