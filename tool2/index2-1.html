@@ -46,7 +46,10 @@
   #bar button{padding:6px 12px;border:1px solid #e5e7eb;background:#fff;border-radius:7px;font-size:11.5px;cursor:pointer;font-family:inherit;color:#374151;}
   #bar button:hover{background:#f9fafb;}
   #view{flex:1;overflow:auto;padding:34px 26px 90px;}
+  #view.figmode{padding:16px 16px 40px;}
   #doc{max-width:820px;margin:0 auto;font-size:14.5px;line-height:1.78;}
+  /* 도면(SVG·이미지)일 때는 폭 제한을 풀어 화면을 꽉 채움 */
+  #doc.wide{max-width:none;}
 
   #doc h1{font-size:24px;margin:30px 0 12px;}
   #doc h2{font-size:19px;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb;}
@@ -68,10 +71,10 @@
   #doc img{max-width:100%;border-radius:8px;}
 
   /* SVG / 이미지 문서 */
-  .figure{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;overflow:auto;}
-  .figure svg,.figure img{max-width:100%;height:auto;display:block;margin:0 auto;}
+  .figure{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;overflow:auto;}
+  .figure svg,.figure img{width:100%;height:auto;max-width:100%;display:block;margin:0 auto;}
   .figure.zoom{cursor:zoom-out;}
-  .figure.zoom svg,.figure.zoom img{max-width:none;}
+  .figure.zoom svg,.figure.zoom img{width:auto;max-width:none;}
 
   .empty{text-align:center;color:#9ca3af;padding:90px 20px;}
   .empty .ic{font-size:46px;margin-bottom:16px;}
@@ -196,9 +199,13 @@ function open(d){
   rawBtn.onclick = () => window.open(d.file, '_blank');
   document.getElementById('zoomBtn').style.display = 'none';
   viewEl.scrollTop = 0;
-  docEl.innerHTML = '<div class="empty"><div class="ic">⏳</div><p>불러오는 중…</p></div>';
 
   const ext = extOf(d.file);
+  const isFigure = ['svg','png','jpg','jpeg','gif','webp'].includes(ext);
+  docEl.classList.toggle('wide', isFigure);
+  viewEl.classList.toggle('figmode', isFigure);
+
+  docEl.innerHTML = '<div class="empty"><div class="ic">⏳</div><p>불러오는 중…</p></div>';
 
   if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'webp') {
     docEl.innerHTML = '<div class="figure"><img alt="'+esc(d.title||'')+'" src="'+esc(d.file)+'"></div>';
@@ -241,14 +248,26 @@ function enableZoom(){
   fig.onclick = () => { if(fig.classList.contains('zoom')) btn.onclick(); };
 }
 
-/* 외부 SVG 안의 스크립트·이벤트 제거 (안전장치) */
+/* 외부 SVG 안의 스크립트·이벤트 제거 + 고정크기 해제(반응형화) */
 function stripSvgScripts(svg){
-  return svg
+  svg = svg
     .replace(/<\?xml[\s\S]*?\?>/gi, '')
     .replace(/<!DOCTYPE[\s\S]*?>/gi, '')
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
     .replace(/\son\w+\s*=\s*'[^']*'/gi, '');
+
+  // 루트 <svg>의 width/height를 떼어내고, viewBox가 없으면 원래 크기로 만들어 준다
+  return svg.replace(/<svg\b([^>]*)>/i, (m, attrs) => {
+    const w = (attrs.match(/\bwidth\s*=\s*["']?([\d.]+)/i) || [])[1];
+    const h = (attrs.match(/\bheight\s*=\s*["']?([\d.]+)/i) || [])[1];
+    let a = attrs
+      .replace(/\swidth\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\sheight\s*=\s*["'][^"']*["']/gi, '');
+    if (!/viewBox/i.test(a) && w && h) a += ' viewBox="0 0 ' + w + ' ' + h + '"';
+    if (!/preserveAspectRatio/i.test(a)) a += ' preserveAspectRatio="xMidYMid meet"';
+    return '<svg' + a + '>';
+  });
 }
 
 function extOf(f){ return String(f||'').split('?')[0].split('.').pop().toLowerCase(); }
