@@ -1,0 +1,30 @@
+{
+  "title": "JAEHO ERP 분석 자료실",
+  "subtitle": "기존 ERP 분석 → SaaS 전환 프로젝트 문서",
+  "groups": [
+    {
+      "name": "프로젝트 개요",
+      "docs": [
+        {
+          "id": "context",
+          "title": "프로젝트 컨텍스트",
+          "file": "./docs/PROJECT_CONTEXT.md",
+          "desc": "전체 맥락 요약본",
+          "badge": "내부"
+        }
+      ]
+    },
+    {
+      "name": "구조도",
+      "docs": [
+        {
+          "id": "menu-v2",
+          "title": "메뉴구조도 v2.0 확정",
+          "file": "./docs/JAEHO_ERP_메뉴구조도_v2_0_확정.svg",
+          "desc": "실제 화면 캡처 기반",
+          "badge": "확정"
+        }
+      ]
+    }
+  ]
+}

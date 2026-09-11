@@ -2,48 +2,197 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23534AB7%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27Arial,sans-serif%27 font-size=%2718%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3EJ%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Process Design - JAEHO ERP Suite</title>
+
+<!-- ══════════════════════════════════════════════════════════════
+     이 파일 = 껍데기(타이틀부). 헤더·네비·로그인검증·로더만 담당.
+     실제 내용은 아래 CONTENT가 가리키는 파일에서 불러옵니다.
+
+     ▶ 내용을 바꾸고 싶다면 CONTENT 한 줄만 고치세요. 그 외에는 건드릴 필요 없음.
+        예) './index2-1.html'   → 기본 내용물
+            './설계안.html'      → 직접 만든 HTML
+            './메모.md'          → 마크다운 문서 (자동 렌더)
+            './메모.txt'         → 텍스트 문서
+
+     ▶ 잠깐 다른 파일을 테스트만 해보고 싶으면 주소 뒤에 붙이세요.
+        index2.html?c=다른파일.html
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+  const CONTENT = './index2-1.html';   // ← 여기만 바꾸면 됩니다
+  const TITLE   = 'Process Design';    // ← 헤더에 보일 이름
+  const ICON    = '🎯';
+</script>
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:#f7f8fc;min-height:100vh;color:#1f2937;}
-  header{background:linear-gradient(135deg,#6366f1 0%,#534AB7 100%);color:#fff;padding:20px 32px;display:flex;justify-content:space-between;align-items:center;}
+  html,body{height:100%;}
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:#f7f8fc;color:#1f2937;display:flex;flex-direction:column;}
+  header{background:linear-gradient(135deg,#6366f1 0%,#534AB7 100%);color:#fff;padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:12px;flex-wrap:wrap;}
   .brand{font-size:16px;font-weight:700;}
+  .brand small{display:block;font-size:11px;font-weight:400;opacity:.8;margin-top:2px;}
   .nav-btns{display:flex;gap:10px;}
   .nav-btns button{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;}
-  .wrap{max-width:640px;margin:80px auto;text-align:center;padding:0 24px;}
-  .icon{font-size:56px;margin-bottom:20px;}
-  h1{font-size:22px;margin-bottom:10px;}
-  p{color:#6b7280;font-size:14px;line-height:1.6;}
-  .tag{display:inline-block;margin-top:20px;background:#e0e7ff;color:#4338ca;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;}
+  .nav-btns button:hover{background:rgba(255,255,255,0.28);}
+
+  /* 내용물이 들어가는 자리 */
+  #stage{flex:1;position:relative;min-height:0;}
+  #stage iframe{width:100%;height:100%;border:none;display:block;background:#f7f8fc;}
+  #docView{height:100%;overflow-y:auto;padding:40px 24px 80px;}
+  #docInner{max-width:760px;margin:0 auto;font-size:14.5px;line-height:1.75;}
+  #docInner h1{font-size:24px;margin:28px 0 12px;}
+  #docInner h2{font-size:19px;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb;}
+  #docInner h3{font-size:16px;margin:22px 0 8px;}
+  #docInner p{margin:10px 0;}
+  #docInner ul,#docInner ol{margin:10px 0 10px 22px;}
+  #docInner li{margin:4px 0;}
+  #docInner code{background:#eef0f6;border-radius:4px;padding:1px 5px;font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  #docInner pre{background:#1E1E2E;color:#CDD6F4;border-radius:10px;padding:14px 16px;overflow-x:auto;margin:14px 0;}
+  #docInner pre code{background:none;color:inherit;padding:0;}
+  #docInner blockquote{border-left:3px solid #c7d2fe;padding:4px 0 4px 14px;color:#4b5563;margin:12px 0;}
+  #docInner table{border-collapse:collapse;margin:14px 0;width:100%;font-size:13.5px;}
+  #docInner th,#docInner td{border:1px solid #e5e7eb;padding:8px 11px;text-align:left;}
+  #docInner th{background:#f3f4f6;font-weight:700;}
+  #docInner a{color:#534AB7;}
+
+  .msg{max-width:560px;margin:80px auto;text-align:center;padding:0 24px;color:#6b7280;}
+  .msg .ic{font-size:52px;margin-bottom:18px;}
+  .msg h2{font-size:19px;color:#1f2937;margin-bottom:10px;}
+  .msg p{font-size:13.5px;line-height:1.7;}
+  .msg code{background:#eef0f6;border-radius:4px;padding:2px 7px;font-size:12.5px;}
 </style>
 </head>
 <body>
+
 <header>
-  <div class="brand">🎯 Process Design</div>
+  <div class="brand"><span id="hIcon"></span> <span id="hTitle"></span><small id="hFile"></small></div>
   <div class="nav-btns">
+    <button onclick="location.reload()">↻ 새로고침</button>
     <button onclick="window.location.href='../menu.html'">☰ 메뉴</button>
     <button onclick="handleLogout()">로그아웃</button>
   </div>
 </header>
-<div class="wrap">
-  <div class="icon">🎯</div>
-  <h1>Process Design</h1>
-  <p>미래 업무프로세스 고도화 설계 도구입니다.<br>현재 개발 중이며 곧 만나보실 수 있습니다.</p>
-  <div class="tag">STEP 2 · 준비중</div>
-</div>
+
+<div id="stage"></div>
+
 <script>
+  /* ── 로그인 검증 ── */
   if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = '../index.html'; }
   function handleLogout(){
     if(confirm('로그아웃하시겠습니까?')){
-      sessionStorage.removeItem('isLoggedIn');
-      sessionStorage.removeItem('username');
-      sessionStorage.removeItem('loginTime');
-      sessionStorage.removeItem('role');
-      sessionStorage.removeItem('pw');
-      sessionStorage.removeItem('loginCount');
+      ['isLoggedIn','username','loginTime','role','pw','loginCount'].forEach(k=>sessionStorage.removeItem(k));
       window.location.href='../index.html';
     }
+  }
+
+  /* ── 헤더 표기 ── */
+  const params = new URLSearchParams(location.search);
+  const src = params.get('c') || CONTENT;
+  document.getElementById('hIcon').textContent = ICON;
+  document.getElementById('hTitle').textContent = TITLE;
+  document.getElementById('hFile').textContent = src;
+
+  const stage = document.getElementById('stage');
+
+  /* ── 내용물 로드: 확장자만 보고 방식 결정 ── */
+  const ext = (src.split('?')[0].split('.').pop() || '').toLowerCase();
+
+  if (ext === 'html' || ext === 'htm') {
+    // HTML → iframe 그대로 (독립된 페이지를 통째로 얹음)
+    fetch(src, {cache:'no-store'})
+      .then(r => { if(!r.ok) throw new Error(r.status); return true; })
+      .then(() => {
+        const f = document.createElement('iframe');
+        f.src = src;
+        f.title = TITLE;
+        stage.appendChild(f);
+      })
+      .catch(showMissing);
+  } else {
+    // md / txt → 읽어서 렌더
+    fetch(src, {cache:'no-store'})
+      .then(r => { if(!r.ok) throw new Error(r.status); return r.text(); })
+      .then(text => {
+        stage.innerHTML = '<div id="docView"><div id="docInner"></div></div>';
+        document.getElementById('docInner').innerHTML =
+          (ext === 'md' || ext === 'markdown') ? renderMd(text) : '<pre>'+esc(text)+'</pre>';
+      })
+      .catch(showMissing);
+  }
+
+  function showMissing(){
+    stage.innerHTML =
+      '<div class="msg"><div class="ic">📄</div>'+
+      '<h2>연결된 내용 파일이 없습니다</h2>'+
+      '<p><code>'+esc(src)+'</code> 파일을 찾지 못했습니다.<br><br>'+
+      '같은 폴더에 그 이름으로 파일을 올리거나,<br>'+
+      '<code>index2.html</code> 상단의 <code>CONTENT</code> 한 줄을 바꿔주세요.</p></div>';
+  }
+
+  function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ── 아주 작은 마크다운 렌더러 (제목·목록·표·코드·강조·링크) ── */
+  function renderMd(md){
+    const blocks = [];
+    md = md.replace(/```([\s\S]*?)```/g, (m,c)=>{
+      blocks.push('<pre><code>'+esc(c.replace(/^[a-zA-Z]*\n/,''))+'</code></pre>');
+      return '\u0000B'+(blocks.length-1)+'\u0000';
+    });
+
+    const lines = esc(md).split('\n');
+    let out = '', list = null, inTable = false;
+
+    const inline = s => s
+      .replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+      .replace(/(^|[^*])\*([^*]+)\*/g,'$1<em>$2</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    const closeList = ()=>{ if(list){ out += '</'+list+'>'; list=null; } };
+    const closeTable = ()=>{ if(inTable){ out += '</tbody></table>'; inTable=false; } };
+
+    for (let i=0;i<lines.length;i++){
+      const raw = lines[i];
+      const t = raw.trim();
+
+      if (!t){ closeList(); closeTable(); continue; }
+
+      if (/^\u0000B\d+\u0000$/.test(t)){ closeList(); closeTable(); out += blocks[+t.match(/\d+/)[0]]; continue; }
+
+      // 표
+      if (t.startsWith('|') && lines[i+1] && /^\s*\|[\s\-:|]+\|\s*$/.test(lines[i+1])){
+        closeList(); closeTable();
+        const cells = t.split('|').slice(1,-1).map(c=>'<th>'+inline(c.trim())+'</th>').join('');
+        out += '<table><thead><tr>'+cells+'</tr></thead><tbody>';
+        inTable = true; i++; continue;
+      }
+      if (inTable && t.startsWith('|')){
+        out += '<tr>'+t.split('|').slice(1,-1).map(c=>'<td>'+inline(c.trim())+'</td>').join('')+'</tr>';
+        continue;
+      }
+      closeTable();
+
+      const h = t.match(/^(#{1,4})\s+(.*)$/);
+      if (h){ closeList(); out += '<h'+h[1].length+'>'+inline(h[2])+'</h'+h[1].length+'>'; continue; }
+
+      if (/^&gt;\s?/.test(t)){ closeList(); out += '<blockquote>'+inline(t.replace(/^&gt;\s?/,''))+'</blockquote>'; continue; }
+
+      if (/^[-*]\s+/.test(t)){
+        if(list!=='ul'){ closeList(); out+='<ul>'; list='ul'; }
+        out += '<li>'+inline(t.replace(/^[-*]\s+/,''))+'</li>'; continue;
+      }
+      if (/^\d+\.\s+/.test(t)){
+        if(list!=='ol'){ closeList(); out+='<ol>'; list='ol'; }
+        out += '<li>'+inline(t.replace(/^\d+\.\s+/,''))+'</li>'; continue;
+      }
+      if (/^(-{3,}|\*{3,})$/.test(t)){ closeList(); out += '<hr>'; continue; }
+
+      closeList();
+      out += '<p>'+inline(t)+'</p>';
+    }
+    closeList(); closeTable();
+    return out;
   }
 </script>
 </body>
