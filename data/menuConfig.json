@@ -53,7 +53,7 @@
       "desc": "기술스택\n플랫폼: .NET Framework 4.0 + Windows Forms\nDB: MS-SQL Server, DB명 JAEHO.db, 크기 11GB\n개발사: 태성S&C (tssoft.kr, TSSC)\n설치일: 2019년 12월 / 최종 DB백업: 2022년 2월",
       "icon": "📄",
       "color": "#dc2626",
-      "link": "./tool4/index5.html",
+      "link": "./tool5/index5.html",
       "enabled": true
     }
   ]
