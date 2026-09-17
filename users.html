@@ -422,13 +422,24 @@
       <div class="action-grid">
         <button onclick="doResetPassword('${esc(d.username)}')">🔑 비밀번호 초기화</button>
         <button onclick="doResetLoginCount('${esc(d.username)}')">↺ 로그인횟수 초기화</button>
+        ${isSelf ? '' : `<button onclick="doSetRole('${esc(d.username)}', '${d.role==='admin'?'user':'admin'}')">${d.role==='admin'?'👤 일반 사용자로 전환':'👑 관리자로 지정'}</button>`}
         ${isSelf ? '' : `<button class="${isBlocked?'':'warn'}" onclick="doToggleBlock('${esc(d.username)}', ${!isBlocked})">${isBlocked?'🔓 차단 해제':'⛔ 계정 차단'}</button>`}
         ${isSelf ? '' : (isPending
           ? `<button onclick="doCancelDelete('${esc(d.username)}')">↩ 삭제예약 취소</button>`
           : `<button class="danger" onclick="doReserveDelete('${esc(d.username)}')">🗑 삭제 예약 (유예기간 후 삭제)</button>`)}
-        ${isSelf ? '<div style="grid-column:1/-1;font-size:11px;color:var(--text-light);text-align:center;">본인 계정은 차단·삭제할 수 없습니다.</div>' : ''}
+        ${isSelf ? '<div style="grid-column:1/-1;font-size:11px;color:var(--text-light);text-align:center;">본인 계정은 역할 변경·차단·삭제할 수 없습니다.</div>' : ''}
       </div>
     `;
+  }
+
+  async function doSetRole(username, newRole){
+    if(!confirm(`"${username}"의 역할을 ${newRole==='admin'?'관리자로 지정':'일반 사용자로 전환'}할까요?`)) return;
+    try{
+      const { data, error } = await sb.rpc('admin_set_role', { p_admin_username: myUsername, p_admin_password: myPw, p_target_username: username, p_new_role: newRole });
+      if(error) throw error;
+      if(!data.success){ alert(data.message||'실패'); return; }
+      onExecUserChange();
+    }catch(err){ console.error(err); alert('처리 중 오류가 발생했습니다.'); }
   }
 
   async function doResetPassword(username){
