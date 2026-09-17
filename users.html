@@ -206,7 +206,7 @@
   const myRole = sessionStorage.getItem('role');
   const myUsername = sessionStorage.getItem('username');
   const myPw = sessionStorage.getItem('pw');
-  const sb = getSupabase();
+  const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
 
   if (myRole !== 'admin') {
     document.getElementById('mainArea').innerHTML = `
