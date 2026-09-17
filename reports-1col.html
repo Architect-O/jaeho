@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리포트 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* 대시보드(dashboard-master.html)와 동일한 헤더/콘텐츠 변수 — 테마 선택 시 이 페이지도 같이 바뀝니다 */
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+
+        /* ===== Header — 대시보드와 동일한 구조 (테마 색상 실시간 반영) ===== */
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .card { background: var(--card-bg); border-radius: 10px; padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px; }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+        th { padding: 12px 16px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--text-secondary); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        tbody tr:hover { background: var(--gray-100); }
+
+        .card-badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; }
+        .badge-info { background: var(--info-soft); color: var(--info); }
+        .badge-warning { background: var(--warning-soft); color: #b45309; }
+        .badge-success { background: var(--success-soft); color: var(--success); }
+
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-secondary { background: var(--gray-100); color: var(--text); border: 1px solid var(--border); }
+        .btn-small { padding: 4px 8px; font-size: 11px; }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">📰 주간 리포트</div>
+                <div class="brand-sub">프로젝트 관련 문서 및 리포트</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">📰 최근 리포트 & 업데이트</h1>
+            <p class="page-subtitle">프로젝트 관련 문서 및 리포트</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📰 최근 리포트 & 업데이트</div>
+                <button class="btn btn-primary btn-small">📥 주간 보고서 다운</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>제목</th>
+                            <th>타입</th>
+                            <th>작성자</th>
+                            <th>액션</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2025-09-16</td>
+                            <td>주간 진행현황 (9월 3주차)</td>
+                            <td><span class="card-badge badge-info">주간보고</span></td>
+                            <td>근 (PM)</td>
+                            <td><button class="btn btn-secondary btn-small">보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>2025-09-14</td>
+                            <td>주간 진행현황 (9월 2주차)</td>
+                            <td><span class="card-badge badge-info">주간보고</span></td>
+                            <td>근 (PM)</td>
+                            <td><button class="btn btn-secondary btn-small">보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>2025-09-10</td>
+                            <td>[리스크] 개발 인력 일정 재조정</td>
+                            <td><span class="card-badge badge-warning">리스크</span></td>
+                            <td>IT팀장</td>
+                            <td><button class="btn btn-secondary btn-small">보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>2025-09-08</td>
+                            <td>설계 최종 승인 결과 공지</td>
+                            <td><span class="card-badge badge-success">승인</span></td>
+                            <td>경영진</td>
+                            <td><button class="btn btn-secondary btn-small">보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>2025-09-05</td>
+                            <td>마이그레이션 전략 최종 결정</td>
+                            <td><span class="card-badge badge-info">전략</span></td>
+                            <td>IT팀 리더</td>
+                            <td><button class="btn btn-secondary btn-small">보기</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>
