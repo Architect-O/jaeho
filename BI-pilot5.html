@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>파일럿5: 무역 (가상 ERP 데모) - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+        --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 18px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .note-card { background: var(--info-soft); border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 12.5px; color: #1e40af; line-height:1.6; margin-bottom: 18px; }
+    .note-card a { color: #1e40af; font-weight: 700; text-decoration: underline; }
+
+    .tab-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+    .tab-btn {
+        padding: 10px 16px; min-height: 38px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
+        background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .summary-row { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    @media (max-width: 700px) { .summary-row { grid-template-columns: 1fr; } }
+    .summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .summary-label { font-size: 11.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px; }
+    .summary-value { font-size: 22px; font-weight: 700; color: var(--text); }
+    .summary-value.warn { color: #b45309; }
+    .summary-value.good { color: var(--success); }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+    th { padding: 10px 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10.5px; color: var(--text-secondary); white-space:nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:hover { background: var(--gray-100); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .empty-state { padding: 40px 20px; text-align:center; color: var(--text-tertiary); font-size: 13px; }
+
+    .badge { display:inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space:nowrap; }
+    .badge-ok { background: var(--success-soft); color: var(--success); }
+    .badge-warn { background: var(--warning-soft); color: #b45309; }
+    .badge-info { background: var(--info-soft); color: var(--info); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); }
+    .badge-dim { background: var(--gray-100); color: var(--text-secondary); }
+
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; display:inline-flex; align-items:center; gap:6px; min-height: 34px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: var(--gray-100); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger-soft); color: var(--danger); }
+    .btn-small { padding: 6px 11px; font-size: 11px; min-height: 30px; }
+    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+    .form-panel { display:none; background: var(--gray-100); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+    .form-panel.open { display:block; }
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; display:block; }
+    .form-input, .form-select, .form-textarea {
+        width:100%; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font:inherit; font-size:13px; background:#fff; color:var(--text);
+    }
+    .line-table { width:100%; border-collapse: collapse; margin-bottom: 10px; }
+    .line-table th, .line-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+    .line-table select, .line-table input { width:100%; padding:6px 8px; font-size:12.5px; border:1px solid var(--border); border-radius:5px; font-family:inherit; }
+    .line-remove { background: var(--danger-soft); color: var(--danger); border:none; border-radius:5px; padding:5px 9px; cursor:pointer; font-size:11px; min-height:30px; }
+    .form-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+    .form-status { font-size:12px; margin-top:8px; }
+    .form-status.err { color: var(--danger); }
+    .form-status.ok { color: var(--success); }
+
+    #printOverlay, #lotOverlay { display:none; position:fixed; inset:0; background:rgba(15,23,32,0.55); z-index:999; padding:24px; overflow-y:auto; }
+    #printOverlay.open, #lotOverlay.open { display:flex; justify-content:center; align-items:flex-start; }
+    .print-sheet { background:#fff; width:100%; max-width:720px; border-radius:10px; padding:36px 40px; }
+    .print-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 22px; border-bottom: 2px solid #16324f; padding-bottom: 16px; }
+    .print-head h2 { font-size: 20px; color:#16324f; }
+    .print-head .doc-no { font-size: 12px; color:#6b7280; margin-top:4px; }
+    .print-meta { display:grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 12.5px; margin-bottom: 20px; }
+    .print-meta .k { color:#6b7280; }
+    .print-total { text-align:right; font-size: 15px; font-weight:700; margin-top: 10px; color:#16324f; }
+    .print-controls { display:flex; justify-content:flex-end; gap:8px; margin-top: 20px; }
+    @media print {
+        body * { visibility: hidden; }
+        #printOverlay, #printOverlay * { visibility: visible; }
+        #printOverlay { position: absolute; inset:0; background:#fff; padding:0; display:block !important; }
+        .print-sheet { box-shadow:none; max-width:100%; }
+        .no-print { display:none !important; }
+    }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title">🚢 파일럿5: 무역</div>
+            <div class="brand-sub">자체 참고 가상 ERP · 수입(매입)·재고(랜디드코스트)·판매(마진) 데모</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🚢 파일럿5 — 무역 가상 ERP</h1>
+            <p class="page-subtitle">해외 공급처로부터 물품을 수입(매입)하여 국내판매 또는 재수출(수출)하는 무역상사 데모. 외화 인보이스를 환율로 환산하고 관세를 반영한 <b>랜디드코스트</b>로 재고를 평가하며, 판매 시 FIFO로 원가를 매칭해 매출총이익(마진)을 자동 계산합니다.</p>
+        </div>
+        <a class="ghost-btn" href="./BA-evaluation.html">⚖️ 종합 비교로 이동</a>
+    </div>
+
+    <div class="note-card">
+        ℹ️ 파일럿3(BE·유통)·파일럿4(BH·보세창고운영)와 같은 <b>구매→재고→출고</b> 골격을 재사용하되, 무역업의 실제 수익 동인인 <b>환율 변동 + 관세 포함 원가 대비 판매마진</b>을 반영했습니다. 수입전표를 확정하면 외화 인보이스 금액에 환율을 적용하고 운임·보험료를 더해 <b>과세가격(CIF)</b>을 산출한 뒤, 품목별 금액 비중으로 배분해 <b>관세를 계산</b>하고, <b>관세를 포함한 랜디드코스트</b> 단가로 재고 Lot을 생성합니다(부가세는 매입세액공제 대상이라 원가에 반영하지 않고 기록만 함). 판매를 확정하면 오래된 Lot부터(FIFO) 원가를 매칭해 <b>매출원가·매출총이익</b>이 자동 계산됩니다.
+    </div>
+
+    <div class="tab-bar" id="tabBar"></div>
+    <div id="tabContent"></div>
+</main>
+
+<div id="printOverlay">
+    <div class="print-sheet" id="printSheet"></div>
+</div>
+
+<div id="lotOverlay">
+    <div class="print-sheet" id="lotSheet" style="max-width:860px;"></div>
+</div>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    const myUsername = sessionStorage.getItem('username') || '';
+    const myPw = sessionStorage.getItem('pw') || '';
+    const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
+    const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+    function fmtNum(n) { const v = Number(n) || 0; return v.toLocaleString('ko-KR'); }
+    function fmtDate(iso) {
+        if (!iso) return '-';
+        const d = new Date(iso);
+        return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    const INCOTERM_LABEL = { EXW: 'EXW (공장인도)', FOB: 'FOB (본선인도)', CIF: 'CIF (운임보험료포함)', DDP: 'DDP (관세지급인도)' };
+
+    let ITEMS = [];
+    let PARTNERS = [];
+    let STOCK_LOTS = [];
+    let IMPORT_DOCS = [];
+    let SALES_DOCS = [];
+    let currentTab = 'inventory';
+
+    function suppliers() { return PARTNERS.filter(p => p.partner_type === 'supplier'); }
+    function customers() { return PARTNERS.filter(p => p.partner_type === 'customer'); }
+    function lotsFor(itemId) { return STOCK_LOTS.filter(l => l.item_id === itemId); }
+
+    const TABS = [
+        { key: 'inventory', label: '📦 재고 현황' },
+        { key: 'import', label: '📥 수입(매입)' },
+        { key: 'sales', label: '📤 판매' },
+        { key: 'master', label: '🗂 거래처·품목 관리' },
+    ];
+
+    function renderTabBar() {
+        document.getElementById('tabBar').innerHTML = TABS.map(t => `
+            <button type="button" class="tab-btn ${t.key === currentTab ? 'active' : ''}" onclick="switchTab('${t.key}')">${t.label}</button>
+        `).join('');
+    }
+    function switchTab(key) { currentTab = key; renderTabBar(); renderTabContent(); }
+
+    function renderTabContent() {
+        const el = document.getElementById('tabContent');
+        if (currentTab === 'inventory') el.innerHTML = inventoryHTML();
+        else if (currentTab === 'import') el.innerHTML = docsHTML('import');
+        else if (currentTab === 'sales') el.innerHTML = docsHTML('sales');
+        else if (currentTab === 'master') el.innerHTML = masterHTML();
+    }
+
+    /* ══════════════════ 재고 현황 ══════════════════ */
+    function inventoryHTML() {
+        const byItem = {};
+        STOCK_LOTS.forEach(l => {
+            if (!byItem[l.item_id]) byItem[l.item_id] = { item_code: l.item_code, item_name: l.item_name, qty: 0, value: 0 };
+            byItem[l.item_id].qty += Number(l.qty);
+            byItem[l.item_id].value += Number(l.qty) * Number(l.unit_cost);
+        });
+        const itemIds = Object.keys(byItem);
+        const totalQty = itemIds.reduce((s, k) => s + byItem[k].qty, 0);
+        const totalValue = itemIds.reduce((s, k) => s + byItem[k].value, 0);
+
+        const rows = itemIds.length ? itemIds.map(id => {
+            const r = byItem[id];
+            const avgCost = r.qty > 0 ? r.value / r.qty : 0;
+            return `
+                <tr>
+                    <td>${esc(r.item_code)}</td>
+                    <td>${esc(r.item_name)}</td>
+                    <td class="num">${fmtNum(r.qty)}</td>
+                    <td class="num">${fmtNum(Math.round(avgCost))}원</td>
+                    <td class="num">${fmtNum(Math.round(r.value))}원</td>
+                    <td><button type="button" class="btn btn-secondary btn-small" onclick="openLots('${id}')">배치 보기</button></td>
+                </tr>`;
+        }).join('') : `<tr><td colspan="6"><div class="empty-state">보유 재고가 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="summary-row">
+                <div class="summary-card"><div class="summary-label">총 재고 수량</div><div class="summary-value">${fmtNum(totalQty)}</div></div>
+                <div class="summary-card"><div class="summary-label">재고 평가액(랜디드코스트 기준)</div><div class="summary-value good">${fmtNum(Math.round(totalValue))}원</div></div>
+                <div class="summary-card"><div class="summary-label">보유 품목 수</div><div class="summary-value">${itemIds.length}개</div></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>📦 품목별 재고 현황</span></div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>품목코드</th><th>품목명</th><th>수량</th><th>평균 단가(랜디드코스트)</th><th>재고 평가액</th><th>배치</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    }
+
+    function daysHeld(inDate) {
+        const ms = new Date(new Date().toDateString()) - new Date(inDate + 'T00:00:00');
+        return Math.max(0, Math.round(ms / 86400000));
+    }
+
+    /* ══════════════════ 배치(Lot) 상세 ══════════════════ */
+    function openLots(itemId) {
+        const lots = lotsFor(itemId).slice().sort((a, b) => (a.in_date < b.in_date ? -1 : 1));
+        const item = lots[0] ? { item_code: lots[0].item_code, item_name: lots[0].item_name } : null;
+        const rows = lots.length ? lots.map(l => {
+            const held = daysHeld(l.in_date);
+            return `
+                <tr>
+                    <td>${esc(l.lot_no)}</td>
+                    <td class="num">${fmtNum(l.qty)}</td>
+                    <td>${esc(l.in_date)} (${held}일 경과)</td>
+                    <td class="num">${fmtNum(l.unit_cost)}원</td>
+                    <td class="num">${fmtNum(l.declared_value)}</td>
+                    <td class="num">${fmtNum(l.customs_duty)}</td>
+                    <td>${esc(l.source_doc_no || '-')}</td>
+                </tr>`;
+        }).join('') : `<tr><td colspan="7"><div class="empty-state">이 품목의 재고 배치가 없습니다.</div></td></tr>`;
+
+        document.getElementById('lotSheet').innerHTML = `
+            <div class="print-head">
+                <div><h2>재고 배치(Lot) 상세</h2><div class="doc-no">${esc(item ? item.item_code + ' · ' + item.item_name : '')}</div></div>
+                <button class="btn btn-secondary no-print" onclick="closeLots()">닫기</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>배치번호</th><th>수량</th><th>수입일(경과일)</th><th>랜디드코스트 단가</th><th>과세가격(CIF)</th><th>관세</th><th>수입전표</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <p style="font-size:11.5px;color:var(--text-tertiary);margin-top:12px;">판매 시에는 수입일이 가장 오래된 배치부터(FIFO) 소진되며, 소진된 배치의 랜디드코스트 단가로 매출원가가 계산됩니다.</p>`;
+        document.getElementById('lotOverlay').classList.add('open');
+    }
+    function closeLots() { document.getElementById('lotOverlay').classList.remove('open'); }
+
+    /* ══════════════════ 수입 · 판매 공통 ══════════════════ */
+    function docConfig(type) {
+        if (type === 'import') {
+            return {
+                docs: IMPORT_DOCS, title: '📥 수입(매입)전표', docLabel: '수입전표', addLabel: '+ 새 수입전표 작성',
+                createFn: 'p5_admin_create_import_doc', confirmFn: 'p5_admin_confirm_import_doc',
+                deleteFn: 'p5_admin_delete_import_doc', cancelFn: 'p5_admin_cancel_import_doc', docPrefix: 'TI',
+            };
+        }
+        return {
+            docs: SALES_DOCS, title: '📤 판매전표', docLabel: '판매전표', addLabel: '+ 새 판매전표 작성',
+            createFn: 'p5_admin_create_sales_doc', confirmFn: 'p5_admin_confirm_sales_doc',
+            deleteFn: 'p5_admin_delete_sales_doc', cancelFn: 'p5_admin_cancel_sales_doc', docPrefix: 'TS',
+        };
+    }
+
+    function docsHTML(type) {
+        const cfg = docConfig(type);
+        const isImport = type === 'import';
+        const partnerOptions = (isImport ? suppliers() : customers()).map(p => `<option value="${p.id}">${esc(p.partner_name)}</option>`).join('');
+        const itemOptions = ITEMS.map(i => `<option value="${i.id}">${esc(i.item_code)} · ${esc(i.item_name)}</option>`).join('');
+
+        const rows = cfg.docs.length ? cfg.docs.map(d => {
+            const statusBadge = d.status === 'confirmed' ? '<span class="badge badge-ok">확정</span>'
+                : d.status === 'draft' ? '<span class="badge badge-warn">임시저장</span>'
+                : '<span class="badge badge-dim">취소됨</span>';
+            const canManage = isAdmin && d.status === 'draft';
+            const canCancel = isAdmin && d.status === 'confirmed';
+            const noteLine = d.note ? `<br><span style="font-size:10.5px;color:var(--text-tertiary);">📝 ${esc(d.note)}</span>` : '';
+            const extraCol = isImport
+                ? `<td>${esc(INCOTERM_LABEL[d.incoterm] || d.incoterm)}</td><td class="num">${fmtNum(d.exchange_rate)}</td>`
+                : `<td>${d.sale_type === 'export' ? '<span class="badge badge-info">수출</span>' : '국내판매'}</td><td class="num">${d.total_margin != null ? fmtNum(d.total_margin) + '원' : '-'}</td>`;
+            return `
+                <tr>
+                    <td>${esc(d.doc_no)}${noteLine}</td>
+                    <td>${esc((isImport ? d.supplier_name : d.customer_name) || '-')}</td>
+                    ${extraCol}
+                    <td>${statusBadge}</td>
+                    <td class="num">${(d.lines || []).length}건</td>
+                    <td>${fmtDate(d.created_at)}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn btn-secondary btn-small" onclick='printDoc(${JSON.stringify(type)}, ${JSON.stringify(d).replace(/&/g, "&amp;").replace(/'/g, "&#39;")})'>🖨 인쇄</button>
+                            ${canManage ? `<button class="btn btn-primary btn-small" onclick="confirmDoc('${type}','${d.id}')">✅ 확정</button>` : ''}
+                            ${canManage ? `<button class="btn btn-danger btn-small" onclick="deleteDoc('${type}','${d.id}')">삭제</button>` : ''}
+                            ${canCancel ? `<button class="btn btn-danger btn-small" onclick="cancelDoc('${type}','${d.id}')">⛔ 취소</button>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('') : `<tr><td colspan="7"><div class="empty-state">등록된 ${esc(cfg.docLabel)}가 없습니다.</div></td></tr>`;
+
+        const headCols = isImport
+            ? `<th>전표번호</th><th>공급처</th><th>인코텀즈</th><th>환율</th><th>상태</th><th>품목</th><th>작성일</th><th>동작</th>`
+            : `<th>전표번호</th><th>판매처</th><th>유형</th><th>마진</th><th>상태</th><th>품목</th><th>작성일</th><th>동작</th>`;
+
+        const importExtraFields = isImport ? `
+                        <div>
+                            <label class="form-label">인코텀즈</label>
+                            <select class="form-select" id="${type}Incoterm">
+                                <option value="FOB">FOB (본선인도)</option>
+                                <option value="EXW">EXW (공장인도)</option>
+                                <option value="CIF">CIF (운임보험료포함)</option>
+                                <option value="DDP">DDP (관세지급인도)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">통화</label>
+                            <input class="form-input" type="text" id="${type}Currency" value="USD" placeholder="예: USD, EUR">
+                        </div>
+                        <div>
+                            <label class="form-label">환율(1외화당 원화)</label>
+                            <input class="form-input" type="number" id="${type}ExRate" min="0" step="0.01" value="1300">
+                        </div>
+                        <div>
+                            <label class="form-label">인보이스번호 (선택)</label>
+                            <input class="form-input" type="text" id="${type}InvoiceNo" placeholder="선택 입력">
+                        </div>
+                        <div>
+                            <label class="form-label">수입신고번호 (선택)</label>
+                            <input class="form-input" type="text" id="${type}DeclNo" placeholder="선택 입력">
+                        </div>
+                        <div>
+                            <label class="form-label">운임(원화, 선택)</label>
+                            <input class="form-input" type="number" id="${type}Freight" min="0" value="0">
+                        </div>
+                        <div>
+                            <label class="form-label">보험료(원화, 선택)</label>
+                            <input class="form-input" type="number" id="${type}Insurance" min="0" value="0">
+                        </div>` : `
+                        <div>
+                            <label class="form-label">판매유형</label>
+                            <select class="form-select" id="${type}SaleType">
+                                <option value="domestic">국내판매</option>
+                                <option value="export">수출</option>
+                            </select>
+                        </div>`;
+        const lineHeadExtra = isImport ? `<th style="width:20%;">외화단가</th>` : `<th style="width:20%;">판매단가(원)</th>`;
+
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <span>${cfg.title}</span>
+                    ${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="toggleDocForm('${type}')">${cfg.addLabel}</button>` : ''}
+                </div>
+                <div class="form-panel" id="${type}FormPanel">
+                    <div class="form-grid">
+                        <div>
+                            <label class="form-label">${isImport ? '공급처(해외)' : '판매처'}</label>
+                            <select class="form-select" id="${type}PartnerSelect">
+                                <option value="">선택하세요</option>${partnerOptions}
+                            </select>
+                        </div>
+                        <div><label class="form-label">비고</label><input class="form-input" type="text" id="${type}NoteInput" placeholder="선택 입력"></div>
+                        ${importExtraFields}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="line-table" id="${type}LineTable">
+                            <thead><tr><th style="width:36%;">품목</th><th style="width:16%;">수량</th>${lineHeadExtra}<th></th></tr></thead>
+                            <tbody id="${type}LineBody"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="addLineRow('${type}')">+ 품목 추가</button>
+                    <div class="form-actions" style="margin-top:14px;">
+                        <button type="button" class="btn btn-secondary" onclick="toggleDocForm('${type}', false)">취소</button>
+                        <button type="button" class="btn btn-primary" onclick="submitDoc('${type}')">임시저장</button>
+                    </div>
+                    <div class="form-status" id="${type}FormStatus"></div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr>${headCols}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <p class="note" style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px;">
+                ${isImport
+                    ? `${cfg.docPrefix} 전표는 임시저장 상태에서만 확정/삭제할 수 있습니다. 확정하면 외화 인보이스 금액을 환율로 환산하고 관세를 계산해 랜디드코스트 단가로 재고가 생성됩니다.`
+                    : `${cfg.docPrefix} 전표를 확정하면 오래된 재고 배치부터(FIFO) 원가가 매칭되어 매출원가·매출총이익이 자동 계산됩니다.`}
+                </p>
+            </div>
+            <template id="${type}ItemOptionsTpl">${itemOptions}</template>`;
+    }
+
+    function toggleDocForm(type, force) {
+        const panel = document.getElementById(type + 'FormPanel');
+        const willOpen = force !== undefined ? force : !panel.classList.contains('open');
+        panel.classList.toggle('open', willOpen);
+        if (willOpen) {
+            document.getElementById(type + 'LineBody').innerHTML = '';
+            addLineRow(type);
+            document.getElementById(type + 'FormStatus').textContent = '';
+        }
+    }
+
+    function addLineRow(type) {
+        const tpl = document.getElementById(type + 'ItemOptionsTpl');
+        const opts = tpl ? tpl.innerHTML : '';
+        const tbody = document.getElementById(type + 'LineBody');
+        const row = document.createElement('tr');
+        const priceClass = type === 'import' ? 'line-price-fc' : 'line-price';
+        row.innerHTML = `
+            <td><select class="line-item-select"><option value="">품목 선택</option>${opts}</select></td>
+            <td><input type="number" min="1" step="1" class="line-qty" value="1"></td>
+            <td><input type="number" min="0" step="0.01" class="${priceClass}" value="0"></td>
+            <td><button type="button" class="line-remove" onclick="this.closest('tr').remove()">삭제</button></td>`;
+        tbody.appendChild(row);
+    }
+
+    async function submitDoc(type) {
+        if (!isAdmin) return;
+        const cfg = docConfig(type);
+        const isImport = type === 'import';
+        const statusEl = document.getElementById(type + 'FormStatus');
+        const partnerId = document.getElementById(type + 'PartnerSelect').value;
+        const note = document.getElementById(type + 'NoteInput').value;
+        const rows = Array.from(document.querySelectorAll('#' + type + 'LineBody tr'));
+        const lines = [];
+        let hasInvalidPrice = false;
+        for (const row of rows) {
+            const itemId = row.querySelector('.line-item-select').value;
+            const qty = parseFloat(row.querySelector('.line-qty').value);
+            if (!itemId || !qty || qty <= 0) continue;
+            const line = { item_id: itemId, qty };
+            // 가격 입력값은 || 0 으로 조용히 무시하지 않는다 — 오타/공백 등 숫자로 해석 안 되는
+            // 값이 그대로 0원 랜디드코스트 라인으로 들어가면 재고평가가 조용히 틀어지므로,
+            // 여기서 즉시 잡아서 사용자에게 알린다(코드점검에서 발견해 수정).
+            const priceRaw = parseFloat(row.querySelector(isImport ? '.line-price-fc' : '.line-price').value);
+            if (isNaN(priceRaw) || priceRaw < 0) { hasInvalidPrice = true; continue; }
+            if (isImport) line.unit_price_fc = priceRaw;
+            else line.unit_price = priceRaw;
+            lines.push(line);
+        }
+        if (!partnerId) { statusEl.textContent = (isImport ? '공급처' : '판매처') + '를 선택하세요.'; statusEl.className = 'form-status err'; return; }
+        if (hasInvalidPrice) { statusEl.textContent = '단가가 올바른 숫자가 아닌 줄이 있습니다. 확인 후 다시 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        if (!lines.length) { statusEl.textContent = '품목을 1개 이상 정상적으로 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        if (!sb || !myUsername || !myPw) { statusEl.textContent = '로그인 정보가 없습니다.'; statusEl.className = 'form-status err'; return; }
+
+        statusEl.textContent = '저장 중...'; statusEl.className = 'form-status';
+        try {
+            let rpcParams;
+            if (isImport) {
+                rpcParams = {
+                    p_admin_username: myUsername, p_admin_password: myPw,
+                    p_supplier_id: partnerId,
+                    p_incoterm: document.getElementById('importIncoterm').value || 'FOB',
+                    p_currency: document.getElementById('importCurrency').value || 'USD',
+                    p_exchange_rate: parseFloat(document.getElementById('importExRate').value) || 1300,
+                    p_invoice_no: document.getElementById('importInvoiceNo').value || null,
+                    p_declaration_no: document.getElementById('importDeclNo').value || null,
+                    p_freight_amount: parseFloat(document.getElementById('importFreight').value) || 0,
+                    p_insurance_amount: parseFloat(document.getElementById('importInsurance').value) || 0,
+                    p_note: note, p_lines: lines,
+                };
+            } else {
+                rpcParams = {
+                    p_admin_username: myUsername, p_admin_password: myPw,
+                    p_customer_id: partnerId, p_sale_type: document.getElementById('salesSaleType').value || 'domestic',
+                    p_note: note, p_lines: lines,
+                };
+            }
+            const { data, error } = await sb.rpc(cfg.createFn, rpcParams);
+            if (error) throw error;
+            if (data && data.success) {
+                statusEl.textContent = '✅ ' + data.doc_no + ' 임시저장 완료';
+                statusEl.className = 'form-status ok';
+                toggleDocForm(type, false);
+                await loadAll();
+            } else {
+                statusEl.textContent = '❌ ' + ((data && data.message) || '저장 실패');
+                statusEl.className = 'form-status err';
+            }
+        } catch (e) {
+            statusEl.textContent = '❌ 저장 실패: ' + e.message;
+            statusEl.className = 'form-status err';
+        }
+    }
+
+    async function confirmDoc(type, id) {
+        if (!isAdmin) return;
+        const cfg = docConfig(type);
+        if (!confirm('이 ' + cfg.docLabel + '를 확정할까요?' + (type === 'sales' ? ' 확정 시 매출원가/마진이 자동 계산됩니다.' : ' 확정하면 관세가 계산되고 랜디드코스트 단가로 재고가 생성됩니다.'))) return;
+        try {
+            const { data, error } = await sb.rpc(cfg.confirmFn, { p_admin_username: myUsername, p_admin_password: myPw, p_doc_id: id });
+            if (error) throw error;
+            if (data && data.success) {
+                if (type === 'sales' && data.total_margin !== undefined) alert('판매가 확정되었습니다.\n매출액: ' + fmtNum(data.total_revenue) + '원\n매출원가: ' + fmtNum(data.total_cogs) + '원\n매출총이익: ' + fmtNum(data.total_margin) + '원');
+                else if (type === 'import' && data.total_customs_value !== undefined) alert('수입이 확정되었습니다.\n과세가격(CIF) 합계: ' + fmtNum(data.total_customs_value) + '원');
+                await loadAll();
+            } else alert('확정 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('확정 실패: ' + e.message); }
+    }
+
+    async function deleteDoc(type, id) {
+        if (!isAdmin) return;
+        const cfg = docConfig(type);
+        if (!confirm('임시저장된 이 ' + cfg.docLabel + '를 삭제할까요?')) return;
+        try {
+            const { data, error } = await sb.rpc(cfg.deleteFn, { p_admin_username: myUsername, p_admin_password: myPw, p_doc_id: id });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); }
+            else alert('삭제 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('삭제 실패: ' + e.message); }
+    }
+
+    async function cancelDoc(type, id) {
+        if (!isAdmin) return;
+        const cfg = docConfig(type);
+        if (!confirm('확정된 이 ' + cfg.docLabel + '를 취소할까요? 재고가 원상복구됩니다(이미 판매되었거나 소진된 재고가 있으면 거부됩니다).')) return;
+        const reason = prompt('취소 사유를 입력하세요 (선택 입력):', '') || '';
+        try {
+            const { data, error } = await sb.rpc(cfg.cancelFn, { p_admin_username: myUsername, p_admin_password: myPw, p_doc_id: id, p_reason: reason || null });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); }
+            else alert('취소 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('취소 실패: ' + e.message); }
+    }
+
+    function printDoc(type, d) {
+        const cfg = docConfig(type);
+        const isImport = type === 'import';
+        const rows = (d.lines || []).map(l => `
+            <tr>
+                <td>${esc(l.item_code)}</td><td>${esc(l.item_name)}</td>
+                <td style="text-align:right;">${fmtNum(l.qty)} ${esc(l.unit || '')}</td>
+                ${isImport ? `<td style="text-align:right;">${fmtNum(l.unit_price_fc)}</td><td style="text-align:right;">${fmtNum(l.amount_fc)}</td>` : `<td style="text-align:right;">${fmtNum(l.unit_price)}</td><td style="text-align:right;">${l.margin != null ? fmtNum(l.margin) : '-'}</td>`}
+            </tr>`).join('');
+        const statusText = d.status === 'confirmed' ? '확정' : (d.status === 'draft' ? '임시저장' : '취소됨');
+
+        document.getElementById('printSheet').innerHTML = `
+            <div class="print-head">
+                <div><h2>${esc(cfg.docLabel)} (${esc(cfg.docPrefix)})</h2><div class="doc-no">JAEHO ERP Suite · 파일럿5 (무역)</div></div>
+                <div class="doc-no">전표번호: ${esc(d.doc_no)}</div>
+            </div>
+            <div class="print-meta">
+                <div><span class="k">${isImport ? '공급처' : '판매처'}:</span> ${esc((isImport ? d.supplier_name : d.customer_name) || '-')}</div>
+                <div><span class="k">상태:</span> ${statusText}</div>
+                ${isImport ? `<div><span class="k">인코텀즈:</span> ${esc(INCOTERM_LABEL[d.incoterm] || d.incoterm || '-')}</div><div><span class="k">환율:</span> ${fmtNum(d.exchange_rate)}원/${esc(d.currency || '')}</div>` : `<div><span class="k">판매유형:</span> ${d.sale_type === 'export' ? '수출' : '국내판매'}</div>`}
+                <div><span class="k">작성일:</span> ${fmtDate(d.created_at)}</div>
+                <div><span class="k">확정일:</span> ${d.confirmed_at ? fmtDate(d.confirmed_at) : '-'}</div>
+                <div style="grid-column:1/-1;"><span class="k">비고:</span> ${esc(d.note || '-')}</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                <thead><tr style="border-bottom:2px solid #16324f;">
+                    <th style="text-align:left;padding:6px;">품목코드</th><th style="text-align:left;padding:6px;">품목명</th>
+                    <th style="text-align:right;padding:6px;">수량</th>${isImport ? '<th style="text-align:right;padding:6px;">외화단가</th><th style="text-align:right;padding:6px;">외화금액</th>' : '<th style="text-align:right;padding:6px;">판매단가</th><th style="text-align:right;padding:6px;">마진</th>'}
+                </tr></thead>
+                <tbody>${rows || `<tr><td colspan="5" style="padding:16px;text-align:center;color:#9ca3af;">품목 없음</td></tr>`}</tbody>
+            </table>
+            ${!isImport && d.total_margin != null ? `<div class="print-total">매출액 ${fmtNum(d.total_revenue)}원 − 매출원가 ${fmtNum(d.total_cogs)}원 = 매출총이익 ${fmtNum(d.total_margin)}원</div>` : ''}
+            <div class="print-controls no-print">
+                <button class="btn btn-secondary" onclick="closePrint()">닫기</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨 인쇄</button>
+            </div>`;
+        document.getElementById('printOverlay').classList.add('open');
+    }
+    function closePrint() { document.getElementById('printOverlay').classList.remove('open'); }
+
+    /* ══════════════════ 거래처·품목 관리 ══════════════════ */
+    function masterHTML() {
+        const partnerRows = PARTNERS.length ? PARTNERS.map(p => `
+            <tr>
+                <td>${esc(p.partner_name)}</td>
+                <td>${p.partner_type === 'supplier' ? '<span class="badge badge-info">공급처</span>' : '<span class="badge badge-ok">판매처</span>'}</td>
+                <td>${esc(p.country_code)}</td><td>${esc(p.currency)}</td><td>${esc(p.contact || '-')}</td>
+                <td>${isAdmin ? `<div class="row-actions">
+                    <button class="btn btn-secondary btn-small" onclick='openPartnerForm(${JSON.stringify(p).replace(/&/g, "&amp;").replace(/'/g, "&#39;")})'>수정</button>
+                    <button class="btn btn-danger btn-small" onclick="deletePartner('${p.id}')">삭제</button>
+                </div>` : ''}</td>
+            </tr>`).join('') : `<tr><td colspan="6"><div class="empty-state">등록된 거래처가 없습니다.</div></td></tr>`;
+
+        const itemRows = ITEMS.length ? ITEMS.map(i => `
+            <tr>
+                <td>${esc(i.item_code)}</td><td>${esc(i.item_name)}</td><td>${esc(i.unit)}</td><td>${esc(i.hs_code || '-')}</td>
+                <td class="num">${i.tariff_rate}%</td><td class="num">${i.vat_rate}%</td>
+                <td>${isAdmin ? `<div class="row-actions">
+                    <button class="btn btn-secondary btn-small" onclick='openItemForm(${JSON.stringify(i).replace(/&/g, "&amp;").replace(/'/g, "&#39;")})'>수정</button>
+                    <button class="btn btn-danger btn-small" onclick="deleteItem('${i.id}')">삭제</button>
+                </div>` : ''}</td>
+            </tr>`).join('') : `<tr><td colspan="7"><div class="empty-state">등록된 품목이 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="card">
+                <div class="card-title"><span>🏢 거래처 마스터 (공급처/판매처)</span>${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="openPartnerForm()">+ 거래처 등록</button>` : ''}</div>
+                <div class="form-panel" id="partnerFormPanel">
+                    <div class="form-grid">
+                        <input type="hidden" id="partnerId">
+                        <div><label class="form-label">거래처명</label><input class="form-input" id="partnerName" placeholder="예: Vietnam Coffee Exports Co."></div>
+                        <div><label class="form-label">거래처 유형</label>
+                            <select class="form-select" id="partnerType"><option value="supplier">공급처(해외 매입처)</option><option value="customer">판매처</option></select>
+                        </div>
+                        <div><label class="form-label">국가코드</label><input class="form-input" id="partnerCountry" placeholder="예: VN, US, KR" value="US"></div>
+                        <div><label class="form-label">통화</label><input class="form-input" id="partnerCurrency" placeholder="예: USD, KRW" value="USD"></div>
+                        <div><label class="form-label">담당자</label><input class="form-input" id="partnerContact" placeholder="선택 입력"></div>
+                        <div><label class="form-label">연락처</label><input class="form-input" id="partnerPhone" placeholder="선택 입력"></div>
+                        <div><label class="form-label">사업자번호 (선택)</label><input class="form-input" id="partnerBizNo" placeholder="선택 입력"></div>
+                    </div>
+                    <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="closePartnerForm()">취소</button><button type="button" class="btn btn-primary" onclick="submitPartner()">저장</button></div>
+                    <div class="form-status" id="partnerFormStatus"></div>
+                </div>
+                <div class="table-responsive"><table><thead><tr><th>거래처명</th><th>유형</th><th>국가</th><th>통화</th><th>담당자</th><th>동작</th></tr></thead><tbody>${partnerRows}</tbody></table></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span>📋 품목 마스터 (관세율/부가세율)</span>${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="openItemForm()">+ 품목 등록</button>` : ''}</div>
+                <div class="form-panel" id="itemFormPanel">
+                    <div class="form-grid">
+                        <input type="hidden" id="itemId">
+                        <div><label class="form-label">품목코드</label><input class="form-input" id="itemCode" placeholder="예: TR-002"></div>
+                        <div><label class="form-label">품목명</label><input class="form-input" id="itemName" placeholder="예: 수입 원두(생두) 60kg 포대"></div>
+                        <div><label class="form-label">단위</label><input class="form-input" id="itemUnit" placeholder="예: BAG, KG, BOX"></div>
+                        <div><label class="form-label">HS코드</label><input class="form-input" id="itemHsCode" placeholder="예: 0901.11"></div>
+                        <div><label class="form-label">원산지</label><input class="form-input" id="itemOrigin" placeholder="예: 베트남"></div>
+                        <div><label class="form-label">관세율(%)</label><input class="form-input" type="number" id="itemTariff" min="0" step="0.1" value="8"></div>
+                        <div><label class="form-label">부가세율(%)</label><input class="form-input" type="number" id="itemVat" min="0" step="0.1" value="10"></div>
+                    </div>
+                    <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="closeItemForm()">취소</button><button type="button" class="btn btn-primary" onclick="submitItem()">저장</button></div>
+                    <div class="form-status" id="itemFormStatus"></div>
+                </div>
+                <div class="table-responsive"><table><thead><tr><th>코드</th><th>품목명</th><th>단위</th><th>HS코드</th><th>관세율</th><th>부가세율</th><th>동작</th></tr></thead><tbody>${itemRows}</tbody></table></div>
+            </div>`;
+    }
+
+    function openPartnerForm(p) {
+        document.getElementById('partnerId').value = p ? p.id : '';
+        document.getElementById('partnerName').value = p ? p.partner_name : '';
+        document.getElementById('partnerType').value = p ? p.partner_type : 'supplier';
+        document.getElementById('partnerCountry').value = p ? p.country_code : 'US';
+        document.getElementById('partnerCurrency').value = p ? p.currency : 'USD';
+        document.getElementById('partnerContact').value = p ? (p.contact || '') : '';
+        document.getElementById('partnerPhone').value = p ? (p.phone || '') : '';
+        document.getElementById('partnerBizNo').value = p ? (p.biz_no || '') : '';
+        document.getElementById('partnerFormStatus').textContent = '';
+        document.getElementById('partnerFormPanel').classList.add('open');
+    }
+    function closePartnerForm() { document.getElementById('partnerFormPanel').classList.remove('open'); }
+    async function submitPartner() {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('partnerFormStatus');
+        const id = document.getElementById('partnerId').value || null;
+        const name = document.getElementById('partnerName').value.trim();
+        if (!name) { statusEl.textContent = '거래처명을 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        try {
+            const { data, error } = await sb.rpc('p5_admin_upsert_partner', {
+                p_admin_username: myUsername, p_admin_password: myPw, p_id: id, p_partner_name: name,
+                p_partner_type: document.getElementById('partnerType').value,
+                p_country_code: document.getElementById('partnerCountry').value || 'US',
+                p_currency: document.getElementById('partnerCurrency').value || 'USD',
+                p_contact: document.getElementById('partnerContact').value || null,
+                p_phone: document.getElementById('partnerPhone').value || null,
+                p_biz_no: document.getElementById('partnerBizNo').value || null,
+            });
+            if (error) throw error;
+            if (data && data.success) { closePartnerForm(); await loadAll(); }
+            else { statusEl.textContent = '❌ ' + (data.message || '저장 실패'); statusEl.className = 'form-status err'; }
+        } catch (e) { statusEl.textContent = '❌ ' + e.message; statusEl.className = 'form-status err'; }
+    }
+    async function deletePartner(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 거래처를 삭제할까요? (이미 전표에서 사용 중이면 삭제할 수 없습니다)')) return;
+        try {
+            const { data, error } = await sb.rpc('p5_admin_delete_partner', { p_admin_username: myUsername, p_admin_password: myPw, p_id: id });
+            if (error) throw error;
+            if (data && data.success) await loadAll(); else alert('삭제 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('삭제 실패: ' + e.message); }
+    }
+
+    function openItemForm(i) {
+        document.getElementById('itemId').value = i ? i.id : '';
+        document.getElementById('itemCode').value = i ? i.item_code : '';
+        document.getElementById('itemName').value = i ? i.item_name : '';
+        document.getElementById('itemUnit').value = i ? i.unit : '';
+        document.getElementById('itemHsCode').value = i ? (i.hs_code || '') : '';
+        document.getElementById('itemOrigin').value = i ? (i.origin_country || '') : '';
+        document.getElementById('itemTariff').value = i ? i.tariff_rate : 8;
+        document.getElementById('itemVat').value = i ? i.vat_rate : 10;
+        document.getElementById('itemFormStatus').textContent = '';
+        document.getElementById('itemFormPanel').classList.add('open');
+    }
+    function closeItemForm() { document.getElementById('itemFormPanel').classList.remove('open'); }
+    async function submitItem() {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('itemFormStatus');
+        const id = document.getElementById('itemId').value || null;
+        const code = document.getElementById('itemCode').value.trim();
+        const name = document.getElementById('itemName').value.trim();
+        const unit = document.getElementById('itemUnit').value.trim();
+        if (!code || !name || !unit) { statusEl.textContent = '품목코드/품목명/단위를 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        try {
+            const { data, error } = await sb.rpc('p5_admin_upsert_item', {
+                p_admin_username: myUsername, p_admin_password: myPw, p_id: id,
+                p_item_code: code, p_item_name: name, p_unit: unit,
+                p_hs_code: document.getElementById('itemHsCode').value || null,
+                p_origin_country: document.getElementById('itemOrigin').value || null,
+                p_tariff_rate: parseFloat(document.getElementById('itemTariff').value) || 0,
+                p_vat_rate: parseFloat(document.getElementById('itemVat').value) || 0,
+            });
+            if (error) throw error;
+            if (data && data.success) { closeItemForm(); await loadAll(); }
+            else { statusEl.textContent = '❌ ' + (data.message || '저장 실패'); statusEl.className = 'form-status err'; }
+        } catch (e) { statusEl.textContent = '❌ ' + e.message; statusEl.className = 'form-status err'; }
+    }
+    async function deleteItem(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 품목을 삭제할까요? (이미 전표에서 사용 중이면 삭제할 수 없습니다)')) return;
+        try {
+            const { data, error } = await sb.rpc('p5_admin_delete_item', { p_admin_username: myUsername, p_admin_password: myPw, p_id: id });
+            if (error) throw error;
+            if (data && data.success) await loadAll(); else alert('삭제 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('삭제 실패: ' + e.message); }
+    }
+
+    /* ══════════════════ 데이터 로드 ══════════════════ */
+    async function loadAll() {
+        if (!sb) { document.getElementById('tabContent').innerHTML = '<div class="card"><div class="empty-state">Supabase 설정이 필요합니다.</div></div>'; return; }
+        try {
+            const [itemsRes, partnersRes, lotsRes, importRes, salesRes] = await Promise.all([
+                sb.rpc('p5_get_items'),
+                sb.rpc('p5_get_partners'),
+                sb.rpc('p5_get_stock_lots', { p_item_id: null, p_only_available: true }),
+                sb.rpc('p5_get_import_docs'),
+                sb.rpc('p5_get_sales_docs'),
+            ]);
+            ITEMS = itemsRes.data || [];
+            PARTNERS = partnersRes.data || [];
+            STOCK_LOTS = lotsRes.data || [];
+            IMPORT_DOCS = importRes.data || [];
+            SALES_DOCS = salesRes.data || [];
+        } catch (e) {
+            console.error('데이터 로드 실패:', e);
+        }
+        renderTabContent();
+    }
+
+    renderTabBar();
+    loadAll();
+
+    /* ══════════════════ 헤더 테마 (공용) ══════════════════ */
+    const HEADER_THEMES = {
+        A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+        B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+        C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+    };
+    function applyHeaderTheme(key) {
+        const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+        Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+    }
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+</script>
+</body>
+</html>

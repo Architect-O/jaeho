@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기존 실패사항 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+            --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 24px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; box-shadow: var(--shadow-sm); margin-bottom: 14px; }
+        .item-head { display:flex; align-items:center; gap: 10px; margin-bottom: 8px; }
+        .item-num { width:26px; height:26px; border-radius:7px; background: var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+        .item-title { font-size: 14.5px; font-weight: 700; color: var(--text); }
+        .item-tag { margin-left:auto; }
+        .item-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; padding-left: 36px; }
+        .item-link { font-size: 11.5px; color: var(--text-tertiary); padding-left: 36px; margin-top: 6px; }
+        .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; white-space: nowrap; }
+        
+        .badge-danger{background:var(--danger-soft);color:var(--danger);}
+        .badge-warning{background:var(--warning-soft);color:#b45309;}
+        .badge-info{background:var(--info-soft);color:var(--info);}
+        .badge-success{background:var(--success-soft);color:var(--success);}
+        .badge-gray{background:var(--gray-100);color:var(--text-secondary);}
+        .badge-real{background:#f5f3ff;color:#7c3aed;}
+
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">📋 기존 실패사항</div>
+                <div class="brand-sub">과거 유사 프로젝트/시도에서 있었던 실패 사례 — 아래 교훈 도출(DB)로 이어집니다.</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">📋 기존 실패사항</h1>
+            <p class="page-subtitle">과거 유사 프로젝트/시도에서 있었던 실패 사례 — 아래 교훈 도출(DB)로 이어집니다.</p>
+        </div>
+
+        <div id="itemList"></div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        const ITEMS = [
+{ title: '요구사항 미확정 상태로 개발 착수 (과거 A 프로젝트)', badge: '일정 영향', badgeClass: 'badge-danger', body: '현업 요구사항이 확정되기 전에 개발을 먼저 시작하면서, 중간에 요구사항이 계속 바뀌어 이미 만든 화면과 로직을 여러 차례 재작업했습니다. 결과적으로 전체 일정이 약 3개월 지연되었습니다.', link: '→ 교훈: <a href="./DB-lessons.html">학습&분석 &gt; 교훈 도출 #1</a>로 이어짐' },
+{ title: '가격 위주 벤더 선정, 기능 검증 부족 (과거 B 시도)', badge: '재작업 비용', badgeClass: 'badge-danger', body: '여러 ERP 후보 중 견적가가 가장 낮은 곳을 우선 기준으로 선정했으나, 도입 후 현업에서 꼭 필요한 핵심 기능 일부가 빠져있는 것을 뒤늦게 발견했습니다. 결국 추가 커스터마이징 비용이 발생해 애초에 예상했던 총비용을 넘어섰습니다.', link: '→ 교훈: <a href="./DB-lessons.html">학습&분석 &gt; 교훈 도출 #2</a>로 이어짐' },
+{ title: '사용자 교육 없이 시스템 오픈 (과거 C 사례)', badge: '사용률 저조', badgeClass: 'badge-warning', body: '개발 일정에 쫓겨 현업 교육 기간을 충분히 확보하지 못한 채 시스템을 오픈했습니다. 사용법에 익숙하지 않은 직원들이 기존 방식(엑셀 등)을 계속 병행 사용하면서, 오픈 후 3개월간 실제 사용률이 매우 낮았습니다.', link: '→ 교훈: <a href="./DB-lessons.html">학습&분석 &gt; 교훈 도출 #3</a>로 이어짐' },
+{ title: '리스크를 사후에만 파악 (과거 공통 이슈)', badge: '보고 체계 부재', badgeClass: 'badge-gray', body: '이전 프로젝트들에서는 리스크를 정기적으로 점검하는 절차가 없어, 문제가 이미 커진 뒤에야 경영진에게 보고되는 경우가 많았습니다. 조기에 알았다면 대응 가능했던 사안들도 있었습니다.', link: '→ 교훈: <a href="./DB-lessons.html">학습&분석 &gt; 교훈 도출 #4</a>로 이어짐 · 현재는 <a href="./AC-risk.html">대시보드 &gt; 리스크 현황</a>에서 상시 관리' },
+{ title: '기존 ERP "JAEHO"(태성S&C, WinForms) 운영 중단 — 벤더 종속·기술 노후화 (실사례)', badge: '실사례', badgeClass: 'badge-real', body: '2019년 12월 도입한 실사용 ERP(.NET Framework 4.0 + WinForms, MS-SQL 11GB, 개발사 태성S&C)가 로컬 SQL Server 미구성으로 인한 접속 오류(Named Pipes error 40)와 외부 벤더 배포 서버 단절이 겹치면서 2022년 2월 마지막 백업을 끝으로 운영이 중단되었습니다. 화면을 그리던 UI 프레임워크(DevExpress v13.1, FarPoint)는 이미 10년 이상 지나 웹 전환이 불가능한 상태였고, 배포·인증 경로 자체가 외부 벤더 서버에 묶여 있어 벤더와 연락이 끊기자 자체적으로 재구동조차 어려웠던 것이 핵심 원인입니다.', link: '→ 교훈: <a href="./DB-lessons.html">학습&분석 &gt; 교훈 도출 #5</a>로 이어짐' }
+];
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+        function renderItems() {
+            document.getElementById('itemList').innerHTML = ITEMS.map((it, i) => `
+                <div class="item-card">
+                    <div class="item-head">
+                        <div class="item-num">${i + 1}</div>
+                        <div class="item-title">${esc(it.title)}</div>
+                        ${it.badge ? `<span class="item-tag badge ${esc(it.badgeClass || '')}">${esc(it.badge)}</span>` : ''}
+                    </div>
+                    <div class="item-body">${it.body}</div>
+                    ${it.link ? `<div class="item-link">${it.link}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        renderItems();
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

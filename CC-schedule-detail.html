@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상세 일정 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* 대시보드(menu.html)와 동일한 헤더/콘텐츠 변수 — 테마 선택 시 이 페이지도 같이 바뀝니다 */
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+
+        /* ===== Header — 대시보드와 동일한 구조 (테마 색상 실시간 반영) ===== */
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 30px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .filter-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+        .filter-chip {
+            padding:9px 16px; min-height:36px; border-radius:20px; border:1px solid var(--border); background:var(--gray-100);
+            color: var(--text-secondary); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;
+            transition: all .15s;
+        }
+        .filter-chip.active { background: var(--primary); color:#fff; border-color: var(--primary); }
+
+        .card { background: var(--card-bg); border-radius: 10px; padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 16px; }
+        .phase-head { display:flex; align-items:center; gap:10px; margin-bottom: 14px; }
+        .phase-num { width:26px; height:26px; border-radius:7px; background: var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+        .phase-title { font-size: 14px; font-weight: 700; color: var(--text); }
+        .phase-range { font-size: 11.5px; color: var(--text-secondary); margin-left: auto; white-space:nowrap; }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+        th { padding: 10px 14px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--text-secondary); white-space:nowrap; }
+        td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: var(--gray-100); }
+        .task-name { font-weight: 600; color: var(--text); }
+        .task-desc { font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; }
+        .progress-bar { width: 90px; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--primary); }
+        .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; white-space:nowrap; }
+        .badge-success { background: var(--success-soft); color: var(--success); }
+        .badge-info { background: var(--info-soft); color: var(--info); }
+        .badge-warning { background: var(--warning-soft); color: #b45309; }
+        .badge-pending { background: var(--gray-100); color: var(--text-secondary); }
+        .meta { color: var(--text-secondary); white-space: nowrap; }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">🗓️ 상세 일정</div>
+                <div class="brand-sub">단계별 세부 작업 일정</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">🗓️ 상세 일정</h1>
+                <p class="page-subtitle">마일스톤(CA) · 단계별 진행도(CB)보다 한 단계 더 세부적인 작업 단위 일정입니다.</p>
+            </div>
+        </div>
+
+        <div class="filter-bar" id="filterBar"></div>
+        <div id="phaseList"></div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        // 마일스톤(CA-timeline-1col.html)의 Phase 1~5 구간과 맞춰 세부 작업을 정리한 정적 데이터입니다.
+        // 실제 일정 관리 도구(Supabase 등)와 연동하려면 이 배열을 API 응답으로 교체하면 됩니다.
+        const SCHEDULE = [
+            {
+                phase: 1, title: 'Phase 1: 요구사항 분석', range: '2025-06-15 → 2025-07-30',
+                tasks: [
+                    { name: '이해관계자 인터뷰', desc: '현업 부서별 요구사항 수집', start: '2025-06-15', end: '2025-06-25', owner: 'PMO', progress: 100, status: '완료' },
+                    { name: '현행 프로세스 분석', desc: 'AS-IS 업무 흐름도 작성', start: '2025-06-20', end: '2025-07-05', owner: '컨설팅팀', progress: 100, status: '완료' },
+                    { name: '요구사항 정의서 작성', desc: 'TO-BE 요구사항 확정 및 승인', start: '2025-07-05', end: '2025-07-30', owner: 'PMO', progress: 100, status: '완료' },
+                ]
+            },
+            {
+                phase: 2, title: 'Phase 2: 시스템 설계', range: '2025-08-01 → 2025-09-10',
+                tasks: [
+                    { name: '아키텍처 설계', desc: '전체 시스템 구조 및 연동 방식 정의', start: '2025-08-01', end: '2025-08-20', owner: '설계팀', progress: 100, status: '완료' },
+                    { name: '데이터 모델 설계', desc: 'ERD 및 마이그레이션 매핑표 작성', start: '2025-08-10', end: '2025-09-01', owner: 'DB팀', progress: 100, status: '완료' },
+                    { name: '화면 설계(UI/UX)', desc: '주요 화면 와이어프레임 및 리뷰', start: '2025-08-20', end: '2025-09-10', owner: '설계팀', progress: 100, status: '완료' },
+                ]
+            },
+            {
+                phase: 3, title: 'Phase 3: 개발 및 구축', range: '2025-09-12 → 2025-12-20',
+                tasks: [
+                    { name: '모듈별 개발', desc: '대시보드/도입평가/일정관리 등 핵심 모듈', start: '2025-09-12', end: '2025-11-30', owner: 'IT팀 (5명)', progress: 85, status: '진행중' },
+                    { name: '데이터 마이그레이션', desc: '레거시 시스템 데이터 이관', start: '2025-10-01', end: '2025-12-10', owner: 'DB팀 (3명)', progress: 60, status: '진행중' },
+                    { name: '통합 테스트 계획 수립', desc: '테스트 시나리오 및 케이스 작성', start: '2025-11-15', end: '2025-12-15', owner: 'QA팀 (2명)', progress: 40, status: '진행중' },
+                    { name: '사용자 교육 자료 제작', desc: '매뉴얼 및 교육 커리큘럼', start: '2025-11-20', end: '2026-01-15', owner: '교육팀 (2명)', progress: 30, status: '계획' },
+                ]
+            },
+            {
+                phase: 4, title: 'Phase 4: 테스트 및 검증', range: '2025-12-15 → 2026-01-31',
+                tasks: [
+                    { name: '통합 테스트(SIT)', desc: '모듈 간 연동 시나리오 검증', start: '2025-12-15', end: '2026-01-10', owner: 'QA팀', progress: 0, status: '예정' },
+                    { name: '사용자 인수 테스트(UAT)', desc: '현업 담당자 대상 실사용 검증', start: '2026-01-05', end: '2026-01-25', owner: '현업 TF', progress: 0, status: '예정' },
+                    { name: '보안 점검', desc: '취약점 점검 및 조치', start: '2026-01-15', end: '2026-01-31', owner: '보안팀', progress: 0, status: '예정' },
+                ]
+            },
+            {
+                phase: 5, title: 'Phase 5: 운영 개시 및 안정화', range: '2026-02-01 → 2026-03-31',
+                tasks: [
+                    { name: '오픈(Go-Live) 준비', desc: '운영 전환 체크리스트 점검', start: '2026-02-01', end: '2026-02-15', owner: 'PMO', progress: 0, status: '예정' },
+                    { name: '병행 운영', desc: '신규/레거시 시스템 병행 운영', start: '2026-02-15', end: '2026-03-15', owner: 'IT팀', progress: 0, status: '예정' },
+                    { name: '안정화 및 이슈 대응', desc: '초기 운영 이슈 수집 및 조치', start: '2026-03-01', end: '2026-03-31', owner: 'IT팀 + PMO', progress: 0, status: '예정' },
+                ]
+            },
+        ];
+
+        const STATUS_BADGE = { '완료': 'badge-success', '진행중': 'badge-info', '계획': 'badge-warning', '예정': 'badge-pending' };
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+        function renderFilterBar(activePhase) {
+            const bar = document.getElementById('filterBar');
+            const chips = [{ label: '전체', value: 'all' }].concat(SCHEDULE.map(p => ({ label: `Phase ${p.phase}`, value: String(p.phase) })));
+            bar.innerHTML = chips.map(c => `<button class="filter-chip ${activePhase === c.value ? 'active' : ''}" onclick="renderPhases('${c.value}')">${esc(c.label)}</button>`).join('');
+        }
+
+        function renderPhases(activePhase) {
+            renderFilterBar(activePhase);
+            const list = document.getElementById('phaseList');
+            const phases = activePhase === 'all' ? SCHEDULE : SCHEDULE.filter(p => String(p.phase) === activePhase);
+
+            list.innerHTML = phases.map(p => `
+                <div class="card">
+                    <div class="phase-head">
+                        <div class="phase-num">${p.phase}</div>
+                        <div class="phase-title">${esc(p.title)}</div>
+                        <div class="phase-range">${esc(p.range)}</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>작업 항목</th>
+                                    <th>시작일</th>
+                                    <th>종료일</th>
+                                    <th>담당</th>
+                                    <th>진행률</th>
+                                    <th>상태</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${p.tasks.map(t => `
+                                    <tr>
+                                        <td>
+                                            <div class="task-name">${esc(t.name)}</div>
+                                            <div class="task-desc">${esc(t.desc)}</div>
+                                        </td>
+                                        <td class="meta">${esc(t.start)}</td>
+                                        <td class="meta">${esc(t.end)}</td>
+                                        <td class="meta">${esc(t.owner)}</td>
+                                        <td><div class="progress-bar"><div class="progress-bar-fill" style="width:${t.progress}%"></div></div></td>
+                                        <td><span class="badge ${STATUS_BADGE[t.status] || 'badge-pending'}">${esc(t.status)}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        renderPhases('all');
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

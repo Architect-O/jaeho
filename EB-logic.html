@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>도출 로직 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 22px; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; padding: 20px 22px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 16px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+    th { padding: 10px 14px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--text-secondary); white-space:nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .formula-box { background: var(--gray-100); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--text); font-family: 'SFMono-Regular', Consolas, monospace; line-height: 1.7; }
+
+    .rank-row { display:flex; align-items:center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-num { width:24px; height:24px; border-radius:50%; background: var(--gray-100); color: var(--text-secondary); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; flex-shrink:0; }
+    .rank-row.top .rank-num { background: var(--success-soft); color: var(--success); }
+    .rank-name { font-weight: 600; flex: 1; }
+    .rank-value { font-size: 13px; color: var(--text-secondary); }
+    .rank-value.empty { color: var(--text-tertiary); font-style: italic; }
+    .note { font-size: 12px; color: var(--text-tertiary); margin-top: 10px; }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title">🔗 도출 로직</div>
+            <div class="brand-sub">구축 설계 · 평가 점수 → 의사결정 도출 방식</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <h1 class="page-title">🔗 도출 로직</h1>
+        <p class="page-subtitle">도입평가(BA)에서 수집한 점수를 어떤 기준과 방식으로 최종 의사결정에 반영할지를 정리했습니다. 경영진 보고 시 "왜 이 결론인지"를 설명하는 근거 자료로 사용합니다.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">⚖️ 평가 기준별 가중치 (제안)</div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr><th>평가 항목</th><th>가중치</th><th>설명</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>기능 충족도</td><td>25%</td><td>현업 요구사항을 얼마나 충족하는지</td></tr>
+                    <tr><td>초기 도입 비용</td><td>15%</td><td>구축 단계에 소요되는 총 비용</td></tr>
+                    <tr><td>유지보수 비용</td><td>15%</td><td>운영 단계에서 매년 반복되는 비용</td></tr>
+                    <tr><td>구축 기간</td><td>15%</td><td>오픈까지 걸리는 시간 (기회비용 포함)</td></tr>
+                    <tr><td>커스터마이징 자유도</td><td>10%</td><td>향후 요구사항 변화에 대응할 수 있는 유연성</td></tr>
+                    <tr><td>기술 지원</td><td>10%</td><td>장애 대응, 문의 대응 등 지원 체계</td></tr>
+                    <tr><td>데이터 보안</td><td>10%</td><td>보안·규정 준수 수준</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="note">가중치는 조직의 우선순위에 따라 조정 가능한 제안값입니다. 실제 운영 시 경영진 협의를 통해 확정하는 것을 권장합니다.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🧮 점수 산정 방식</div>
+        <div class="formula-box">
+            1. 항목별 1~5점 척도로 평가 (1=매우 미흡, 5=매우 우수)<br>
+            2. 가중 합산 점수 = Σ (항목 점수 × 가중치)<br>
+            3. 가중 합산 점수를 도입평가(BA) 종합비교 표의 "종합 점수" 칸에 기록<br>
+            4. 종합 점수가 가장 높은 후보를 우선 검토 대상으로 선정 (단, 리스크 현황(AC)의 상급 리스크와 상충하지 않는지 별도 확인)
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:0;">
+        <div class="card-title">📊 현재 종합 점수 비교 (도입평가와 실시간 공유)</div>
+        <div id="rankList"></div>
+        <p class="note">숫자로 입력된 "종합 점수"만 자동으로 순위가 매겨집니다. 값을 입력·수정하려면 <a href="./BA-evaluation.html" style="color:var(--primary);font-weight:600;">도입평가 &gt; 종합 비교</a>에서 관리자로 입력하세요.</p>
+    </div>
+</main>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    async function fetchDashboardSettings(){
+        try {
+            const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+            if (!sb) return null;
+            const { data, error } = await sb.rpc('get_dashboard_settings');
+            if (error) throw error;
+            return data || {};
+        } catch(e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+    function loadLocalPrograms() {
+        try { const raw = localStorage.getItem('evalPrograms'); if (raw) return JSON.parse(raw); } catch(e) {}
+        return [
+            { id: 'inhouse', name: '자체 개발', icon: '🛠️' },
+            { id: 'p1', name: '파일럿: 프로그램 1', icon: '🧪' },
+            { id: 'p2', name: '파일럿: 프로그램 2', icon: '🧪' },
+        ];
+    }
+    function loadLocalValues() {
+        try { const raw = localStorage.getItem('evalValues'); return raw ? JSON.parse(raw) : {}; } catch(e) { return {}; }
+    }
+
+    function renderRanking(programs, values) {
+        const rows = programs.map(p => {
+            const raw = (values[p.id] || {}).overall;
+            const num = raw != null ? parseFloat(String(raw).replace(/[^0-9.\-]/g, '')) : NaN;
+            return { id: p.id, name: p.name, icon: p.icon || '🧪', raw, num: isNaN(num) ? null : num };
+        });
+        const withNum = rows.filter(r => r.num !== null).sort((a, b) => b.num - a.num);
+        const withoutNum = rows.filter(r => r.num === null);
+        const ordered = withNum.concat(withoutNum);
+
+        document.getElementById('rankList').innerHTML = ordered.map((r, i) => `
+            <div class="rank-row ${i === 0 && r.num !== null ? 'top' : ''}">
+                <div class="rank-num">${i + 1}</div>
+                <div class="rank-name">${r.icon} ${esc(r.name)}</div>
+                <div class="rank-value ${r.raw ? '' : 'empty'}">${r.raw ? esc(r.raw) : '입력 필요'}</div>
+            </div>
+        `).join('');
+    }
+
+    async function init() {
+        renderRanking(loadLocalPrograms(), loadLocalValues());
+        const remote = await fetchDashboardSettings();
+        if (remote) {
+            try {
+                if (remote.dash_eval_programs) localStorage.setItem('evalPrograms', remote.dash_eval_programs);
+                if (remote.dash_eval_values) localStorage.setItem('evalValues', remote.dash_eval_values);
+                renderRanking(loadLocalPrograms(), loadLocalValues());
+            } catch(e) {}
+        }
+    }
+    init();
+
+    const HEADER_THEMES = {
+        A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+        B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+        C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+    };
+    function applyHeaderTheme(key){
+        const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+        Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+    }
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+</script>
+</body>
+</html>

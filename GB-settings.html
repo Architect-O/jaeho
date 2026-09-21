@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면 설정 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --primary:#534AB7; --secondary:#6366f1; --bg:#f7f8fc;
+    --card-bg:#ffffff; --text:#1f2937; --text-light:#6b7280; --border:#e5e7eb;
+    /* 대시보드(dashboard-master.html)와 동일한 헤더 변수 — 테마 선택 시 이 페이지의 상단바도 같이 바뀝니다 */
+    --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+    --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+  }
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  /* ===== Header — 대시보드와 동일한 크기/구조 (테마 색상 실시간 반영) ===== */
+  header{
+    height:56px; background:var(--header-bg); color:var(--header-text);
+    border-bottom:var(--header-border-width) solid var(--header-border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+  .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+  .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+  .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+  .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .ghost-btn{
+    background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+    padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+    text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+  }
+  .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+  main{max-width:900px;margin:0 auto;padding:32px 24px 100px;}
+  .notice{
+    background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:12.5px;
+    padding:12px 16px;border-radius:10px;margin-bottom:24px;line-height:1.6;
+  }
+  .notice.locked{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
+  .readonly-dim{opacity:0.55;pointer-events:none;}
+  .site-meta{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:12px;
+    padding:18px 20px;margin-bottom:24px;
+  }
+  .site-meta .row{display:flex;gap:12px;margin-bottom:10px;}
+  .site-meta label{font-size:11px;color:var(--text-light);display:block;margin-bottom:4px;}
+  .site-meta input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;}
+
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11px;color:var(--text-light);font-weight:600;}
+  .field input[type=text]{
+    padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;
+  }
+
+  .bottom-bar{
+    position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
+    padding:14px 24px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,0.05);
+  }
+  .bottom-bar button{
+    padding:10px 18px;border-radius:9px;font-size:13px;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:#fff;
+  }
+  .bottom-bar .save{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
+  .bottom-bar .download{background:#10b981;color:#fff;border-color:#10b981;font-weight:600;}
+  .msg{font-size:12px;color:var(--text-light);text-align:center;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo" id="brandLogo">J</div>
+    <div class="brand-info">
+      <div class="brand-title">⚙ 화면 설정</div>
+      <div class="brand-sub">테마 · 언어 · 사이트 정보를 관리합니다</div>
+    </div>
+  </div>
+  <div class="hbtns">
+    <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    <button class="ghost-btn" onclick="promptUploadConfig()">📂 불러오기</button>
+  </div>
+</header>
+
+<main>
+  <div class="notice" id="noticeBox"></div>
+
+  <div class="site-meta" id="displaySettingsCard">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;">🎨 화면 설정</div>
+    <div style="font-size:11.5px;color:var(--text-light);margin-bottom:16px;">대시보드에 적용될 색상 테마와 메뉴 언어를 선택하세요. 클릭 즉시 적용됩니다. (기본값: C)</div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:12.5px;font-weight:600;margin-bottom:8px;">색상 테마</div>
+      <div id="themeSwatches" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </div>
+
+    <div>
+      <div style="font-size:12.5px;font-weight:600;margin-bottom:8px;">메뉴 언어</div>
+      <div id="langOptions" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
+  <div class="site-meta">
+    <div style="font-size:14px;font-weight:700;margin-bottom:14px;">🏷️ 사이트 정보</div>
+    <div class="row">
+      <div class="field" style="flex:1;">
+        <label>사이트 타이틀</label>
+        <input type="text" id="siteTitle" placeholder="JAEHO ERP Suite">
+      </div>
+    </div>
+    <div class="field">
+      <label>사이트 부제</label>
+      <input type="text" id="siteSubtitle" placeholder="ERP 도입 사전단계 통합 플랫폼">
+    </div>
+  </div>
+</main>
+
+<div class="bottom-bar">
+  <div style="width:100%;">
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <button class="download" onclick="downloadConfig()">⬇ JSON 다운로드</button>
+      <button class="save" id="saveToFileBtn" onclick="saveToFile()">💾 파일로 저장 (data/displayConfig.json)</button>
+      <button onclick="changeFileLocation()" title="저장할 파일 위치를 다시 선택합니다" style="font-size:11px;">🔄 저장 위치 변경</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+  if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+  function setMsg(t){ document.getElementById('msg').textContent = t; setTimeout(()=>{ if(document.getElementById('msg').textContent===t) document.getElementById('msg').textContent=''; }, 4000); }
+
+  /* ===== Supabase 연동: 이 설정은 관리자만 저장할 수 있고, 저장되면 모든 사용자/기기에 공유됩니다 ===== */
+  const myUsername = sessionStorage.getItem('username');
+  const myPw = sessionStorage.getItem('pw');
+  const isAdmin = sessionStorage.getItem('role') === 'admin';
+
+  async function fetchDashboardSettings(){
+    try {
+      const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+      if (!sb) return null;
+      const { data, error } = await sb.rpc('get_dashboard_settings');
+      if (error) throw error;
+      return data || {};
+    } catch(e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+  }
+  async function saveDashboardSetting(key, value){
+    try {
+      const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+      if (!sb || !myUsername || !myPw) return { success:false, message:'로그인 정보가 없습니다.' };
+      const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
+      if (error) throw error;
+      return data;
+    } catch(e) { console.error('공유 설정 저장 실패:', e); return { success:false, message: e.message }; }
+  }
+  async function syncSettingsFromCloud(){
+    const remote = await fetchDashboardSettings();
+    if (!remote) return;
+    if (remote.dash_theme) localStorage.setItem('dashTheme', remote.dash_theme);
+    if (remote.dash_lang) localStorage.setItem('dashLang', remote.dash_lang);
+    if (remote.dash_site_title !== undefined) localStorage.setItem('dashSiteTitle', remote.dash_site_title);
+    if (remote.dash_site_subtitle !== undefined) localStorage.setItem('dashSiteSubtitle', remote.dash_site_subtitle);
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    loadSiteMeta();
+    renderDisplaySettings();
+  }
+
+  /* ===== 헤더 테마 — dashboard-master.html과 동일한 값 (이 페이지 상단바에도 실시간 반영) ===== */
+  const HEADER_THEMES = {
+    A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+    B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+    C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+  };
+  function applyHeaderTheme(key){
+    const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+    Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+  }
+
+  /* ===== 화면 설정 (테마 / 언어) — 대시보드(menu.html)와 localStorage로 공유 ===== */
+  /* 기본값(C)이 항상 맨 앞에 오도록 순서를 C → A → B 로 둡니다. */
+  const THEME_META = {
+    C: { name: 'C. 컨설팅 클린 (기본값)', colors: ['#16324f', '#b8860b', '#ffffff'] },
+    A: { name: 'A. 이그제큐티브 네이비 & 골드', colors: ['#0b1830', '#c9a227', '#fbfaf7'] },
+    B: { name: 'B. 모던 엔터프라이즈 슬레이트', colors: ['#0f172a', '#2563eb', '#f8fafc'] },
+  };
+  const LANG_META = { ko: '한글', en: '영문 (English)', both: '한글+영문' };
+
+  function renderDisplaySettings(){
+    const themeWrap = document.getElementById('themeSwatches');
+    const curTheme = localStorage.getItem('dashTheme') || 'C';
+    themeWrap.innerHTML = Object.entries(THEME_META).map(([key, meta]) => `
+      <button type="button" data-theme="${key}" ${isAdmin?'':'disabled'} style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px 12px;border-radius:10px;border:2px solid ${key===curTheme?'var(--primary)':'var(--border)'};background:#fff;cursor:${isAdmin?'pointer':'not-allowed'};font-family:inherit;min-width:160px;${isAdmin?'':'opacity:0.6;'}">
+        <div style="display:flex;gap:4px;">
+          ${meta.colors.map(c=>`<span style="width:16px;height:16px;border-radius:4px;background:${c};border:1px solid rgba(0,0,0,0.08);"></span>`).join('')}
+        </div>
+        <div style="font-size:11.5px;font-weight:600;color:var(--text);text-align:left;">${meta.name}</div>
+      </button>
+    `).join('');
+    if (isAdmin) themeWrap.querySelectorAll('button').forEach(btn=>{
+      btn.onclick = async () => {
+        localStorage.setItem('dashTheme', btn.dataset.theme);
+        applyHeaderTheme(btn.dataset.theme);
+        renderDisplaySettings();
+        setMsg('🎨 테마 적용 중...');
+        const res = await saveDashboardSetting('dash_theme', btn.dataset.theme);
+        setMsg(res && res.success ? '☁️ 테마가 "'+THEME_META[btn.dataset.theme].name+'"(으)로 전체 공유 저장되었습니다.' : '⚠️ 로컬에는 적용됐지만 공유 저장에 실패했습니다: '+(res&&res.message||''));
+      };
+    });
+
+    const langWrap = document.getElementById('langOptions');
+    const curLang = localStorage.getItem('dashLang') || 'ko';
+    langWrap.innerHTML = Object.entries(LANG_META).map(([key, name]) => `
+      <button type="button" data-lang="${key}" ${isAdmin?'':'disabled'} style="padding:8px 14px;border-radius:8px;border:1px solid ${key===curLang?'var(--primary)':'var(--border)'};background:${key===curLang?'var(--primary)':'#fff'};color:${key===curLang?'#fff':'var(--text)'};font-size:12.5px;font-family:inherit;cursor:${isAdmin?'pointer':'not-allowed'};font-weight:${key===curLang?'700':'500'};${isAdmin?'':'opacity:0.6;'}">${name}</button>
+    `).join('');
+    if (isAdmin) langWrap.querySelectorAll('button').forEach(btn=>{
+      btn.onclick = async () => {
+        localStorage.setItem('dashLang', btn.dataset.lang);
+        renderDisplaySettings();
+        setMsg('🌐 언어 적용 중...');
+        const res = await saveDashboardSetting('dash_lang', btn.dataset.lang);
+        setMsg(res && res.success ? '☁️ 메뉴 언어가 "'+LANG_META[btn.dataset.lang]+'"(으)로 전체 공유 저장되었습니다.' : '⚠️ 로컬에는 적용됐지만 공유 저장에 실패했습니다: '+(res&&res.message||''));
+      };
+    });
+  }
+
+  /* ===== 사이트 정보 (제목/부제) — 관리자만 입력 가능, 입력 즉시 로컬 반영 + 공유 저장(디바운스) ===== */
+  function loadSiteMeta(){
+    document.getElementById('siteTitle').value = localStorage.getItem('dashSiteTitle') || 'JAEHO ERP Suite';
+    document.getElementById('siteSubtitle').value = localStorage.getItem('dashSiteSubtitle') || '';
+    if (!isAdmin) {
+      document.getElementById('siteTitle').readOnly = true;
+      document.getElementById('siteSubtitle').readOnly = true;
+    }
+  }
+  let _siteMetaTimer = null;
+  function scheduleSiteMetaCloudSave(){
+    if (!isAdmin) return;
+    clearTimeout(_siteMetaTimer);
+    _siteMetaTimer = setTimeout(async ()=>{
+      setMsg('사이트 정보 저장 중...');
+      const r1 = await saveDashboardSetting('dash_site_title', localStorage.getItem('dashSiteTitle') || 'JAEHO ERP Suite');
+      const r2 = await saveDashboardSetting('dash_site_subtitle', localStorage.getItem('dashSiteSubtitle') || '');
+      setMsg((r1&&r1.success && r2&&r2.success) ? '☁️ 사이트 정보가 전체 공유 저장되었습니다.' : '⚠️ 공유 저장에 실패했습니다.');
+    }, 700);
+  }
+  document.getElementById('siteTitle').addEventListener('input', e=>{
+    if (!isAdmin) return;
+    localStorage.setItem('dashSiteTitle', e.target.value || 'JAEHO ERP Suite');
+    scheduleSiteMetaCloudSave();
+  });
+  document.getElementById('siteSubtitle').addEventListener('input', e=>{
+    if (!isAdmin) return;
+    localStorage.setItem('dashSiteSubtitle', e.target.value);
+    scheduleSiteMetaCloudSave();
+  });
+
+  function currentConfig(){
+    return {
+      siteTitle: localStorage.getItem('dashSiteTitle') || 'JAEHO ERP Suite',
+      siteSubtitle: localStorage.getItem('dashSiteSubtitle') || '',
+      theme: localStorage.getItem('dashTheme') || 'C',
+      lang: localStorage.getItem('dashLang') || 'ko',
+    };
+  }
+  function applyConfig(cfg){
+    if (cfg.siteTitle !== undefined) localStorage.setItem('dashSiteTitle', cfg.siteTitle || 'JAEHO ERP Suite');
+    if (cfg.siteSubtitle !== undefined) localStorage.setItem('dashSiteSubtitle', cfg.siteSubtitle || '');
+    if (cfg.theme) localStorage.setItem('dashTheme', cfg.theme);
+    if (cfg.lang) localStorage.setItem('dashLang', cfg.lang);
+    loadSiteMeta();
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    renderDisplaySettings();
+  }
+
+  /* ===== 다운로드 / 업로드 (팀 공유 · 백업용) ===== */
+  function downloadAsJSON(data, filename){
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = (filename||'displayConfig') + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function downloadConfig(){
+    downloadAsJSON(currentConfig(), 'displayConfig');
+    setMsg('⬇ displayConfig.json 다운로드 완료.');
+  }
+  function promptUploadConfig(){
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'application/json';
+    input.onchange = (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        try{
+          const data = JSON.parse(ev.target.result);
+          applyConfig(data);
+          setMsg('📂 설정 파일을 불러와 적용했습니다.');
+        }catch(err){ alert('올바른 JSON 파일이 아닙니다.'); console.error(err); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  /* ===== 파일로 직접 저장 (File System Access API) =====
+     Chrome/Edge에서 localhost(http://) 같은 보안 컨텍스트에서 동작합니다.
+     최초 1회 data/displayConfig.json 파일을 선택하면, 이후에는 그 파일 핸들을
+     IndexedDB에 저장해두고 재사용하여 클릭 한 번으로 바로 저장합니다. */
+  const IDB_NAME = 'jaehoErpSettings';
+  const IDB_STORE = 'handles';
+  const HANDLE_KEY = 'displayConfigHandle';
+  let fileHandle = null;
+  const supportsFS = typeof window.showSaveFilePicker === 'function';
+
+  if (!supportsFS) {
+    const btn = document.getElementById('saveToFileBtn');
+    if (btn) { btn.disabled = true; btn.title = '이 브라우저는 지원하지 않습니다 (Chrome/Edge 권장)'; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed'; }
+  }
+
+  function openHandleDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function idbGet(key){
+    const db = await openHandleDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const r = tx.objectStore(IDB_STORE).get(key);
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+  }
+  async function idbSet(key, value){
+    const db = await openHandleDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function restoreHandle(){
+    if (fileHandle) return fileHandle;
+    try {
+      const saved = await idbGet(HANDLE_KEY);
+      if (!saved) return null;
+      let perm = await saved.queryPermission({ mode: 'readwrite' });
+      if (perm === 'prompt') perm = await saved.requestPermission({ mode: 'readwrite' });
+      if (perm === 'granted') { fileHandle = saved; return fileHandle; }
+    } catch(e) { console.warn('저장된 파일 위치를 복원하지 못했습니다:', e); }
+    return null;
+  }
+
+  async function pickHandle(){
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'displayConfig.json',
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      fileHandle = handle;
+      await idbSet(HANDLE_KEY, handle);
+      return handle;
+    } catch(e) {
+      if (e.name !== 'AbortError') console.error(e);
+      return null;
+    }
+  }
+
+  async function changeFileLocation(){
+    if (!supportsFS) { alert('이 브라우저는 파일 직접 저장을 지원하지 않습니다.'); return; }
+    const handle = await pickHandle();
+    if (handle) setMsg('📁 저장 위치를 변경했습니다. 열려있는 폴더의 data/displayConfig.json을 선택해주세요.');
+  }
+
+  async function saveToFile(){
+    if (!supportsFS) {
+      alert('이 브라우저는 파일 직접 저장을 지원하지 않습니다 (Chrome/Edge 전용 기능). "JSON 다운로드" 버튼을 사용해주세요.');
+      return;
+    }
+    let handle = await restoreHandle();
+    if (!handle) {
+      alert('처음 저장하는 경우, 열려있는 프로젝트 폴더 안의 data 폴더로 들어가서\n원하는 파일명(예: displayConfig.json)으로 저장 위치를 선택해주세요.');
+      handle = await pickHandle();
+    }
+    if (!handle) return; // 사용자가 취소함
+    try {
+      const writable = await handle.createWritable();
+      await writable.write(JSON.stringify(currentConfig(), null, 2));
+      await writable.close();
+      setMsg('✅ 파일에 직접 저장했습니다 (' + handle.name + ').');
+    } catch(e) {
+      console.error(e);
+      alert('파일 저장 중 오류가 발생했습니다: ' + e.message + '\n다시 "저장 위치 변경" 후 시도해보세요.');
+    }
+  }
+
+  /* 다른 탭(대시보드/설정)에서 값이 바뀌면 이 페이지에도 실시간 반영 */
+  window.addEventListener('storage', (e)=>{
+    if (e.key==='dashTheme') { applyHeaderTheme(e.newValue||'C'); renderDisplaySettings(); }
+    if (e.key==='dashLang') renderDisplaySettings();
+    if (e.key==='dashSiteTitle' || e.key==='dashSiteSubtitle') loadSiteMeta();
+  });
+
+  /* ===== 안내 문구 (관리자 여부에 따라 달라짐) ===== */
+  function renderNotice(){
+    const box = document.getElementById('noticeBox');
+    if (isAdmin) {
+      box.className = 'notice';
+      box.innerHTML = 'ℹ️ 아래 테마 · 언어 · 사이트 정보는 클릭하거나 입력하는 즉시 로컬에 적용되고, Supabase에 저장되어 <b>모든 사용자·기기에 공유</b>됩니다.<br>' +
+        '별도로 백업해두려면 <b>💾 파일로 저장</b>으로 <code>data/displayConfig.json</code>에 저장(Chrome/Edge, 로컬 서버 환경)하거나 <b>⬇ JSON 다운로드</b> 후 보관하세요.';
+    } else {
+      box.className = 'notice locked';
+      box.innerHTML = '🔒 이 설정은 <b>관리자만 변경</b>할 수 있습니다. 아래는 현재 전체에 적용된 값이며, 읽기 전용으로 표시됩니다.';
+    }
+  }
+
+  /* 모바일 등 좁은 화면에서는 .bottom-bar 안의 버튼 3개가 줄바꿈되어 바 높이가 커지는데,
+     main의 padding-bottom이 고정 100px이면 늘어난 바가 화면 하단 내용을 가려버림.
+     바의 실제 높이를 측정해서 그만큼 여백을 확보 (초기 로드 + 리사이즈 시 재계산). */
+  function syncBottomBarPadding(){
+    const bar = document.querySelector('.bottom-bar');
+    const main = document.querySelector('main');
+    if (!bar || !main) return;
+    main.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
+  }
+  window.addEventListener('resize', syncBottomBarPadding);
+
+  /* ===== Init ===== */
+  renderNotice();
+  applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+  loadSiteMeta();
+  renderDisplaySettings();
+  syncSettingsFromCloud(); // 로컬 캐시로 먼저 즉시 표시한 뒤, 공유된 최신 값으로 갱신
+  syncBottomBarPadding();
+</script>
+</body>
+</html>

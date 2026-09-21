@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레이아웃 - JAEHO ERP Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* 대시보드(menu.html)와 동일한 헤더/콘텐츠 변수 — 테마 선택 시 이 페이지도 같이 바뀝니다 */
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+
+        /* ===== Header — 대시보드와 동일한 구조 (테마 색상 실시간 반영) ===== */
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 22px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .card { background: var(--card-bg); border-radius: 10px; padding: 20px 22px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; display:flex; align-items:center; gap:8px; }
+
+        .diagram-scroll { overflow-x: auto; }
+        pre.mermaid { margin: 0; min-width: 640px; }
+
+        .legend { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); }
+        .legend-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-secondary); }
+        .swatch { width:20px; height:0; border-top-width:2px; border-top-style:solid; flex-shrink:0; }
+        .swatch.dash { border-top-style:dashed; }
+
+        ul.plain { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+        ul.plain li { font-size:12.5px; line-height:1.5; padding-left:16px; position:relative; color:var(--text-secondary); }
+        ul.plain li::before { content:'—'; position:absolute; left:0; color:var(--text-tertiary); }
+        ul.plain code { font-size:11.5px; background:var(--gray-100); color:var(--text); padding:1px 5px; border-radius:4px; }
+
+        .badge-inline { display:inline-block; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 7px; border-radius:20px; margin-left:6px; }
+        .badge-warn { background:var(--warning-soft); color:#b45309; }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">🗺️ 레이아웃</div>
+                <div class="brand-sub">[3] 폴더 파일 연결 구조</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">🗺️ 파일 연결 구조</h1>
+            <p class="page-subtitle">로그인부터 각 메뉴 화면까지, 실제 파일이 서로 어떻게 fetch·임베드되고 어떤 파일이 Supabase와 직접 통신하는지를 정리한 구조도입니다.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🗺️ 전체 흐름</div>
+            <div class="diagram-scroll">
+<pre class="mermaid">
+flowchart TD
+    IDX["index.html<br/><span style='font-size:11px'>로그인 화면</span>"]
+    SHELL["menu.html<br/><span style='font-size:11px'>3분할 셸(메뉴·사이드·본문) · 유일한 셸 파일</span>"]
+    JS["js/supabaseClient.js<br/><span style='font-size:11px'>공용 Supabase 클라이언트</span>"]
+    SB[("Supabase<br/><span style='font-size:11px'>users · app_settings · audit_logs</span>")]
+
+    IDX -- 로그인 성공 --> SHELL
+
+    subgraph EMBED["본문 영역에 fetch + iframe으로 로드 (코드-파일명)"]
+        direction TB
+        KPI["AB-kpi-1col.html<br/><span style='font-size:11px'>대시보드 · KPI 모니터링</span>"]
+        RISK["AC-risk.html<br/><span style='font-size:11px'>대시보드 · 리스크 현황</span>"]
+        EVAL["BA-evaluation.html<br/><span style='font-size:11px'>도입평가 · 종합비교 (Supabase)</span>"]
+        INHOUSE["BB-inhouse.html<br/><span style='font-size:11px'>도입평가 · 자체개발 프로파일 (Supabase)</span>"]
+        P1["BC-pilot1.html<br/><span style='font-size:11px'>도입평가 · 파일럿1 프로파일 (Supabase)</span>"]
+        P2["BD-pilot2.html<br/><span style='font-size:11px'>도입평가 · 파일럿2 프로파일 (Supabase)</span>"]
+        P3["BE-pilot3.html<br/><span style='font-size:11px'>도입평가 · 파일럿3 가상 ERP 데모 (Supabase)</span>"]
+        TL["CA-timeline-1col.html<br/><span style='font-size:11px'>일정관리 · 마일스톤</span>"]
+        PROG["CB-progress-1col.html<br/><span style='font-size:11px'>일정관리 · 단계별 진행도</span>"]
+        SCHED["CC-schedule-detail.html<br/><span style='font-size:11px'>일정관리 · 상세 일정</span>"]
+        EVT["CD-events.html<br/><span style='font-size:11px'>일정관리 · 중요 이벤트</span>"]
+        FAIL["DA-failures.html<br/><span style='font-size:11px'>학습&분석 · 기존 실패사항</span>"]
+        LESSON["DB-lessons.html<br/><span style='font-size:11px'>학습&분석 · 교훈 도출</span>"]
+        BEST["DC-best-practice.html<br/><span style='font-size:11px'>학습&분석 · Best Practice</span>"]
+        SYSARCH["EA-architecture.html<br/><span style='font-size:11px'>구축설계 · 아키텍처</span>"]
+        LOGIC["EB-logic.html<br/><span style='font-size:11px'>구축설계 · 도출 로직 (Supabase)</span>"]
+        DMAP["EC-data-map.html<br/><span style='font-size:11px'>구축설계 · 데이터 맵핑</span>"]
+        REP["FA-reports-1col.html<br/><span style='font-size:11px'>문서&리포팅 · 주간 리포트 (Supabase)</span>"]
+        PROP["FB-proposal.html<br/><span style='font-size:11px'>문서&리포팅 · 사업기안서 (Supabase)</span>"]
+        CHG["FC-changelog.html<br/><span style='font-size:11px'>문서&리포팅 · 변경 이력 (Supabase)</span>"]
+        ARCH["FD-archive.html<br/><span style='font-size:11px'>문서&리포팅 · 아카이브 (Supabase)</span>"]
+        USERS["GA-users.html<br/><span style='font-size:11px'>시스템 · 사용자관리 (관리자 전용, Supabase)</span>"]
+        SET["GB-settings.html<br/><span style='font-size:11px'>시스템 · 권한설정 (Supabase)</span>"]
+        LAYOUT["GC-layout.html<br/><span style='font-size:11px'>시스템 · 레이아웃 (이 화면)</span>"]
+        LOG["GD-log.html<br/><span style='font-size:11px'>시스템 · 작업 로그</span>"]
+    end
+
+    SHELL --> KPI
+    SHELL --> RISK
+    SHELL --> EVAL
+    SHELL --> INHOUSE
+    SHELL --> P1
+    SHELL --> P2
+    SHELL --> P3
+    SHELL --> TL
+    SHELL --> PROG
+    SHELL --> SCHED
+    SHELL --> EVT
+    SHELL --> FAIL
+    SHELL --> LESSON
+    SHELL --> BEST
+    SHELL --> SYSARCH
+    SHELL --> LOGIC
+    SHELL --> DMAP
+    SHELL --> REP
+    SHELL --> PROP
+    SHELL --> CHG
+    SHELL --> ARCH
+    SHELL --> USERS
+    SHELL --> SET
+    SHELL --> LAYOUT
+    SHELL --> LOG
+
+    IDX -.-> JS
+    SHELL -.-> JS
+    EVAL -.-> JS
+    INHOUSE -.-> JS
+    P1 -.-> JS
+    P2 -.-> JS
+    P3 -.-> JS
+    LOGIC -.-> JS
+    REP -.-> JS
+    PROP -.-> JS
+    CHG -.-> JS
+    ARCH -.-> JS
+    USERS -.-> JS
+    SET -.-> JS
+    JS -.-> SB
+
+    classDef entry fill:#eef2f5,stroke:#16324f,stroke-width:1.5px,color:#16324f;
+    classDef shell fill:#16324f,stroke:#16324f,stroke-width:1.5px,color:#ffffff;
+    classDef embed fill:#ffffff,stroke:#c9ccd1,stroke-width:1px,color:#1f2328;
+    classDef data fill:#fbf3df,stroke:#b8860b,stroke-width:1.5px,color:#6b4e00;
+    class IDX entry;
+    class SHELL shell;
+    class KPI,RISK,EVAL,INHOUSE,P1,P2,P3,TL,PROG,SCHED,EVT,FAIL,LESSON,BEST,SYSARCH,LOGIC,DMAP,REP,PROP,CHG,ARCH,USERS,SET,LAYOUT,LOG embed;
+    class JS,SB data;
+</pre>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="swatch" style="border-color:#16324f;"></span> 화면 이동 / 본문 임베드</div>
+                <div class="legend-item"><span class="swatch dash" style="border-color:#9aa3ad;"></span> Supabase 클라이언트 스크립트 포함</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">✅ 전체 메뉴 구현 완료<span class="badge-inline" style="background:var(--success-soft);color:var(--success);">2026-09-18</span></div>
+            <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6;">
+                더 이상 placeholder 항목이 없습니다. 구축설계(EA~EC)는 실제 Architect-LAB 도구를 그대로 임베드한 것이 아니라, 아키텍처/도출로직/데이터맵핑을 문서화한 자체 페이지입니다 —
+                Architect-LAB 자체를 화면 안에 넣는 방안은 별도 검토 과제로 남아있습니다 (시스템 &gt; 로그 참고). 도입평가에는 파일럿: 프로그램 3(BE)이 추가되어, SAP ERP 구조를 참고한 실제 동작하는 가상 ERP(구매·재고·출고)로 직접 체험해볼 수 있습니다.
+            </p>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+            <div class="card-title">ℹ️ 참고</div>
+            <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6;">
+                이 화면은 구조를 한눈에 보기 위한 것이고, "언제 어떤 파일이 왜 만들어지거나 바뀌었는지"에 대한 시간순 이력은
+                <a href="./GD-log.html" style="color:var(--primary); font-weight:600;">시스템 &gt; 로그</a>에서 확인할 수 있습니다.
+                파일명 코드 규칙(A~G + 두 자리)은 <code>menu.html</code>의 <code>CATEGORIES</code> 배열 주석 참고.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

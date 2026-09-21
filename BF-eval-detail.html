@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>도입 평가 상세 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+        --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 24px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; display:flex; align-items:center; gap:8px; }
+    .page-title input { font: inherit; font-weight: 700; border:1px solid transparent; background:transparent; color:var(--text); padding:2px 6px; border-radius:6px; min-width:120px; }
+    .page-title input:focus { border-color:var(--border); background:#fff; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+    .sync-note { font-size: 12px; color: var(--text-tertiary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+
+    .score-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (max-width: 700px) { .score-grid { grid-template-columns: 1fr; } }
+    .score-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .score-label { font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+    .score-value { font-size: 14px; font-weight: 600; color: var(--text); }
+    .score-value.empty { color: var(--text-tertiary); font-weight: 400; font-style: italic; }
+    .score-input { width:100%; font: inherit; font-size:14px; font-weight:600; color:var(--text); border:1px solid transparent; background:transparent; padding:4px 6px; border-radius:5px; }
+    .score-input:focus { border-color:var(--border); background:#fff; }
+    .score-item.overall { grid-column: 1 / -1; background: var(--gray-100); }
+    .score-item.overall .score-value, .score-item.overall .score-input { font-size: 18px; color: var(--primary); }
+    .score-group-header { grid-column: 1 / -1; font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing:.3px; background:#eef2f6; padding:6px 10px; border-radius:6px; margin-top:4px; }
+    .score-item select.score-select { width:100%; font: inherit; font-size:14px; font-weight:600; color:var(--text); border:1px solid var(--border); background:#fff; padding:4px 6px; border-radius:5px; }
+    .score-weight-tag { font-weight:400; color:var(--text-tertiary); font-size:10.5px; }
+
+    /* ===== 2026-09-18 개선: 점수를 숫자(1~5)만으로 보여주면 기준을 모르는 사람은 "5점이 어느 위치인지" 감이 안 옴.
+       별 5개를 채워서 한눈에 위치를 알 수 있게 하는 별점 위젯. BA-evaluation.html과 완전히 동일한 CSS/구조 —
+       손보면 두 파일 모두 갱신할 것. */
+    /* 2026-09-18 재정리: 행마다 붙던 "n/5"·"미입력" 텍스트와 ✕ 지우기 버튼을 없애 별만 남기고,
+       척도 설명은 점수 카드 위 범례(.star-legend)에 한 번만 표시한다(BA-evaluation.html과 동일 —
+       손보면 두 파일 모두 갱신할 것). */
+    .star-rating-wrap{display:inline-flex;align-items:center;}
+    .star-rating{display:inline-flex;flex-direction:row-reverse;gap:1px;font-size:18px;}
+    .star-rating input{display:none;}
+    .star-rating label{cursor:pointer;color:var(--gray-300,#dfe3e7);line-height:1;transition:color .1s;}
+    .star-rating label::before{content:'★';}
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label{color:#f5a623;}
+    .star-rating-ro{display:inline-flex;font-size:18px;line-height:1;}
+    .star.filled{color:#f5a623;}
+    .star.empty{color:var(--gray-300,#dfe3e7);}
+    .star-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--text-secondary);background:#f8f9fa;border:1px solid var(--border);border-radius:8px;padding:9px 14px;margin-bottom:14px;}
+    .star-legend b{color:var(--text);font-weight:700;}
+    .star-legend .legend-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+    .star-legend .legend-item .star-rating-ro{font-size:13px;}
+    .star-legend .legend-hint{margin-left:auto;color:var(--text-tertiary);font-style:italic;}
+    .summary-bar { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:16px; }
+    @media (max-width:700px) { .summary-bar { grid-template-columns: 1fr; } }
+    .summary-box { border:1px solid var(--border); border-radius:8px; padding:12px 14px; text-align:center; }
+    .summary-box .summary-label { font-size:11.5px; color:var(--text-secondary); text-transform:uppercase; font-weight:600; margin-bottom:4px; }
+    .summary-box .summary-value { font-size:22px; font-weight:700; color:var(--text); }
+    .summary-box.final { background: var(--primary); border-color: var(--primary); }
+    .summary-box.final .summary-label, .summary-box.final .summary-value { color:#fff; }
+
+    .list-title { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 8px; display:flex; align-items:center; gap:6px; justify-content:space-between; }
+    ul.plain { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+    ul.plain li { font-size: 13px; line-height: 1.55; color: var(--text-secondary); padding-left: 16px; position: relative; display:flex; align-items:flex-start; gap:6px; }
+    ul.plain li::before { content: '—'; position: absolute; left: 0; color: var(--text-tertiary); }
+    ul.plain li .li-text { flex:1; border:1px solid transparent; background:transparent; font:inherit; color:var(--text-secondary); padding:2px 4px; border-radius:5px; resize:none; overflow:hidden; }
+    ul.plain li .li-text:focus { border-color:var(--border); background:#fff; }
+    ul.plain li .li-del { border:none; background:transparent; color:var(--text-tertiary); cursor:pointer; font-size:12px; flex-shrink:0; }
+    .add-line-btn { border:none; background:transparent; color:var(--primary); cursor:pointer; font-size:12px; font-weight:600; padding:2px 0; margin-top:2px; text-align:left; }
+    .two-col { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+    .note { font-size: 12.5px; color: var(--text-tertiary); }
+    .reco-text { width:100%; font: inherit; font-size:13px; color:var(--text-secondary); line-height:1.6; border:1px solid transparent; background:transparent; padding:4px 6px; border-radius:6px; resize:vertical; min-height:60px; }
+    .reco-text:focus { border-color:var(--border); background:#fff; }
+    .empty-hint { font-size:12.5px; color:var(--text-tertiary); font-style:italic; }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title" id="brandTitle">🧪 도입 평가 상세</div>
+            <div class="brand-sub" id="brandSub">도입 평가 상세 프로파일</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" id="pageTitleWrap">
+                <span id="pageIcon">🧪</span>
+                <input type="text" id="progNameInput" value="" placeholder="프로그램 이름">
+            </h1>
+            <p class="page-subtitle">도입 평가 상세 프로파일 · 이 화면에서 점수와 평가 내용을 입력하면 <a href="./BA-evaluation.html" style="color:var(--primary);font-weight:600;">종합 비교</a> 표에 바로 반영됩니다.</p>
+        </div>
+        <a class="ghost-btn" href="./BA-evaluation.html">⚖️ 종합 비교로 이동</a>
+    </div>
+
+    <div class="card">
+        <div class="card-title" id="scoreCardTitle">📊 평가 점수 (종합 비교와 실시간 공유)</div>
+        <div class="summary-bar" id="summaryBar"></div>
+        <div id="scoreLegend"></div>
+        <div class="score-grid" id="scoreGrid"></div>
+        <p class="note" id="scoreNote" style="margin-top:12px;"></p>
+    </div>
+
+    <div class="two-col">
+        <div class="card">
+            <div class="list-title"><span>✅ 장점</span></div>
+            <ul class="plain" id="prosList"></ul>
+        </div>
+        <div class="card">
+            <div class="list-title"><span>⚠️ 단점</span></div>
+            <ul class="plain" id="consList"></ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="list-title"><span>🚩 주요 리스크</span></div>
+        <ul class="plain" id="risksList"></ul>
+    </div>
+
+    <div class="card" style="margin-bottom:0;">
+        <div class="list-title"><span>🧭 권고</span></div>
+        <textarea class="reco-text" id="recoText" placeholder="이 프로그램에 대한 권고 의견을 입력하세요." rows="3"></textarea>
+    </div>
+</main>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    const myUsername = sessionStorage.getItem('username');
+    const myPw = sessionStorage.getItem('pw');
+    const isAdmin = sessionStorage.getItem('role') === 'admin';
+
+    // 이 파일은 여러 "프로그램" 항목이 공유하는 범용(제네릭) 상세 페이지입니다.
+    // 어떤 프로그램을 보여줄지는 menu.html 셸이 iframe에 넣어주는 window.__EVAL_PID__ 값으로 정해집니다.
+    // (menu.html이 없이 파일을 직접 열었을 때를 대비해 URL의 ?pid=값도 보조로 지원합니다.)
+    const PROGRAM_ID = window.__EVAL_PID__ || new URLSearchParams(location.search).get('pid') || 'inhouse';
+
+    // 기존에 자체개발/파일럿1/파일럿2로 고정 페이지에 하드코딩돼 있던 평가 내용을
+    // 이 범용 페이지의 "기본값"으로 그대로 옮겨서, 아무도 아직 손대지 않았어도
+    // 이전과 동일한 내용이 보이도록 합니다. 그 외(신규 프로그램)의 기본값은 빈 상태입니다.
+    const DEFAULT_DETAILS = {
+        inhouse: {
+            pros: ['요구사항을 100% 반영하는 커스터마이징이 가능함', '외부 라이선스 비용이 없음 (인건비/인프라 비용만 발생)', '내부 데이터를 완전히 통제할 수 있어 보안·규정 준수에 유리함', '기존 사내 시스템과의 연동이 자유로움'],
+            cons: ['개발 기간이 상대적으로 길어짐 (통상 6개월 이상)', '초기 인력 투입 규모가 큼', '오픈 이후에도 유지보수를 전담할 인력이 계속 필요함', '검증된 상용 사례가 없어 품질 리스크가 상대적으로 큼'],
+            risks: ['핵심 개발자 이탈 시 프로젝트 지연 및 지식 단절 위험 (리스크 현황 AC 참고)', '요구사항 변경이 잦을 경우 예산·일정 초과 가능성', '초기 버전의 버그/미완성 기능으로 인한 초기 사용자 불만 가능성'],
+            reco: '장기적으로 커스터마이징 요구가 크고, 내부 IT 역량과 유지보수 인력을 안정적으로 확보할 수 있을 때 적합한 선택입니다. 단기간에 표준 기능만 필요하다면 상용 솔루션(파일럿 프로그램) 대비 상대적으로 불리할 수 있습니다.'
+        },
+        p1: {
+            pros: ['이미 다수 기업에서 검증된 상용 솔루션임', '빠른 도입이 가능함 (통상 1~2개월 내 구축 가능)', '벤더의 기술 지원 및 장애 대응 체계가 존재함', '초기 도입 비용을 계약 시점에 비교적 정확히 예측할 수 있음'],
+            cons: ['커스터마이징 범위가 벤더가 허용하는 수준으로 제한됨', '라이선스·유지보수 비용이 매년 지속적으로 발생함', '특정 벤더에 종속되는 구조가 됨(벤더 락인)'],
+            risks: ['벤더의 가격 정책 변경이나 라이선스 인상 가능성 (리스크 현황 AC 참고)', '국내 데이터 보호 규정 준수 여부를 계약 전 반드시 확인해야 함', '벤더의 로드맵과 우리 조직의 향후 요구사항이 맞지 않을 가능성'],
+            reco: '표준적인 업무 프로세스 비중이 높고, 빠른 도입과 안정적인 기술지원이 중요할 때 적합한 선택입니다. 세부 커스터마이징이 핵심 요구사항이라면 자체개발과 함께 재검토가 필요합니다.'
+        },
+        p2: {
+            pros: ['프로그램 1 대비 총소유비용(TCO)이 상대적으로 낮음', '오픈 API를 제공해 향후 확장·연동이 비교적 용이함', '핵심 기능 위주로 가볍게 시작하기에 적합함'],
+            cons: ['일부 고급 기능(고급 리포팅, 특수 산업 대응 등)이 부족할 수 있음', '프로그램 1 대비 도입 사례·커뮤니티 레퍼런스가 상대적으로 적음', '장기 지원 로드맵의 안정성을 추가로 확인할 필요가 있음'],
+            risks: ['벤더의 장기 지원 지속 여부에 대한 불확실성 (리스크 현황 AC 참고)', '기능 확장 시 예상보다 많은 추가 개발이 필요할 가능성'],
+            reco: '예산 제약이 크고 핵심 기능 위주로 우선 도입한 뒤 단계적으로 확장하고자 할 때 적합한 선택입니다. 장기 지원 안정성은 계약 전 벤더에 직접 확인하는 것을 권장합니다.'
+        }
+    };
+
+    /* ===== 2026-09-18 고도화: BA-evaluation.html과 완전히 동일한 EVAL_TRACKS =====
+       항목을 고치면 반드시 BA-evaluation.html의 EVAL_TRACKS도 같이 갱신할 것(단일 소스가 아니라
+       두 파일에 복제되어 있음 — 값 자체는 dash_eval_values로 공유되지만 항목 정의는 각자 보관). */
+    const EVAL_TRACKS = [
+        { key: 'std', ko: '표준기준', items: [
+            { key: 'std_feature', ko: '기능 충족도', w: 25 },
+            { key: 'std_initCost', ko: '초기 도입 비용', w: 15 },
+            { key: 'std_maintCost', ko: '유지보수 비용', w: 15 },
+            { key: 'std_buildTime', ko: '구축 기간', w: 15 },
+            { key: 'std_customization', ko: '커스터마이징 자유도', w: 10 },
+            { key: 'std_support', ko: '기술 지원', w: 10 },
+            { key: 'std_security', ko: '데이터 보안', w: 10 },
+        ]},
+        { key: 'ours', ko: '우리기준', items: [
+            { key: 'ours_trade', ko: '무역관리(USANCE) 대응력', w: 10 },
+            { key: 'ours_bom', ko: '자재관리 BOM 연계 정확도', w: 12 },
+            { key: 'ours_prod', ko: '생산관리공통 프로세스 적합도', w: 9 },
+            { key: 'ours_sales', ko: '영업관리 프로세스 적합도', w: 9 },
+            { key: 'ours_master', ko: '기준관리(기초정보) 유연성', w: 7 },
+            { key: 'ours_security', ko: '내부 보안·커스터마이징 자유도', w: 7 },
+            { key: 'ours_hr', ko: '인력 구조 대응력', w: 10 },
+            { key: 'ours_multitenancy', ko: '멀티테넌시·통합모듈 지원', w: 7 },
+            { key: 'ours_roleAccount', ko: '부서·역할 기반 계정 구조', w: 7 },
+            { key: 'ours_pnl', ko: '손익·비용구조 도출 유연성', w: 7 },
+            { key: 'ours_residual', ko: '실패·부분도입 시 잔존가치', w: 6 },
+            { key: 'ours_govfit', ko: '정부지원사업 적합성(로그·존속의무)', w: 9 },
+        ]},
+    ];
+    function itemScoreContribution(values, pid, item) {
+        const raw = Number((values[pid] || {})[item.key]);
+        if (!raw || raw < 1 || raw > 5) return 0;
+        return item.w * (raw / 5);
+    }
+    function trackTotal(values, pid, trackKey) {
+        const track = EVAL_TRACKS.find(t => t.key === trackKey);
+        return track.items.reduce((sum, it) => sum + itemScoreContribution(values, pid, it), 0);
+    }
+    function finalScore(values, pid) {
+        return (trackTotal(values, pid, 'std') + trackTotal(values, pid, 'ours')) / 2;
+    }
+    function fmtScore(n) { return (Math.round(n * 10) / 10).toFixed(1); }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+    /* ===== Supabase 공유 설정: BA-evaluation.html과 완전히 동일한 키를 읽고 씀 =====
+       dash_eval_programs / dash_eval_values 는 BA와 100% 공유(이 페이지에서 점수를 고치면
+       BA 표에도 바로 반영됨). dash_eval_details는 이 페이지가 새로 쓰는 키로, 프로그램별
+       장점/단점/리스크/권고 텍스트를 담음. 새 SQL 마이그레이션 불필요(app_settings 재사용). */
+    async function fetchDashboardSettings() {
+        try {
+            const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+            if (!sb) return null;
+            const { data, error } = await sb.rpc('get_dashboard_settings');
+            if (error) throw error;
+            return data || {};
+        } catch (e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+    }
+    async function saveDashboardSetting(key, value) {
+        try {
+            const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+            if (!sb || !myUsername || !myPw) return { success: false, message: '로그인 정보가 없습니다.' };
+            const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
+            if (error) throw error;
+            return data;
+        } catch (e) { console.error('공유 설정 저장 실패:', e); return { success: false, message: e.message }; }
+    }
+
+    function loadPrograms() {
+        try { const raw = localStorage.getItem('evalPrograms'); if (raw) return JSON.parse(raw); } catch (e) {}
+        return [
+            { id: 'inhouse', name: '자체 개발', icon: '🛠️' },
+            { id: 'p1', name: '파일럿: 프로그램 1', icon: '🧪' },
+            { id: 'p2', name: '파일럿: 프로그램 2', icon: '🧪' },
+        ];
+    }
+    function savePrograms(list) { localStorage.setItem('evalPrograms', JSON.stringify(list)); }
+    function loadValues() {
+        try { const raw = localStorage.getItem('evalValues'); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+    }
+    function saveValues(obj) { localStorage.setItem('evalValues', JSON.stringify(obj)); }
+    function loadDetails() {
+        try { const raw = localStorage.getItem('evalDetails'); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+    }
+    function saveDetails(obj) { localStorage.setItem('evalDetails', JSON.stringify(obj)); }
+
+    function currentDetail() {
+        const all = loadDetails();
+        if (all[PROGRAM_ID]) return all[PROGRAM_ID];
+        if (DEFAULT_DETAILS[PROGRAM_ID]) return DEFAULT_DETAILS[PROGRAM_ID];
+        return { pros: [], cons: [], risks: [], reco: '' };
+    }
+
+    let _saveTimer = null;
+    function scheduleCloudSave() {
+        if (!isAdmin) return;
+        clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(persistToCloud, 800);
+    }
+    async function persistToCloud() {
+        if (!isAdmin) return;
+        await saveDashboardSetting('dash_eval_programs', JSON.stringify(loadPrograms()));
+        await saveDashboardSetting('dash_eval_values', JSON.stringify(loadValues()));
+        await saveDashboardSetting('dash_eval_details', JSON.stringify(loadDetails()));
+    }
+
+    // 이 페이지도 BA와 마찬가지로 menu.html iframe 안에서 열리므로, 이름을 바꾸면
+    // 셸의 사이드 메뉴 라벨도 그 자리에서 바로 갱신되도록 알려준다.
+    function notifyShellSidebar() {
+        try { if (window.parent && window.parent !== window && typeof window.parent.renderSidebar === 'function') window.parent.renderSidebar(); }
+        catch (e) {}
+    }
+
+    /* ===== 프로그램 이름 (BA 표의 열 이름과 동일한 데이터) ===== */
+    function renderProgramName() {
+        const programs = loadPrograms();
+        const p = programs.find(x => x.id === PROGRAM_ID);
+        document.getElementById('pageIcon').textContent = (p && p.icon) || '🧪';
+        document.getElementById('brandLogo').textContent = 'J';
+        document.getElementById('brandTitle').textContent = ((p && p.icon) || '🧪') + ' ' + ((p && p.name) || '도입 평가 상세');
+        document.getElementById('brandSub').textContent = '도입 평가 상세 프로파일 · 이 화면과 종합 비교(BA)가 실시간으로 공유됩니다';
+        const input = document.getElementById('progNameInput');
+        input.value = (p && p.name) || '';
+        input.disabled = !isAdmin;
+        input.oninput = () => {
+            const list = loadPrograms();
+            const item = list.find(x => x.id === PROGRAM_ID);
+            if (item) { item.name = input.value; savePrograms(list); }
+            document.getElementById('brandTitle').textContent = ((p && p.icon) || '🧪') + ' ' + input.value;
+            notifyShellSidebar();
+            scheduleCloudSave();
+        };
+    }
+
+    /* ===== 평가 점수 (BA 표의 셀과 완전히 동일한 데이터 — 여기서 고치면 BA에도 반영) =====
+       2026-09-18 고도화: 항목마다 1~5점 채점 + 가중치 자동환산. 요약(표준기준 합계·
+       우리기준 합계·최종평균)을 카드 상단에 항상 노출한다. */
+    function renderSummaryBar(values) {
+        document.getElementById('summaryBar').innerHTML = `
+            <div class="summary-box">
+                <div class="summary-label">표준기준 합계</div>
+                <div class="summary-value">${fmtScore(trackTotal(values, PROGRAM_ID, 'std'))}</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">우리기준 합계</div>
+                <div class="summary-value">${fmtScore(trackTotal(values, PROGRAM_ID, 'ours'))}</div>
+            </div>
+            <div class="summary-box final">
+                <div class="summary-label">최종 평균</div>
+                <div class="summary-value">${fmtScore(finalScore(values, PROGRAM_ID))}</div>
+            </div>`;
+    }
+    /* 별점 위젯 — BA-evaluation.html의 starRatingHTML과 완전히 동일한 구현(값 자체는 dash_eval_values로
+       공유되지만 위젯 코드는 두 파일에 복제되어 있음 — 손보면 두 파일 모두 갱신할 것). */
+    // 2026-09-18 재정리: 행마다 "n/5"·"미입력" 텍스트와 ✕ 버튼을 붙이던 걸 없애고 별만 남김 —
+    // 척도 설명은 starLegendHTML()로 카드 위에 한 번만 표시. 정확한 값은 별에 마우스를 올리면
+    // title 툴팁으로 확인 가능.
+    function starRatingHTML(name, val, editable, onChangeExpr, onClearExpr) {
+        const v = Number(val) || 0;
+        if (!editable) {
+            const stars = [1, 2, 3, 4, 5].map(n => `<span class="star ${n <= v ? 'filled' : 'empty'}">★</span>`).join('');
+            return `<span class="star-rating-ro" title="${v ? v + '/5' : '미입력'}">${stars}</span>`;
+        }
+        // 라디오 버튼은 원래 "이미 선택된 걸 다시 클릭"해도 저절로 해제되지 않으므로, 지금 선택된
+        // 값과 같은 별에는 onclick을 따로 달아 "다시 클릭 = 선택 해제(미입력으로)"가 되도록 한다.
+        // (다른 값으로 바뀌는 클릭/키보드 이동은 그대로 onchange가 처리 — this.value로 새 값 저장)
+        let radios = '';
+        for (let n = 5; n >= 1; n--) {
+            const id = 'star-' + name + '-' + n;
+            const isCurrent = v === n;
+            radios += `<input type="radio" id="${id}" name="star-${name}" value="${n}" ${isCurrent ? 'checked' : ''}
+                    onchange="${esc(onChangeExpr)}"${isCurrent ? ` onclick="this.checked=false;${esc(onClearExpr)}"` : ''}>
+                <label for="${id}" title="${n}점${isCurrent ? ' · 다시 클릭하면 취소' : ''}"></label>`;
+        }
+        return `<span class="star-rating-wrap"><span class="star-rating" title="${v ? v + '점' : '미입력'}">${radios}</span></span>`;
+    }
+
+    /* 점수 카드 위에 한 번만 표시하는 척도 범례 — BA-evaluation.html의 starLegendHTML()과 동일 구조. */
+    function starLegendHTML() {
+        const mini = n => `<span class="star-rating-ro">${[1,2,3,4,5].map(i => `<span class="star ${i <= n ? 'filled' : 'empty'}">★</span>`).join('')}</span>`;
+        return `<div class="star-legend">
+                <b>평가 척도</b>
+                <span class="legend-item">${mini(1)} 1점(미흡)</span>
+                <span class="legend-item">${mini(3)} 3점(보통)</span>
+                <span class="legend-item">${mini(5)} 5점(우수)</span>
+                ${isAdmin ? `<span class="legend-hint">별을 클릭해 평가 · 선택된 별을 다시 클릭하면 취소</span>` : ''}
+            </div>`;
+    }
+
+    function scoreItemHTML(item, v) {
+        const val = v[item.key] || '';
+        const widget = starRatingHTML(item.key, val, isAdmin,
+            `updateScore('${item.key}', this.value)`,
+            `updateScore('${item.key}', '')`);
+        return `
+            <div class="score-item">
+                <div class="score-label">${esc(item.ko)} <span class="score-weight-tag">(${item.w}점)</span></div>
+                ${widget}
+            </div>`;
+    }
+    function renderScores() {
+        const values = loadValues();
+        const v = values[PROGRAM_ID] || {};
+        document.getElementById('scoreCardTitle').textContent = isAdmin
+            ? '📊 평가 점수 (종합 비교와 실시간 공유 · 여기서 입력하면 종합 비교 표에도 바로 반영됩니다)'
+            : '📊 평가 점수 (종합 비교와 실시간 공유)';
+        document.getElementById('scoreNote').textContent = isAdmin
+            ? '항목마다 1~5점을 매기면 가중치대로 자동 환산되어 위 요약에 실시간 반영됩니다.'
+            : '값을 수정하려면 관리자로 로그인하세요. 이 페이지 또는 도입평가 > 종합 비교, 어느 쪽에서 입력해도 서로 반영됩니다.';
+        renderSummaryBar(values);
+        document.getElementById('scoreLegend').innerHTML = starLegendHTML();
+        document.getElementById('scoreGrid').innerHTML = EVAL_TRACKS.map(track => `
+            <div class="score-group-header">▍${esc(track.ko)} (100점 만점)</div>
+            ${track.items.map(item => scoreItemHTML(item, v)).join('')}
+        `).join('');
+    }
+    function updateScore(key, val) {
+        if (!isAdmin) return;
+        const values = loadValues();
+        values[PROGRAM_ID] = values[PROGRAM_ID] || {};
+        values[PROGRAM_ID][key] = val;
+        saveValues(values);
+        // 2026-09-18: 별점 클릭 직후 별 자체는 (브라우저 기본 라디오 동작으로) 바로 채워지지만,
+        // 요약바만 갱신하고 점수 카드 그리드를 다시 그리지 않으면 옆의 "n/5" 숫자·✕ 지우기 버튼이
+        // 갱신되지 않아 "클릭해도 반응이 이상하다"처럼 보였다. renderScores()가 요약바까지 함께
+        // 갱신하므로 이걸로 교체해서 클릭할 때마다 화면 전체가 방금 입력한 값과 항상 일치하게 한다.
+        renderScores();
+        scheduleCloudSave();
+    }
+
+    /* ===== 장점/단점/리스크 — 관리자는 줄 추가·수정·삭제, 뷰어는 읽기 전용 ===== */
+    function autoGrow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+    function renderLineList(containerId, field, emptyMsg) {
+        const detail = currentDetail();
+        const lines = detail[field] || [];
+        const el = document.getElementById(containerId);
+        if (!isAdmin) {
+            el.innerHTML = lines.length
+                ? lines.map(t => `<li><span>${esc(t)}</span></li>`).join('')
+                : `<li style="padding-left:0;" class="empty-hint">${emptyMsg}</li>`;
+            return;
+        }
+        el.innerHTML = lines.map((t, idx) => `
+            <li>
+                <textarea class="li-text" rows="1" oninput="updateLine('${field}', ${idx}, this.value); autoGrow(this);">${esc(t)}</textarea>
+                <button class="li-del" title="삭제" onclick="removeLine('${field}', ${idx})">🗑</button>
+            </li>
+        `).join('') + `<li style="padding-left:0;"><button class="add-line-btn" onclick="addLine('${field}')">+ 항목 추가</button></li>`;
+        el.querySelectorAll('textarea.li-text').forEach(autoGrow);
+    }
+    function addLine(field) {
+        if (!isAdmin) return;
+        const all = loadDetails();
+        all[PROGRAM_ID] = all[PROGRAM_ID] || JSON.parse(JSON.stringify(currentDetail()));
+        all[PROGRAM_ID][field] = all[PROGRAM_ID][field] || [];
+        all[PROGRAM_ID][field].push('');
+        saveDetails(all);
+        renderAll();
+        scheduleCloudSave();
+    }
+    function updateLine(field, idx, val) {
+        if (!isAdmin) return;
+        const all = loadDetails();
+        all[PROGRAM_ID] = all[PROGRAM_ID] || JSON.parse(JSON.stringify(currentDetail()));
+        all[PROGRAM_ID][field] = all[PROGRAM_ID][field] || [];
+        all[PROGRAM_ID][field][idx] = val;
+        saveDetails(all);
+        scheduleCloudSave();
+    }
+    function removeLine(field, idx) {
+        if (!isAdmin) return;
+        const all = loadDetails();
+        all[PROGRAM_ID] = all[PROGRAM_ID] || JSON.parse(JSON.stringify(currentDetail()));
+        all[PROGRAM_ID][field] = (all[PROGRAM_ID][field] || []).filter((_, i) => i !== idx);
+        saveDetails(all);
+        renderAll();
+        scheduleCloudSave();
+    }
+
+    function renderReco() {
+        const detail = currentDetail();
+        const el = document.getElementById('recoText');
+        el.value = detail.reco || '';
+        el.disabled = !isAdmin;
+        el.placeholder = isAdmin ? '이 프로그램에 대한 권고 의견을 입력하세요.' : '아직 작성된 권고 내용이 없습니다.';
+        el.oninput = () => {
+            if (!isAdmin) return;
+            const all = loadDetails();
+            all[PROGRAM_ID] = all[PROGRAM_ID] || JSON.parse(JSON.stringify(currentDetail()));
+            all[PROGRAM_ID].reco = el.value;
+            saveDetails(all);
+            scheduleCloudSave();
+        };
+        autoGrow(el);
+    }
+
+    function renderAll() {
+        renderProgramName();
+        renderScores();
+        renderLineList('prosList', 'pros', '아직 작성된 장점이 없습니다.');
+        renderLineList('consList', 'cons', '아직 작성된 단점이 없습니다.');
+        renderLineList('risksList', 'risks', '아직 작성된 리스크가 없습니다.');
+        renderReco();
+    }
+
+    async function init() {
+        renderAll();
+        const remote = await fetchDashboardSettings();
+        if (remote) {
+            if (remote.dash_eval_programs) localStorage.setItem('evalPrograms', remote.dash_eval_programs);
+            if (remote.dash_eval_values) localStorage.setItem('evalValues', remote.dash_eval_values);
+            if (remote.dash_eval_details) localStorage.setItem('evalDetails', remote.dash_eval_details);
+            renderAll();
+        }
+    }
+    init();
+
+    const HEADER_THEMES = {
+        A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+        B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+        C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+    };
+    function applyHeaderTheme(key){
+        const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+        Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+    }
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+</script>
+</body>
+</html>

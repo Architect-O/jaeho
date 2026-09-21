@@ -242,7 +242,7 @@
     </div>
     <div class="user-area">
         <div class="user-chip">👤 <span id="username">-</span><span id="roleBadge" class="role-badge"></span></div>
-        <a class="ghost-btn" href="./settings.html" id="settingsBtn" title="설정">⚙ 설정</a>
+        <a class="ghost-btn" href="./GB-settings.html" id="settingsBtn" title="설정">⚙ 설정</a>
         <button class="ghost-btn" id="logoutBtn" onclick="handleLogout()">로그아웃</button>
     </div>
 </header>
@@ -325,31 +325,12 @@
         if (remote.dash_lang) { currentLang = remote.dash_lang; localStorage.setItem('dashLang', currentLang); }
         if (remote.dash_site_title !== undefined) localStorage.setItem('dashSiteTitle', remote.dash_site_title);
         if (remote.dash_site_subtitle !== undefined) localStorage.setItem('dashSiteSubtitle', remote.dash_site_subtitle);
+        // 도입평가 사이드 메뉴를 동적으로 만들 때 쓰는 프로그램 목록도 시작할 때 최신화해둔다.
         if (remote.dash_eval_programs) localStorage.setItem('evalPrograms', remote.dash_eval_programs);
-        if (remote.dash_eval_values) localStorage.setItem('evalValues', remote.dash_eval_values);
         renderHeaderTexts();
         renderCategoryBar();
         renderSidebar();
         renderContent();
-    }
-
-    async function syncEvalFromCloud() {
-        const remote = await fetchDashboardSettings();
-        if (!remote) return;
-        if (remote.dash_eval_programs) localStorage.setItem('evalPrograms', remote.dash_eval_programs);
-        if (remote.dash_eval_values) localStorage.setItem('evalValues', remote.dash_eval_values);
-    }
-
-    let _evalSaveTimer = null;
-    function scheduleEvalCloudSave() {
-        if (!isAdmin) return;
-        clearTimeout(_evalSaveTimer);
-        _evalSaveTimer = setTimeout(persistEvalToCloud, 800);
-    }
-    async function persistEvalToCloud() {
-        if (!isAdmin) return;
-        await saveDashboardSetting('dash_eval_programs', JSON.stringify(loadEvalPrograms()));
-        await saveDashboardSetting('dash_eval_values', JSON.stringify(loadEvalValues()));
     }
 
     function renderHeaderTexts() {
@@ -422,52 +403,97 @@
     }
 
     // ===== Menu data model =====
-    // type: 'overview' | 'file' | 'compare' | 'placeholder'
+    // type: 'overview' | 'file' | 'placeholder'
+    // 파일명 코드 규칙: 카테고리 A~G(대시보드~시스템) + 항목 순번(A,B,C...) = 두 자리 코드.
+    // 실제 파일이 있는 항목은 "코드-원래이름.html"로 저장함 (예: FA-reports-1col.html).
+    // 아직 파일이 없는 placeholder 항목도 code만 미리 정해둠 — 나중에 만들 때 그대로 쓰면 됨.
     const CATEGORIES = [
         { key: 'dashboard', icon: '📊', label: '대시보드', labelEn: 'Dashboard', items: [
-            { key: 'overview', icon: '🏠', label: '전체 현황', labelEn: 'Overview', type: 'overview' },
-            { key: 'kpi', icon: '📈', label: 'KPI 모니터링', labelEn: 'KPI Monitoring', type: 'file', file: 'kpi-1col.html' },
-            { key: 'risk', icon: '⚠️', label: '리스크 현황', labelEn: 'Risk Status', type: 'placeholder' },
+            { key: 'overview', code: 'AA', icon: '🏠', label: '전체 현황', labelEn: 'Overview', type: 'overview' },
+            { key: 'kpi', code: 'AB', icon: '📈', label: 'KPI 모니터링', labelEn: 'KPI Monitoring', type: 'file', file: 'AB-kpi-1col.html' },
+            { key: 'risk', code: 'AC', icon: '⚠️', label: '리스크 현황', labelEn: 'Risk Status', type: 'file', file: 'AC-risk.html' },
         ]},
         { key: 'evaluation', icon: '🔬', label: '도입 평가', labelEn: 'Adoption Evaluation', items: [
-            { key: 'eval-compare', icon: '⚖️', label: '종합 비교', labelEn: 'Comparison', type: 'compare' },
-            { key: 'eval-inhouse', icon: '🛠️', label: '자체 개발', labelEn: 'In-house Development', type: 'placeholder' },
-            { key: 'eval-p1', icon: '🧪', label: '파일럿: 프로그램 1', labelEn: 'Pilot: Program 1', type: 'placeholder' },
-            { key: 'eval-p2', icon: '🧪', label: '파일럿: 프로그램 2', labelEn: 'Pilot: Program 2', type: 'placeholder' },
+            // 2026-09-18: 개별 평가 후보(자체개발/파일럿1/2/신규 프로그램 등)는 더 이상 이 배열에
+            // 하나씩 고정 등록하지 않는다. BA(종합 비교)에서 "+ 프로그램 추가"로 열을 만들면
+            // getCategoryItems()가 그 목록(evalPrograms, BA와 완전히 동일한 데이터)을 읽어와
+            // 자동으로 사이드 메뉴 항목을 만들어준다 — 아래에는 항상 고정인 3개만 남겨둔다.
+            // 순서: BA(종합 비교, 맨 앞) → BG(단계별 잔존가치 분석) → (동적 프로그램들) →
+            // BE(파일럿3·유통) → BH(파일럿4·보세창고운영) → BI(파일럿5·무역) → BJ(파일럿6·식품제조).
+            // 2026-09-18: 4개 사업군(유통/보세창고운영/무역/식품제조)을 각각 독립 파일럿으로
+            // 구축해 나중에 통합 모듈화 방향을 판단하기 위한 것 — 모듈_BH/BI/BJ 문서 참고.
+            { key: 'eval-compare', code: 'BA', icon: '⚖️', label: '종합 비교', labelEn: 'Comparison', type: 'file', file: 'BA-evaluation.html' },
+            { key: 'eval-residual', code: 'BG', icon: '📉', label: '단계별 잔존가치 분석', labelEn: 'Phased Residual Value', type: 'file', file: 'BG-잔존가치분석.html' },
+            { key: 'eval-p3', code: 'BE', icon: '🏭', label: '파일럿: 프로그램 3 (가상 ERP · 유통)', labelEn: 'Pilot: Program 3 (Virtual ERP · Distribution)', type: 'file', file: 'BE-pilot3.html' },
+            { key: 'eval-p4', code: 'BH', icon: '🏗', label: '파일럿4: 보세창고 운영', labelEn: 'Pilot 4: Bonded Warehouse Ops', type: 'file', file: 'BH-pilot4.html' },
+            { key: 'eval-p5', code: 'BI', icon: '🚢', label: '파일럿5: 무역', labelEn: 'Pilot 5: Trading', type: 'file', file: 'BI-pilot5.html' },
+            { key: 'eval-p6', code: 'BJ', icon: '🍱', label: '파일럿6: 식품제조', labelEn: 'Pilot 6: Food Manufacturing', type: 'file', file: 'BJ-pilot6.html' },
         ]},
         { key: 'schedule', icon: '📅', label: '일정 관리', labelEn: 'Schedule', items: [
-            { key: 'timeline', icon: '🚀', label: '마일스톤', labelEn: 'Milestones', type: 'file', file: 'timeline-1col.html' },
-            { key: 'progress', icon: '📊', label: '단계별 진행도', labelEn: 'Progress by Phase', type: 'file', file: 'progress-1col.html' },
-            { key: 'detail-schedule', icon: '🗓️', label: '상세 일정', labelEn: 'Detailed Schedule', type: 'placeholder' },
-            { key: 'events', icon: '⚡', label: '중요 이벤트', labelEn: 'Key Events', type: 'placeholder' },
+            { key: 'timeline', code: 'CA', icon: '🚀', label: '마일스톤', labelEn: 'Milestones', type: 'file', file: 'CA-timeline-1col.html' },
+            { key: 'progress', code: 'CB', icon: '📊', label: '단계별 진행도', labelEn: 'Progress by Phase', type: 'file', file: 'CB-progress-1col.html' },
+            { key: 'detail-schedule', code: 'CC', icon: '🗓️', label: '상세 일정', labelEn: 'Detailed Schedule', type: 'file', file: 'CC-schedule-detail.html' },
+            { key: 'events', code: 'CD', icon: '⚡', label: '중요 이벤트', labelEn: 'Key Events', type: 'file', file: 'CD-events.html' },
+            { key: 'calendar', code: 'CE', icon: '📆', label: '일정 캘린더', labelEn: 'Schedule Calendar', type: 'file', file: 'CE-calendar.html' },
         ]},
         { key: 'lessons', icon: '📚', label: '학습 & 분석', labelEn: 'Lessons & Analysis', items: [
-            { key: 'failures', icon: '📋', label: '기존 실패사항', labelEn: 'Past Failures', type: 'placeholder' },
-            { key: 'lessons-learned', icon: '💡', label: '교훈 도출', labelEn: 'Lessons Learned', type: 'placeholder' },
-            { key: 'best-practice', icon: '✅', label: 'Best Practice', labelEn: 'Best Practices', type: 'placeholder' },
+            { key: 'best-practice', code: 'DC', icon: '✅', label: 'Best Practice', labelEn: 'Best Practices', type: 'file', file: 'DC-best-practice.html' },
+            { key: 'lessons-learned', code: 'DB', icon: '💡', label: '교훈 도출', labelEn: 'Lessons Learned', type: 'file', file: 'DB-lessons.html' },
+            { key: 'failures', code: 'DA', icon: '📋', label: '기존 실패사항', labelEn: 'Past Failures', type: 'file', file: 'DA-failures.html' },
+            { key: 'legacy-structure', code: 'DD', icon: '🗺️', label: '기존 ERP 구조 분석', labelEn: 'Legacy ERP Structure', type: 'file', file: 'DD-legacy-structure.html' },
         ]},
         { key: 'architecture', icon: '🏗️', label: '구축 설계', labelEn: 'Architecture', items: [
-            { key: 'arch', icon: '🎨', label: '아키텍처', labelEn: 'Architecture', type: 'placeholder' },
-            { key: 'logic', icon: '🔗', label: '도출 로직', labelEn: 'Derivation Logic', type: 'placeholder' },
-            { key: 'data-map', icon: '🗂️', label: '데이터 맵핑', labelEn: 'Data Mapping', type: 'placeholder' },
+            { key: 'arch', code: 'EA', icon: '🎨', label: '아키텍처', labelEn: 'Architecture', type: 'file', file: 'EA-architecture.html' },
+            { key: 'logic', code: 'EB', icon: '🔗', label: '도출 로직', labelEn: 'Derivation Logic', type: 'file', file: 'EB-logic.html' },
+            { key: 'data-map', code: 'EC', icon: '🗂️', label: '데이터 맵핑', labelEn: 'Data Mapping', type: 'file', file: 'EC-data-map.html' },
         ]},
         { key: 'reports', icon: '📑', label: '문서 & 리포팅', labelEn: 'Documents & Reporting', items: [
-            { key: 'weekly-report', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'reports-1col.html' },
-            { key: 'proposal', icon: '📖', label: '사업기안서', labelEn: 'Business Proposal', type: 'placeholder' },
-            { key: 'changelog', icon: '📝', label: '변경 이력', labelEn: 'Changelog', type: 'placeholder' },
-            { key: 'archive', icon: '💾', label: '아카이브', labelEn: 'Archive', type: 'placeholder' },
+            { key: 'weekly-report', code: 'FA', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports-1col.html' },
+            { key: 'proposal', code: 'FB', icon: '📖', label: '사업기안서', labelEn: 'Business Proposal', type: 'file', file: 'FB-proposal.html' },
+            { key: 'changelog', code: 'FC', icon: '📝', label: '변경 이력', labelEn: 'Changelog', type: 'file', file: 'FC-changelog.html' },
+            { key: 'archive', code: 'FD', icon: '💾', label: '아카이브', labelEn: 'Archive', type: 'file', file: 'FD-archive.html' },
         ]},
         { key: 'system', icon: '⚙️', label: '시스템', labelEn: 'System', items: [
-            { key: 'users', icon: '👥', label: '사용자 관리', labelEn: 'User Management', type: 'file', file: 'users.html', adminOnly: true },
-            { key: 'permissions', icon: '🔐', label: '권한 설정', labelEn: 'Permissions', type: 'file', file: 'settings.html' },
-            { key: 'logs', icon: '⚡', label: '로그', labelEn: 'Logs', type: 'placeholder' },
+            { key: 'users', code: 'GA', icon: '👥', label: '사용자 관리', labelEn: 'User Management', type: 'file', file: 'GA-users.html', adminOnly: true },
+            { key: 'permissions', code: 'GB', icon: '🔐', label: '권한 설정', labelEn: 'Permissions', type: 'file', file: 'GB-settings.html' },
+            { key: 'layout', code: 'GC', icon: '🗺️', label: '레이아웃', labelEn: 'Layout', type: 'file', file: 'GC-layout.html' },
+            { key: 'logs', code: 'GD', icon: '⚡', label: '로그', labelEn: 'Logs', type: 'file', file: 'GD-log.html' },
         ]},
     ];
+
+    // ===== 도입평가(evaluation) 사이드 메뉴 동적 생성 =====
+    // BA-evaluation.html(종합 비교)의 "evalPrograms" 데이터를 이 셸도 함께 읽어서,
+    // BA에 프로그램 열이 추가/삭제/이름변경되면 사이드 메뉴도 자동으로 따라간다.
+    // (contentFrame은 sandbox 없이 srcdoc으로 로드되므로 iframe과 이 셸은 같은 origin의
+    //  localStorage를 실시간으로 공유한다 — BA 안에서 저장한 값이 바로 이 셸에서도 보인다.)
+    function loadEvalProgramsForSidebar() {
+        try {
+            const raw = localStorage.getItem('evalPrograms');
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return [
+            { id: 'inhouse', name: '자체 개발', icon: '🛠️' },
+            { id: 'p1', name: '파일럿: 프로그램 1', icon: '🧪' },
+            { id: 'p2', name: '파일럿: 프로그램 2', icon: '🧪' },
+        ];
+    }
+    function getCategoryItems(cat) {
+        if (cat.key !== 'evaluation') return cat.items;
+        const programs = loadEvalProgramsForSidebar();
+        const dynamicItems = programs.map(p => ({
+            key: 'eval-' + p.id, code: 'BF', icon: p.icon || '🧪',
+            label: p.name || '(이름 없음)', labelEn: p.name || '(unnamed)',
+            type: 'file', file: 'BF-eval-detail.html', pid: p.id,
+        }));
+        // cat.items[0] = BA(종합 비교, 항상 맨 앞), cat.items[1] = BG(단계별 잔존가치 분석, BA 바로 다음 고정),
+        // cat.items[2..5] = BE→BH→BI→BJ(4개 사업군 파일럿, 동적 프로그램들 바로 다음, 항상 이 순서로 맨 뒤 고정)
+        return [cat.items[0], cat.items[1], ...dynamicItems, cat.items[2], cat.items[3], cat.items[4], cat.items[5]];
+    }
 
     function findItem(catKey, itemKey) {
         const cat = CATEGORIES.find(c => c.key === catKey);
         if (!cat) return null;
-        const item = cat.items.find(i => i.key === itemKey);
+        const item = getCategoryItems(cat).find(i => i.key === itemKey);
         if (!item) return null;
         return { cat, item };
     }
@@ -479,8 +505,24 @@
     function selectCategory(catKey) {
         const cat = CATEGORIES.find(c => c.key === catKey);
         if (!cat) return;
-        const visibleItems = cat.items.filter(i => !i.adminOnly || isAdmin);
-        selectItem(catKey, (visibleItems[0] || cat.items[0]).key);
+        const items = getCategoryItems(cat);
+        const visibleItems = items.filter(i => !i.adminOnly || isAdmin);
+        selectItem(catKey, (visibleItems[0] || items[0]).key);
+
+        // 도입평가 탭을 열 때마다, 혹시 다른 기기/세션에서 방금 프로그램을
+        // 추가/삭제했을 수 있으니 최신 목록을 한 번 더 확인해 사이드 메뉴를 갱신한다.
+        if (catKey === 'evaluation') {
+            fetchDashboardSettings().then(remote => {
+                if (!remote || !remote.dash_eval_programs) return;
+                if (remote.dash_eval_programs === localStorage.getItem('evalPrograms')) return;
+                localStorage.setItem('evalPrograms', remote.dash_eval_programs);
+                if (!findItem(currentCategory, currentItem)) {
+                    selectCategory(currentCategory);
+                } else {
+                    renderSidebar();
+                }
+            });
+        }
     }
 
     function selectItem(catKey, itemKey) {
@@ -510,7 +552,7 @@
         const catsToShow = isOverview ? CATEGORIES : CATEGORIES.filter(c => c.key === currentCategory);
         const sidebar = document.getElementById('sidebar');
         sidebar.innerHTML = catsToShow.map(cat => {
-            const items = cat.items.filter(i => !i.adminOnly || isAdmin);
+            const items = getCategoryItems(cat).filter(i => !i.adminOnly || isAdmin);
             return `
                 <div class="sb-section">
                     <div class="sb-section-title">${cat.icon} ${L(cat.label, cat.labelEn)}</div>
@@ -562,7 +604,15 @@
             const MAX_HEIGHT = 20000; // 만약을 위한 안전 상한선
             let lastHeight = 0;
             const resize = () => {
-                const raw = doc.documentElement.scrollHeight || doc.body.scrollHeight;
+                // documentElement.scrollHeight는 항상 0보다 큰 값을 반환하기 때문에
+                // (구 코드의 "documentElement || body" 순서에서는 body 쪽이 사실상 절대
+                // 쓰이지 않았음), 실제 렌더링된 콘텐츠 높이를 더 정확히 반영하는
+                // body 쪽 측정값을 우선 사용합니다. documentElement가 간헐적으로
+                // body보다 훨씬 큰 값을 보고하는 경우가 실제로 관측되었습니다
+                // (evaluation.html 검증 중 body=2074px인데 documentElement=3952px로
+                //  측정되어 iframe 하단에 빈 여백이 남는 문제가 있었음).
+                const bodyH = doc.body ? Math.max(doc.body.scrollHeight, doc.body.offsetHeight) : 0;
+                const raw = bodyH || (doc.documentElement ? doc.documentElement.scrollHeight : 0);
                 const h = Math.min(raw, MAX_HEIGHT);
                 if (Math.abs(h - lastHeight) < 2) return; // 미세한 변화는 무시해 루프 방지
                 lastHeight = h;
@@ -599,7 +649,15 @@
             try {
                 const res = await fetch(item.file, { cache: 'no-store' });
                 if (res.ok) {
-                    const html = await res.text();
+                    let html = await res.text();
+                    // 도입평가의 동적 프로그램 항목(BF-eval-detail.html)처럼, 하나의 파일을
+                    // 여러 사이드 메뉴 항목이 공유하는 경우 item.pid로 "어느 프로그램인지"를
+                    // 알려준다. srcdoc은 주소창 URL이 없어 쿼리스트링을 못 쓰므로, 대신
+                    // 파일 안에 window.__EVAL_PID__ 전역변수를 심어서 전달한다.
+                    if (item.pid) {
+                        const pidScript = '<script>window.__EVAL_PID__=' + JSON.stringify(item.pid) + ';<\/script>';
+                        html = html.includes('<head>') ? html.replace('<head>', '<head>' + pidScript) : (pidScript + html);
+                    }
                     contentInner.style.display = 'none';
                     contentFrame.style.display = 'block';
                     contentFrame.srcdoc = html;
@@ -617,12 +675,6 @@
         contentInner.style.display = 'block';
 
         if (item.type === 'overview') { contentInner.innerHTML = overviewHTML(); return; }
-        if (item.type === 'compare') {
-            contentInner.innerHTML = compareHTML(); // 로컬 캐시로 즉시 표시
-            await syncEvalFromCloud();               // 최신 공유 데이터로 갱신
-            refreshCompareScreen();
-            return;
-        }
         contentInner.innerHTML = placeholderHTML(cat, item);
     }
 
@@ -654,140 +706,10 @@
         `;
     }
 
-    // ===== 도입 평가 · 종합 비교 (동적 프로그램 추가/삭제/편집) =====
-    // 예전 settings.html의 "메뉴 항목 추가" 로직(더 이상 실제 대시보드에 반영되지 않던 기능)을
-    // 실제로 쓰이는 이 화면으로 옮겨왔습니다. 프로그램 열 추가/이름변경/삭제, 각 셀 값 입력이
-    // 모두 즉시 localStorage에 저장되어 새로고침해도 유지됩니다.
-    const EVAL_CRITERIA = [
-        { key: 'feature', ko: '기능 충족도', en: 'Feature Fit' },
-        { key: 'initCost', ko: '초기 도입 비용', en: 'Initial Cost' },
-        { key: 'maintCost', ko: '유지보수 비용', en: 'Maintenance Cost' },
-        { key: 'buildTime', ko: '구축 기간', en: 'Implementation Time' },
-        { key: 'customization', ko: '커스터마이징 자유도', en: 'Customization Flexibility' },
-        { key: 'support', ko: '기술 지원', en: 'Technical Support' },
-        { key: 'security', ko: '데이터 보안', en: 'Data Security' },
-        { key: 'overall', ko: '종합 점수', en: 'Overall Score' },
-    ];
-
-    function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
-    function loadEvalPrograms() {
-        try {
-            const raw = localStorage.getItem('evalPrograms');
-            if (raw) return JSON.parse(raw);
-        } catch (e) {}
-        const def = [
-            { id: 'inhouse', name: L('자체 개발', 'In-house'), icon: '🛠️' },
-            { id: 'p1', name: L('파일럿: 프로그램 1', 'Pilot: Program 1'), icon: '🧪' },
-            { id: 'p2', name: L('파일럿: 프로그램 2', 'Pilot: Program 2'), icon: '🧪' },
-        ];
-        localStorage.setItem('evalPrograms', JSON.stringify(def));
-        return def;
-    }
-    function saveEvalPrograms(list) { localStorage.setItem('evalPrograms', JSON.stringify(list)); }
-    function loadEvalValues() {
-        try { const raw = localStorage.getItem('evalValues'); return raw ? JSON.parse(raw) : {}; }
-        catch (e) { return {}; }
-    }
-    function saveEvalValues(obj) { localStorage.setItem('evalValues', JSON.stringify(obj)); }
-
-    function refreshCompareScreen() {
-        if (currentCategory === 'evaluation' && currentItem === 'eval-compare') contentInner.innerHTML = compareHTML();
-    }
-
-    function addEvalProgram() {
-        if (!isAdmin) return;
-        const list = loadEvalPrograms();
-        const id = 'prog_' + Date.now();
-        list.push({ id, name: L('새 프로그램', 'New Program') + ' ' + (list.length + 1), icon: '🧪' });
-        saveEvalPrograms(list);
-        const values = loadEvalValues(); values[id] = {}; saveEvalValues(values);
-        refreshCompareScreen();
-        persistEvalToCloud();
-    }
-    function removeEvalProgram(id) {
-        if (!isAdmin) return;
-        const list = loadEvalPrograms();
-        if (list.length <= 1) { alert(L('최소 1개의 항목은 남아있어야 합니다.', 'At least one column must remain.')); return; }
-        if (!confirm(L('이 프로그램 열을 삭제할까요?', 'Delete this program column?'))) return;
-        saveEvalPrograms(list.filter(p => p.id !== id));
-        const values = loadEvalValues(); delete values[id]; saveEvalValues(values);
-        refreshCompareScreen();
-        persistEvalToCloud();
-    }
-    function renameEvalProgram(id, name) {
-        if (!isAdmin) return;
-        const list = loadEvalPrograms();
-        const p = list.find(x => x.id === id);
-        if (p) { p.name = name; saveEvalPrograms(list); }
-        scheduleEvalCloudSave();
-    }
-    function updateEvalValue(pid, ck, val) {
-        if (!isAdmin) return;
-        const values = loadEvalValues();
-        values[pid] = values[pid] || {};
-        values[pid][ck] = val;
-        saveEvalValues(values);
-        scheduleEvalCloudSave();
-    }
-
-    function compareHTML() {
-        const programs = loadEvalPrograms();
-        const values = loadEvalValues();
-        const cellFocus = "this.style.borderColor='var(--border)';this.style.background='#fff';";
-        const cellBlur = "this.style.borderColor='transparent';this.style.background='transparent';";
-        const dis = isAdmin ? '' : 'disabled';
-        const subtitle = isAdmin
-            ? L('셀을 클릭해 값을 입력하고, 프로그램 열을 자유롭게 추가·이름변경·삭제할 수 있습니다. 입력한 내용은 모든 사용자에게 공유됩니다.', 'Click any cell to enter a value, and freely add, rename, or remove program columns. Changes are shared with everyone.')
-            : L('실시간으로 공유되는 도입 평가 데이터입니다 (읽기 전용 · 관리자만 수정 가능).', 'Live shared adoption evaluation data (read-only — admins only can edit).');
-        return `
-            <div class="page-title">⚖️ ${L('도입 평가 · 종합 비교', 'Adoption Evaluation · Comparison')}</div>
-            <div class="page-subtitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-                <span>${subtitle}</span>
-                <button class="ghost-btn" onclick="syncEvalFromCloud().then(refreshCompareScreen)" style="flex-shrink:0;">🔄 ${L('새로고침', 'Refresh')}</button>
-            </div>
-            <div class="card" style="overflow-x:auto;">
-                <table class="compare-table">
-                    <thead>
-                        <tr>
-                            <th style="min-width:140px;">${L('평가 항목', 'Criteria')}</th>
-                            ${programs.map(p => `
-                                <th style="min-width:170px;">
-                                    <div style="display:flex;align-items:center;gap:6px;">
-                                        <span>${p.icon || '🧪'}</span>
-                                        <input type="text" value="${esc(p.name)}" oninput="renameEvalProgram('${p.id}', this.value)" ${dis}
-                                               style="flex:1;min-width:0;border:1px solid transparent;background:transparent;font:inherit;font-weight:700;text-transform:none;color:var(--text-secondary);padding:3px 4px;border-radius:5px;"
-                                               onfocus="${cellFocus}" onblur="${cellBlur}">
-                                        ${isAdmin ? `<button onclick="removeEvalProgram('${p.id}')" title="${L('열 삭제', 'Remove column')}"
-                                                style="border:none;background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:12px;flex-shrink:0;">🗑</button>` : ''}
-                                    </div>
-                                </th>
-                            `).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${EVAL_CRITERIA.map(c => `
-                            <tr>
-                                <td>${L(c.ko, c.en)}</td>
-                                ${programs.map(p => `
-                                    <td style="padding:4px 6px;">
-                                        <input type="text" value="${esc((values[p.id] || {})[c.key] || '')}" placeholder="${L('입력 필요', 'TBD')}" ${dis}
-                                               oninput="updateEvalValue('${p.id}','${c.key}', this.value)"
-                                               style="width:100%;border:1px solid transparent;background:transparent;font:inherit;color:var(--text);padding:6px 8px;border-radius:5px;"
-                                               onfocus="${cellFocus}" onblur="${cellBlur}">
-                                    </td>
-                                `).join('')}
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-            ${isAdmin ? `
-            <div style="margin-top:16px;">
-                <button class="ghost-btn" onclick="addEvalProgram()">+ ${L('프로그램 추가', 'Add Program')}</button>
-            </div>` : ''}
-        `;
-    }
+    // ===== 도입 평가 · 종합 비교 =====
+    // 예전에는 이 셸 파일 안에 인라인으로 있었으나, 독립 모듈 파일(evaluation.html)로
+    // 분리되어 다른 'file' 타입 항목(KPI, 사용자관리 등)과 동일하게 본문 영역에 로드됩니다.
+    // 관련 로직(EVAL_CRITERIA, compareHTML 등)은 evaluation.html 안에 있습니다.
 
     function overviewHTML() {
         return `
@@ -878,7 +800,6 @@
             renderContent();
         }
         if (e.key === 'dashSiteTitle' || e.key === 'dashSiteSubtitle') renderHeaderTexts();
-        if (e.key === 'evalPrograms' || e.key === 'evalValues') refreshCompareScreen();
     });
 </script>
 

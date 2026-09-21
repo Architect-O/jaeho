@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI 모니터링 - JAEHO ERP Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabaseClient.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --danger:#ef4444; --danger-soft:#fef2f2; --info:#3b82f6; --info-soft:#eff6ff;
+            --gray-100:#f8f9fa; --gray-200:#eceef0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--content-bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        a { color: inherit; }
+
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 22px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+        .btn-primary-sm { background: var(--primary); color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+        .btn-secondary-sm { background: var(--gray-100); color: var(--text); border:1px solid var(--border); padding:8px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .card { background: var(--card-bg); border-radius: 10px; padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: all 0.2s; }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+        .card-badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; white-space:nowrap; }
+        .badge-success { background: var(--success-soft); color: var(--success); }
+        .badge-warning { background: var(--warning-soft); color: #b45309; }
+        .badge-danger { background: var(--danger-soft); color: var(--danger); }
+        .badge-info { background: var(--info-soft); color: var(--info); }
+
+        .kpi-value { font-size: 32px; font-weight: 700; color: var(--primary); margin: 12px 0; }
+        .kpi-subtitle { font-size: 12px; color: var(--text-secondary); }
+        .kpi-status { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink:0; }
+        .status-dot.success { background: var(--success); }
+        .status-dot.warning { background: var(--warning); }
+        .status-dot.danger { background: var(--danger); }
+
+        .progress-bar-container { margin-top: 12px; }
+        .progress-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+        .progress-bar { width: 100%; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+
+        /* ===== 관리자 편집 모드 ===== */
+        .edit-field { width:100%; border:1px solid var(--border); border-radius:6px; padding:6px 8px; font:inherit; font-size:12.5px; color:var(--text); margin-top:4px; }
+        .edit-field.num { width:80px; display:inline-block; }
+        .edit-label { font-size:10.5px; color:var(--text-tertiary); text-transform:uppercase; font-weight:600; margin-top:10px; display:block; }
+        .edit-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .save-status { font-size:11.5px; margin-top:6px; }
+        .save-status.ok { color: var(--success); }
+        .save-status.err { color: var(--danger); }
+
+        .note-card { background: var(--gray-100); border: 1px dashed var(--border); border-radius: 8px; padding: 12px 14px; font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">📈 KPI 모니터링</div>
+                <div class="brand-sub">주요 성과 지표 현황</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">📊 KPI 모니터링</h1>
+                <p class="page-subtitle">핵심 숫자는 관리자가 입력하고, 진행률·상태 배지는 여기서 자동으로 계산합니다.</p>
+            </div>
+            <button class="btn-secondary-sm" id="editToggleBtn" style="display:none;" onclick="toggleEditMode()">✏️ 편집</button>
+        </div>
+
+        <div class="note-card" id="editNote" style="display:none;">
+            편집 모드입니다. 값을 바꾸면 잠시 후 자동 저장되어 모든 사용자에게 실시간으로 공유됩니다. 완료되면 다시 "편집" 버튼을 눌러 보기 모드로 돌아가세요.
+        </div>
+
+        <div class="dashboard-grid" id="kpiGrid"></div>
+        <div class="save-status" id="saveStatus"></div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        const myUsername = sessionStorage.getItem('username') || '';
+        const myPw = sessionStorage.getItem('pw') || '';
+        const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
+        const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+
+        let editMode = false;
+
+        /* ===== 기본값 (관리자가 아직 값을 입력하지 않았을 때) =====
+           도입평가(BA)와 동일하게 app_settings 테이블의 'dash_kpi_inputs' 키에
+           JSON으로 저장되고, get_dashboard_settings()로 누구나 읽을 수 있습니다.
+           여기서는 "원본 숫자"만 저장하고, 진행률(%)·배지 색상·상태 문구 같은
+           파생값은 항상 이 페이지의 로직(computeXxx 함수들)이 계산합니다 —
+           나중에 마일스톤(CA)/리스크(AC) 등이 실제 DB 테이블로 옮겨가더라도
+           이 계산 로직은 그대로 재사용하고 데이터 소스만 교체하면 됩니다. */
+        const DEFAULT_KPI = {
+            progressPct: 68,
+            milestonesTotal: 10, milestonesDone: 6, nextMilestone: '통합 테스트',
+            risksActive: 3, risksHigh: 1, riskHighNote: '인력부족',
+            budgetUsedPct: 85, budgetTotalLabel: '1.2B KRW',
+            teamsActive: 8, teamsTotal: 8, teamsList: 'IT, 영업, 회계, 인사, 창고...',
+            updateDate: '2026-09-16', updateCount: 2, updateNotes: '데이터 검증 완료\n설정 최적화 진행중',
+        };
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+        function num(v, fallback) { const n = parseFloat(v); return isNaN(n) ? fallback : n; }
+
+        function loadLocalKPI() {
+            try { const raw = localStorage.getItem('kpiInputs'); if (raw) return { ...DEFAULT_KPI, ...JSON.parse(raw) }; } catch (e) {}
+            return { ...DEFAULT_KPI };
+        }
+        function saveLocalKPI(obj) { localStorage.setItem('kpiInputs', JSON.stringify(obj)); }
+
+        async function fetchDashboardSettings() {
+            try {
+                if (!sb) return null;
+                const { data, error } = await sb.rpc('get_dashboard_settings');
+                if (error) throw error;
+                return data || {};
+            } catch (e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+        }
+        async function saveDashboardSetting(key, value) {
+            try {
+                if (!sb || !myUsername || !myPw) return { success: false, message: '로그인 정보가 없습니다.' };
+                const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
+                if (error) throw error;
+                return data;
+            } catch (e) { console.error('공유 설정 저장 실패:', e); return { success: false, message: e.message }; }
+        }
+
+        let KPI = loadLocalKPI();
+        let _saveTimer = null;
+        function scheduleSave() {
+            if (!isAdmin) return;
+            clearTimeout(_saveTimer);
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.textContent = '저장 중...'; statusEl.className = 'save-status';
+            _saveTimer = setTimeout(async () => {
+                saveLocalKPI(KPI);
+                const res = await saveDashboardSetting('dash_kpi_inputs', JSON.stringify(KPI));
+                if (res && res.success !== false) { statusEl.textContent = '저장됨 ✓'; statusEl.className = 'save-status ok'; }
+                else { statusEl.textContent = '저장 실패: ' + ((res && res.message) || '알 수 없는 오류'); statusEl.className = 'save-status err'; }
+            }, 700);
+        }
+
+        function setField(key, value, isNumeric) {
+            KPI[key] = isNumeric ? num(value, KPI[key]) : value;
+            scheduleSave();
+        }
+
+        /* ===== 파생값 계산 로직 (원본 숫자 → 진행률/배지/문구) =====
+           데이터 소스가 무엇이든(지금은 관리자 입력값, 나중엔 실제 DB 집계값)
+           이 함수들만 그대로 쓰면 카드 렌더링은 바뀌지 않습니다. */
+        function computeProgress(pct) {
+            if (pct >= 80) return { status: 'success', label: '정상 진행중', badge: 'ON TRACK', badgeClass: 'badge-success' };
+            if (pct >= 50) return { status: 'warning', label: '지연 우려', badge: 'AT RISK', badgeClass: 'badge-warning' };
+            return { status: 'danger', label: '심각 지연', badge: 'CRITICAL', badgeClass: 'badge-danger' };
+        }
+        function computeMilestones(done, total) {
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            const level = pct >= 80 ? 'success' : (pct >= 50 ? 'warning' : 'danger');
+            return { pct, level, label: `${done} / ${total} 완료` };
+        }
+        function computeRisks(active, high) {
+            if (active === 0) return { status: 'success', label: '리스크 없음', badgeClass: 'badge-success' };
+            if (high > 0) return { status: 'danger', label: '높은 위험도 존재', badgeClass: 'badge-danger' };
+            if (active >= 3) return { status: 'warning', label: '주의 필요', badgeClass: 'badge-warning' };
+            return { status: 'info', label: '관리 중', badgeClass: 'badge-info' };
+        }
+        function computeBudget(usedPct) {
+            if (usedPct >= 100) return { status: 'danger', label: '예산 초과', badgeClass: 'badge-danger' };
+            if (usedPct >= 90) return { status: 'warning', label: '소진 임박', badgeClass: 'badge-warning' };
+            return { status: 'success', label: '정상 범위', badgeClass: 'badge-success' };
+        }
+        function computeTeams(active, total) {
+            if (active >= total) return { status: 'success', label: '모든 팀 활동중', badgeClass: 'badge-info' };
+            return { status: 'warning', label: '일부 팀 비활성', badgeClass: 'badge-warning' };
+        }
+
+        function cardShell(title, statusHtml, badgeHtml, bodyHtml, editHtml) {
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${title}</div>
+                            ${statusHtml}
+                        </div>
+                        ${badgeHtml}
+                    </div>
+                    ${bodyHtml}
+                    ${editMode && isAdmin ? editHtml : ''}
+                </div>`;
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('kpiGrid');
+
+            // 편집 중 매 입력마다 배지/상태를 즉시 갱신하기 위해 카드 전체를 다시 그리는데,
+            // 그대로 두면 innerHTML 교체로 포커스가 있던 입력칸이 사라져서 한 글자씩만
+            // 입력 가능해지는 문제가 생김 → 포커스/커서 위치를 기억했다가 재렌더 후 복원.
+            const active = document.activeElement;
+            const isGridField = active && grid.contains(active) && active.dataset && active.dataset.field;
+            const activeField = isGridField ? active.dataset.field : null;
+            const activeSelStart = (isGridField && typeof active.selectionStart === 'number') ? active.selectionStart : null;
+            const activeSelEnd = (isGridField && typeof active.selectionEnd === 'number') ? active.selectionEnd : null;
+
+            const prog = computeProgress(KPI.progressPct);
+            const ms = computeMilestones(KPI.milestonesDone, KPI.milestonesTotal);
+            const risk = computeRisks(KPI.risksActive, KPI.risksHigh);
+            const budget = computeBudget(KPI.budgetUsedPct);
+            const teams = computeTeams(KPI.teamsActive, KPI.teamsTotal);
+
+            grid.innerHTML = [
+                cardShell(
+                    '전체 진행률',
+                    `<div class="kpi-status"><span class="status-dot ${prog.status}"></span><span>${esc(prog.label)}</span></div>`,
+                    `<span class="card-badge ${prog.badgeClass}">${prog.badge}</span>`,
+                    `<div class="kpi-value">${KPI.progressPct}%</div>
+                     <div class="progress-bar-container">
+                        <div class="progress-bar"><div class="progress-bar-fill" style="width:${KPI.progressPct}%"></div></div>
+                        <div class="progress-bar-label"><span>진행</span><span>예정: 100%</span></div>
+                     </div>`,
+                    `<span class="edit-label">진행률 (%)</span>
+                     <input class="edit-field num" data-field="progressPct" type="number" min="0" max="100" value="${KPI.progressPct}" oninput="setField('progressPct', this.value, true); renderGrid();">`
+                ),
+                cardShell(
+                    '완료된 마일스톤',
+                    `<div class="kpi-status"><span class="status-dot ${ms.level}"></span><span>${esc(ms.label)}</span></div>`,
+                    `<span class="card-badge badge-${ms.level}">${ms.pct}%</span>`,
+                    `<div class="kpi-value">${KPI.milestonesDone}/${KPI.milestonesTotal}</div>
+                     <div class="kpi-subtitle" style="margin-top:12px;">다음 마일스톤: ${esc(KPI.nextMilestone)}</div>`,
+                    `<span class="edit-label">완료 / 전체</span>
+                     <div class="edit-row">
+                        <input class="edit-field num" data-field="milestonesDone" type="number" min="0" value="${KPI.milestonesDone}" oninput="setField('milestonesDone', this.value, true); renderGrid();">
+                        <span>/</span>
+                        <input class="edit-field num" data-field="milestonesTotal" type="number" min="0" value="${KPI.milestonesTotal}" oninput="setField('milestonesTotal', this.value, true); renderGrid();">
+                     </div>
+                     <span class="edit-label">다음 마일스톤</span>
+                     <input class="edit-field" data-field="nextMilestone" type="text" value="${esc(KPI.nextMilestone)}" oninput="setField('nextMilestone', this.value, false); renderGrid();">`
+                ),
+                cardShell(
+                    '활성 리스크',
+                    `<div class="kpi-status"><span class="status-dot ${risk.status}"></span><span>${esc(risk.label)}</span></div>`,
+                    `<span class="card-badge ${risk.badgeClass}">${KPI.risksActive} Active</span>`,
+                    `<div class="kpi-value">${KPI.risksActive}</div>
+                     <div class="kpi-subtitle" style="margin-top:12px;">${KPI.risksHigh > 0 ? `${KPI.risksHigh}개 높은 위험도 (🔴 ${esc(KPI.riskHighNote)})` : '높은 위험도 없음'} · <a href="./AC-risk.html" style="color:var(--primary);font-weight:600;">리스크 현황 보기</a></div>`,
+                    `<span class="edit-label">활성 리스크 수 / 상급 리스크 수</span>
+                     <div class="edit-row">
+                        <input class="edit-field num" data-field="risksActive" type="number" min="0" value="${KPI.risksActive}" oninput="setField('risksActive', this.value, true); renderGrid();">
+                        <span>/</span>
+                        <input class="edit-field num" data-field="risksHigh" type="number" min="0" value="${KPI.risksHigh}" oninput="setField('risksHigh', this.value, true); renderGrid();">
+                     </div>
+                     <span class="edit-label">상급 리스크 메모</span>
+                     <input class="edit-field" data-field="riskHighNote" type="text" value="${esc(KPI.riskHighNote)}" oninput="setField('riskHighNote', this.value, false); renderGrid();">`
+                ),
+                cardShell(
+                    '예산 현황',
+                    `<div class="kpi-status"><span class="status-dot ${budget.status}"></span><span>${esc(budget.label)}</span></div>`,
+                    `<span class="card-badge ${budget.badgeClass}">${KPI.budgetUsedPct}%</span>`,
+                    `<div class="kpi-value">${KPI.budgetUsedPct}%</div>
+                     <div class="progress-bar-container">
+                        <div class="progress-bar"><div class="progress-bar-fill" style="width:${Math.min(KPI.budgetUsedPct,100)}%"></div></div>
+                        <div class="progress-bar-label"><span>소진</span><span>예산: ${esc(KPI.budgetTotalLabel)}</span></div>
+                     </div>`,
+                    `<span class="edit-label">소진율 (%)</span>
+                     <input class="edit-field num" data-field="budgetUsedPct" type="number" min="0" value="${KPI.budgetUsedPct}" oninput="setField('budgetUsedPct', this.value, true); renderGrid();">
+                     <span class="edit-label">총 예산 표기</span>
+                     <input class="edit-field" data-field="budgetTotalLabel" type="text" value="${esc(KPI.budgetTotalLabel)}" oninput="setField('budgetTotalLabel', this.value, false); renderGrid();">`
+                ),
+                cardShell(
+                    '팀 참여도',
+                    `<div class="kpi-status"><span class="status-dot ${teams.status}"></span><span>${esc(teams.label)}</span></div>`,
+                    `<span class="card-badge ${teams.badgeClass}">${KPI.teamsActive}/${KPI.teamsTotal} Teams</span>`,
+                    `<div class="kpi-value">${KPI.teamsActive}</div>
+                     <div class="kpi-subtitle" style="margin-top:12px;">${esc(KPI.teamsList)}</div>`,
+                    `<span class="edit-label">활동 팀 수 / 전체 팀 수</span>
+                     <div class="edit-row">
+                        <input class="edit-field num" data-field="teamsActive" type="number" min="0" value="${KPI.teamsActive}" oninput="setField('teamsActive', this.value, true); renderGrid();">
+                        <span>/</span>
+                        <input class="edit-field num" data-field="teamsTotal" type="number" min="0" value="${KPI.teamsTotal}" oninput="setField('teamsTotal', this.value, true); renderGrid();">
+                     </div>
+                     <span class="edit-label">팀 목록</span>
+                     <input class="edit-field" data-field="teamsList" type="text" value="${esc(KPI.teamsList)}" oninput="setField('teamsList', this.value, false); renderGrid();">`
+                ),
+                cardShell(
+                    '최근 업데이트',
+                    `<div class="kpi-status"><span class="status-dot success"></span><span>현재</span></div>`,
+                    `<span class="card-badge badge-info">${esc(KPI.updateDate)}</span>`,
+                    `<div class="kpi-value" style="font-size:16px;">${KPI.updateCount} 건</div>
+                     <div class="kpi-subtitle" style="margin-top:12px;">${(KPI.updateNotes || '').split('\n').filter(Boolean).map(esc).map(s => '• ' + s).join('<br>')}</div>`,
+                    `<span class="edit-label">날짜 / 건수</span>
+                     <div class="edit-row">
+                        <input class="edit-field" data-field="updateDate" type="date" value="${esc(KPI.updateDate)}" oninput="setField('updateDate', this.value, false); renderGrid();">
+                        <input class="edit-field num" data-field="updateCount" type="number" min="0" value="${KPI.updateCount}" oninput="setField('updateCount', this.value, true); renderGrid();">
+                     </div>
+                     <span class="edit-label">내용 (줄바꿈으로 구분)</span>
+                     <textarea class="edit-field" data-field="updateNotes" rows="2" oninput="setField('updateNotes', this.value, false); renderGrid();">${esc(KPI.updateNotes)}</textarea>`
+                ),
+            ].join('');
+
+            // 포커스 복원: 편집하던 필드를 data-field로 다시 찾아 커서 위치까지 되돌림
+            if (activeField) {
+                const restored = grid.querySelector(`[data-field="${activeField}"]`);
+                if (restored) {
+                    restored.focus();
+                    if (activeSelStart !== null && typeof restored.setSelectionRange === 'function') {
+                        try { restored.setSelectionRange(activeSelStart, activeSelEnd); } catch (e) { /* 일부 input type은 커서 위치 지정 불가 */ }
+                    }
+                }
+            }
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            document.getElementById('editToggleBtn').textContent = editMode ? '✅ 완료' : '✏️ 편집';
+            document.getElementById('editNote').style.display = editMode ? 'block' : 'none';
+            renderGrid();
+        }
+
+        if (isAdmin) { document.getElementById('editToggleBtn').style.display = 'inline-flex'; }
+
+        async function init() {
+            renderGrid();
+            const remote = await fetchDashboardSettings();
+            if (remote && remote.dash_kpi_inputs) {
+                try { KPI = { ...DEFAULT_KPI, ...JSON.parse(remote.dash_kpi_inputs) }; saveLocalKPI(KPI); renderGrid(); } catch (e) {}
+            }
+        }
+        init();
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C');
+            if (e.key === 'kpiInputs') { KPI = loadLocalKPI(); renderGrid(); }
+        });
+    </script>
+</body>
+</html>

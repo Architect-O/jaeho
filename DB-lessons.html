@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교훈 도출 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+            --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 24px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; box-shadow: var(--shadow-sm); margin-bottom: 14px; }
+        .item-head { display:flex; align-items:center; gap: 10px; margin-bottom: 8px; }
+        .item-num { width:26px; height:26px; border-radius:7px; background: var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+        .item-title { font-size: 14.5px; font-weight: 700; color: var(--text); }
+        .item-tag { margin-left:auto; }
+        .item-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; padding-left: 36px; }
+        .item-link { font-size: 11.5px; color: var(--text-tertiary); padding-left: 36px; margin-top: 6px; }
+        .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; white-space: nowrap; }
+        
+        .badge-danger{background:var(--danger-soft);color:var(--danger);}
+        .badge-warning{background:var(--warning-soft);color:#b45309;}
+        .badge-info{background:var(--info-soft);color:var(--info);}
+        .badge-success{background:var(--success-soft);color:var(--success);}
+        .badge-gray{background:var(--gray-100);color:var(--text-secondary);}
+        .badge-real{background:#f5f3ff;color:#7c3aed;}
+
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">💡 교훈 도출</div>
+                <div class="brand-sub">실패사항(DA)에서 도출한 교훈 — Best Practice(DC)와 실제 기능(BA/AC/CC 등)으로 반영됩니다.</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">💡 교훈 도출</h1>
+            <p class="page-subtitle">실패사항(DA)에서 도출한 교훈 — Best Practice(DC)와 실제 기능(BA/AC/CC 등)으로 반영됩니다.</p>
+        </div>
+
+        <div id="itemList"></div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        const ITEMS = [
+{ title: '요구사항 정의 단계에 충분한 시간과 이해관계자 참여가 필요하다', badge: '프로세스', badgeClass: 'badge-info', body: '개발 착수 전 Phase 1(요구사항 분석)에서 전 부서 인터뷰와 승인 절차를 거쳐야 재작업을 최소화할 수 있습니다. 현재 상세 일정(CC)의 Phase 1을 게이트로 두고 있는 이유이기도 합니다.', link: '← <a href="./DA-failures.html">실패사항 #1</a>에서 도출 · → <a href="./DC-best-practice.html">Best Practice #1</a>로 반영' },
+{ title: '벤더/자체개발 비교는 정량 기준으로 다각도로 해야 한다', badge: '평가 체계', badgeClass: 'badge-info', body: '가격 한 가지 기준으로만 비교하면 놓치는 리스크가 큽니다. 기능 충족도·구축기간·유지보수비용·커스터마이징 자유도·기술지원·보안 등 여러 기준을 동시에 놓고 비교해야 합니다.', link: '← <a href="./DA-failures.html">실패사항 #2</a>에서 도출 · → <a href="./BA-evaluation.html">도입평가 &gt; 종합 비교</a>에서 실제 운영 중' },
+{ title: '오픈 전 충분한 교육과 병행운영 기간을 확보해야 한다', badge: '변화관리', badgeClass: 'badge-warning', body: '시스템이 아무리 잘 만들어져도 사용자가 익숙해질 시간이 없으면 현장에서 채택되지 않습니다. 교육과 병행운영을 정식 일정 항목으로 관리해야 합니다.', link: '← <a href="./DA-failures.html">실패사항 #3</a>에서 도출 · → 상세 일정(CC) Phase 4~5에 교육/병행운영 반영됨' },
+{ title: '리스크는 사전에, 정기적으로 점검해야 한다', badge: '거버넌스', badgeClass: 'badge-success', body: '문제가 커지기 전에 조기 경보 체계가 있어야 경영진이 선제적으로 판단할 수 있습니다. 주간 단위로 리스크 현황을 검토하고 보고하는 절차를 표준화합니다.', link: '← <a href="./DA-failures.html">실패사항 #4</a>에서 도출 · → <a href="./AC-risk.html">대시보드 &gt; 리스크 현황</a>으로 반영' },
+{ title: '벤더 종속 구조는 배포·인증 경로까지 반드시 사전 점검해야 한다', badge: '실사례 반영', badgeClass: 'badge-real', body: '기존 JAEHO ERP는 배포 서버가 끊기자 재구동조차 어려워졌습니다. DB 스키마·메뉴/업무 구조·BOM 흐름 같은 도메인 자산은 신규 설계의 베이스라인으로 남지만, 특정 벤더의 폐쇄형 UI 프레임워크는 시간이 지나면 웹 전환도 불가능해 전량 폐기 대상이 됩니다. 신규 자체개발/도입 시에는 배포·인증·업데이트 경로를 우리 쪽이 통제할 수 있는지, UI/미들웨어 프레임워크의 수명주기가 얼마나 남았는지를 사전 평가 항목에 반드시 포함합니다.', link: '← <a href="./DA-failures.html">실패사항 #5</a>에서 도출 · → <a href="./DC-best-practice.html">Best Practice #5</a>로 반영' }
+];
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+        function renderItems() {
+            document.getElementById('itemList').innerHTML = ITEMS.map((it, i) => `
+                <div class="item-card">
+                    <div class="item-head">
+                        <div class="item-num">${i + 1}</div>
+                        <div class="item-title">${esc(it.title)}</div>
+                        ${it.badge ? `<span class="item-tag badge ${esc(it.badgeClass || '')}">${esc(it.badge)}</span>` : ''}
+                    </div>
+                    <div class="item-body">${it.body}</div>
+                    ${it.link ? `<div class="item-link">${it.link}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        renderItems();
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

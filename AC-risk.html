@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리스크 현황 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+            --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 24px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .summary-row { display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+        .summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow-sm); }
+        .summary-num { font-size: 22px; font-weight: 700; color: var(--text); }
+        .summary-num.danger { color: var(--danger); }
+        .summary-num.warning { color: #b45309; }
+        .summary-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        @media (max-width: 900px) { .summary-row { grid-template-columns: repeat(2, 1fr); } }
+
+        .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+        th { padding: 12px 16px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--text-secondary); white-space:nowrap; }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: var(--gray-100); }
+        .risk-name { font-weight: 600; color: var(--text); }
+        .risk-desc { font-size: 11.5px; color: var(--text-tertiary); margin-top: 3px; }
+        .meta { color: var(--text-secondary); white-space: nowrap; }
+        .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; white-space: nowrap; }
+        .sev-high { background: var(--danger-soft); color: var(--danger); }
+        .sev-mid { background: var(--warning-soft); color: #b45309; }
+        .sev-low { background: var(--gray-100); color: var(--text-secondary); }
+        .status-monitor { background: var(--info-soft); color: var(--info); }
+        .status-active { background: var(--warning-soft); color: #b45309; }
+        .status-resolved { background: var(--success-soft); color: var(--success); }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">⚠️ 리스크 현황</div>
+                <div class="brand-sub">프로젝트 주요 리스크 레지스터</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">⚠️ 리스크 현황</h1>
+            <p class="page-subtitle">경영진 보고용 리스크 레지스터입니다. 매주 검토하고 상태를 갱신하는 것을 권장합니다. (학습&분석 &gt; Best Practice 참고)</p>
+        </div>
+
+        <div class="summary-row" id="summaryRow"></div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>리스크</th>
+                            <th>카테고리</th>
+                            <th>심각도</th>
+                            <th>발생 가능성</th>
+                            <th>담당</th>
+                            <th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riskRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        // 프로젝트 리스크 레지스터 정적 데이터. 실제 운영 시 이 배열을 주기적으로 갱신하거나
+        // 추후 Supabase 테이블로 옮겨 관리자가 직접 추가/수정하게 확장할 수 있습니다.
+        const RISKS = [
+            { name: '데이터 마이그레이션 정합성 오류', desc: '레거시 시스템 데이터를 신규 시스템으로 이관하는 과정에서 값이 누락되거나 불일치할 위험', category: '기술', severity: '상', likelihood: '중', owner: 'DB팀', status: '대응중' },
+            { name: '벤더 라이선스 비용 증가', desc: '도입 후보 ERP의 라이선스/유지보수 비용이 계약 갱신 시 인상될 위험', category: '예산', severity: '중', likelihood: '중', owner: 'PMO', status: '모니터링' },
+            { name: '핵심 개발 인력 이탈', category: '조직', desc: '자체 개발 진행 중 핵심 담당자 이탈 시 일정 지연 및 지식 단절 위험', severity: '상', likelihood: '하', owner: 'PMO', status: '모니터링' },
+            { name: '사용자 교육 일정 지연', desc: '현업 부서 일정과 충돌해 교육이 지연되며 오픈 준비도가 낮아질 위험', category: '일정', severity: '중', likelihood: '중', owner: '교육팀', status: '대응중' },
+            { name: '보안 취약점 발견', desc: '통합 테스트 단계 보안 점검에서 취약점이 발견되어 조치가 필요할 위험', category: '기술', severity: '상', likelihood: '중', owner: '보안팀', status: '대응중' },
+            { name: '경영진 의사결정 지연', desc: '자체개발/도입 후보 간 최종 선택이 늦어져 후속 일정 전체가 밀릴 위험', category: '조직', severity: '중', likelihood: '중', owner: 'PMO', status: '모니터링' },
+            { name: '요구사항 범위 변경(스코프 크립)', desc: '개발 도중 부서별 추가 요구사항이 계속 들어와 범위가 확대될 위험', category: '일정', severity: '중', likelihood: '상', owner: '컨설팅팀', status: '모니터링' },
+        ];
+
+        const SEV_CLASS = { '상': 'sev-high', '중': 'sev-mid', '하': 'sev-low' };
+        const STATUS_CLASS = { '모니터링': 'status-monitor', '대응중': 'status-active', '해결됨': 'status-resolved' };
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+        function renderSummary() {
+            const high = RISKS.filter(r => r.severity === '상').length;
+            const active = RISKS.filter(r => r.status === '대응중').length;
+            const resolved = RISKS.filter(r => r.status === '해결됨').length;
+            document.getElementById('summaryRow').innerHTML = `
+                <div class="summary-card"><div class="summary-num">${RISKS.length}</div><div class="summary-label">전체 리스크</div></div>
+                <div class="summary-card"><div class="summary-num danger">${high}</div><div class="summary-label">상급 리스크</div></div>
+                <div class="summary-card"><div class="summary-num warning">${active}</div><div class="summary-label">대응중</div></div>
+                <div class="summary-card"><div class="summary-num">${resolved}</div><div class="summary-label">해결됨</div></div>
+            `;
+        }
+
+        function renderRisks() {
+            document.getElementById('riskRows').innerHTML = RISKS.map(r => `
+                <tr>
+                    <td>
+                        <div class="risk-name">${esc(r.name)}</div>
+                        <div class="risk-desc">${esc(r.desc)}</div>
+                    </td>
+                    <td class="meta">${esc(r.category)}</td>
+                    <td><span class="badge ${SEV_CLASS[r.severity] || 'sev-low'}">${esc(r.severity)}</span></td>
+                    <td class="meta">${esc(r.likelihood)}</td>
+                    <td class="meta">${esc(r.owner)}</td>
+                    <td><span class="badge ${STATUS_CLASS[r.status] || 'status-monitor'}">${esc(r.status)}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        renderSummary();
+        renderRisks();
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

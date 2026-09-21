@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 로그 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* 대시보드(dashboard-master.html)와 동일한 헤더/콘텐츠 변수 — 테마 선택 시 이 페이지도 같이 바뀝니다 */
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+
+        /* ===== Header — 대시보드와 동일한 구조 (테마 색상 실시간 반영) ===== */
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 22px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+        .snapshot-note { font-size: 11.5px; color: var(--text-tertiary); background: var(--gray-100); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; max-width: 340px; line-height:1.5; }
+
+        .card { background: var(--card-bg); border-radius: 10px; padding: 22px 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 18px; }
+
+        .log-timeline { position: relative; padding-left: 30px; }
+        .log-item { position: relative; padding-bottom: 22px; border-left: 2px solid var(--gray-200); }
+        .log-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+        .log-dot { position: absolute; width: 12px; height: 12px; background: var(--primary); border: 3px solid var(--card-bg); border-radius: 50%; left: -21px; top: 2px; box-shadow: 0 0 0 1px var(--gray-300); }
+        .log-dot.unused { background: var(--gray-300); }
+        .log-head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom: 5px; }
+        .log-date { font-size: 12.5px; font-weight: 700; color: var(--text); }
+        .log-time { font-size: 11px; color: var(--text-tertiary); }
+        .log-title { font-weight: 600; font-size: 13.5px; color: var(--text); margin-bottom: 4px; }
+        .log-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+        .log-files { display:flex; flex-wrap:wrap; gap:6px; }
+        .file-chip { font-size: 10.5px; font-family: 'SFMono-Regular', Consolas, monospace; background: var(--gray-100); color: var(--text-secondary); border: 1px solid var(--border); padding: 2px 7px; border-radius: 5px; }
+        .file-chip.unused { color: var(--text-tertiary); text-decoration: line-through; opacity:0.75; }
+
+        .day-divider { display:flex; align-items:center; gap:10px; margin: 22px 0 14px; padding-left: 0; }
+        .day-divider:first-child { margin-top: 0; }
+        .day-divider .line { flex:1; height:1px; background: var(--border); }
+        .day-divider .label { font-size: 11px; font-weight: 700; color: var(--text-tertiary); letter-spacing:.3px; white-space:nowrap; }
+
+        .badge-inline { display:inline-block; font-size: 9.5px; font-weight:700; text-transform:uppercase; padding: 2px 6px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+        .badge-unused { background: var(--gray-100); color: var(--text-tertiary); }
+        .badge-fix { background: var(--warning-soft); color: #b45309; }
+        .badge-new { background: var(--success-soft); color: var(--success); }
+        .badge-deleted { background: var(--gray-100); color: var(--text-tertiary); }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">📜 작업 로그</div>
+                <div class="brand-sub">[3] 폴더 파일 변경 이력 · 작업 상태 기록</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">📜 작업 로그</h1>
+                <p class="page-subtitle">[3] 폴더 안 파일들의 생성·수정 시각을 기준으로 정리한 작업 이력입니다.</p>
+            </div>
+            <div class="snapshot-note">
+                ⓘ 이 로그는 <strong id="snapshotDate">-</strong> 기준 스냅샷입니다. 실시간으로 폴더를 다시 읽어오지 않으므로, 이후 작업을 추가하려면 이 파일(log.html) 상단의 LOG_ENTRIES 목록에 새 항목을 넣어주세요. 셸(menu.html)은 건드릴 필요 없습니다.
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <span>전체 이력 (최신순) — <span id="logCountLabel"></span></span>
+                <input type="text" id="logSearchInput" placeholder="제목·설명·파일명 검색" style="padding:6px 10px;border:1px solid var(--border,#d7dee4);border-radius:8px;font-size:12.5px;min-width:220px;" oninput="onLogSearch(this.value)">
+            </div>
+            <div id="logRoot"></div>
+            <div id="logMoreWrap" style="text-align:center;margin-top:14px;"></div>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        // ===== 로그 항목 =====
+        // 새 작업을 했으면 이 배열 맨 위에 항목을 추가하세요. (date, time은 실제 파일 저장 시각 기준)
+        // unused: true 로 표시된 항목은 "만들었지만 현재 메뉴에 연결되어 있지 않은 파일"입니다.
+        // deleted: true 로 표시된 항목은 실제로 폴더에서 삭제되어 더 이상 존재하지 않는 파일입니다.
+        const LOG_ENTRIES = [
+            {
+                date: '2026-09-19', time: '19:25', badge: 'new',
+                title: 'Supabase SQL 4건 실행 확인 + 일정관리에 "일정 캘린더(CE)" 배포',
+                desc: `사용자가 Supabase SQL Editor에서 pilot3(취소기능+코드점검 수정 반영본)/pilot4/pilot5/pilot6_erp_migration.sql 4건 실행을 완료함("쿼리 3,4,5,6 실행완료")에 따라, BE/BH/BI/BJ 4개 파일럿 전부 화면·SQL이 실제로 살아있는 상태가 됨 — 관련 프로젝트 문서(00_프로젝트_인덱스.md, ERP_Dashboard_메뉴_통합분리_기준.md, 모듈_BE/BH/BI/BJ파일럿 각 문서, 모듈_통합분석_4사업군_모듈화방향.md) 전부에 남아있던 "SQL 실행 대기"·"배포 대기" 등 과거 상태 문구를 최신 상태로 갱신함. 이어서 어제(2026-09-18) 작성해두고도 기기 연결이 끊겨 미배포 상태로 남아있던 "일정 캘린더(CE)"를 배포함 — 일정관리 카테고리에 CD(중요 이벤트) 다음 항목으로 menu.html에 등록. CE는 CC-schedule-detail.html의 프로젝트 공식 업무(파란색)와 근이 직접 기록하는 개인 업무(초록색, 기존 app_settings 테이블의 dash_calendar_personal 키로 Supabase 공유 — 별도 SQL 실행 불필요)를 월간 캘린더 그리드에서 함께 보여줌. 배포 전 node --check 문법 검증 + 태그균형 검사 재확인(신규 코드 변경은 없고 menu.html 등록만 추가) 통과.`,
+                files: ['CE-calendar.html (신규 배포)', 'menu.html', '00_프로젝트_인덱스.md', 'ERP_Dashboard_메뉴_통합분리_기준.md', '모듈_BE파일럿3_가상ERP.md', '모듈_BH파일럿4_보세창고운영.md', '모듈_BI파일럿5_무역.md', '모듈_BJ파일럿6_식품제조.md', '모듈_통합분석_4사업군_모듈화방향.md']
+            },
+            {
+                date: '2026-09-19', time: '19:10', badge: 'new',
+                title: '4개 사업군(BE/BH/BI/BJ) 파일럿 전체 배포 완료 — BH(보세창고운영)·BI(무역)·BJ(식품제조) 신규 3종 최초 배포 + BE 취소기능·코드점검 수정사항 반영',
+                desc: `사용자 지시("폴더연결됨 작업이어서 마무리")에 따라 그동안 준비해온 4개 사업군 파일럿을 전부 사용자 컴퓨터에 배포함. 신규 3개 파일럿(BH-pilot4.html/보세창고운영, BI-pilot5.html/무역, BJ-pilot6.html/식품제조)과 대응 SQL 마이그레이션 3종을 최초로 배포하고, menu.html에 세 파일럿을 신규 카테고리 항목으로 등록함. 기존 BE-pilot3.html은 어제 준비했던 확정 전표 취소(cancel) 기능이 이번에 실제로 처음 배포됨. 배포 직전에 진행한 코드점검(바로 아래 항목 참고)에서 발견된 모든 수정사항 — 특히 BE의 취소 RPC 함수가 실제 배포용 SQL 파일에는 통째로 빠져 있던 치명적 버그 — 이 이번 배포판에 전부 반영된 상태로 나감. 배포 전 device의 menu.html·GD-log.html은 diff로 대조해 사용자가 그 사이 직접 수정한 내용이 없는지 확인 후 덮어씀. ⚠️ 실제 Supabase 데이터베이스에는 아직 이번에 수정·추가된 SQL이 반영되지 않은 상태 — 사용자가 Supabase SQL Editor에서 pilot3(갱신)/pilot4/pilot5/pilot6_erp_migration.sql을 직접 실행해야 함(Claude는 실제 DB 자격정보를 다루지 않으므로 이 단계는 대신할 수 없음). 실행 전까지는 신규 화면을 열어도 데이터가 비어 있거나 RPC 오류가 날 수 있음.`,
+                files: ['BH-pilot4.html (신규)', 'BI-pilot5.html (신규)', 'BJ-pilot6.html (신규)', 'BE-pilot3.html', 'menu.html', 'data/pilot3_erp_migration.sql', 'data/pilot4_erp_migration.sql (신규)', 'data/pilot5_erp_migration.sql (신규)', 'data/pilot6_erp_migration.sql (신규)']
+            },
+            {
+                date: '2026-09-19', time: '18:40', badge: 'fix',
+                title: '배포 전 코드점검 — BE/BH/BI/BJ 4개 파일럿 전수 검토, 치명적 버그 1건 포함 다수 발견·수정',
+                desc: `신규 파일럿 3종(BH/BI/BJ)을 실제 배포하기 전에 "그럼그전에 파일럿프로그램들 코드점검"이라는 사용자 요청에 따라 4개 파일럿(BE/BH/BI/BJ) 전체의 HTML+SQL을 병렬 서브에이전트로 정밀 재검토함(각 파일 전체 읽기 + node --check 문법검증 + 태그균형검사 + JS의 sb.rpc() 호출과 SQL 함수 시그니처 대조 + 모듈 문서의 수치 예제로 확정/취소 로직 직접 추적). 발견된 문제와 수정 내역: ① [치명적] BE의 실제 배포용 SQL 파일(pilot3_erp_migration.sql)에 취소(cancel) RPC 함수 2개가 통째로 빠져 있었음(문서와 별도 테스트 파일에만 존재하고 실제 배포판에는 반영된 적이 없었음) — 두 함수를 배포판에 추가하고, 취소 차단 조건을 품목별 수량 합계 비교 방식으로 개선해서 삽입. ② [보안] 4개 파일 전체 15곳에서 클릭 시 레코드를 JSON으로 onclick 속성에 심어 넣는 패턴이 홑따옴표만 이스케이프하고 &(앰퍼샌드)는 이스케이프하지 않아, 품목명·비고 등에 &quot; 같은 문자열이 들어가면 브라우저가 이를 실제 큰따옴표로 해석해 저장형 XSS(스크립트 실행)가 가능했던 취약점을 발견 — &를 홑따옴표보다 먼저 이스케이프하도록 순서를 수정, jsdom으로 공격 문자열이 수정 전엔 실행되고 수정 후엔 무력화되는 것까지 실제로 재현·확인. ③ BE/BH/BI의 확정 전표 취소 차단 로직이 한 전표에 같은 품목이 두 줄 이상 있으면 정상적인 취소 요청도 오검출로 막아버리는 버그를 발견 — 품목별로 원래 수량 합계와 현재 재고(Lot) 수량 합계를 비교하는 방식으로 교체해 중복 품목 줄이 있어도 정확히 판정하도록 수정. ④ BE/BH/BI의 확정(confirm) RPC들이 재고를 소진할 때 초반의 락 없는 재고 확인과 이후 락을 건 소진 사이에 시간차가 있어, 동시에 여러 요청이 들어오면 재고보다 많이 팔릴 수 있는 동시성 경합(TOCTOU race) 취약점을 발견 — 소진 후에도 채우지 못한 수량이 남아 있으면 즉시 예외를 발생시켜 전체 처리를 롤백하도록 재확인 로직을 추가(BJ에도 동일하게 예방적으로 추가). ⑤ BI의 lot_no가 한 전표에 같은 품목이 두 줄이면 값이 중복 생성되던 버그 수정(전표번호+순번 조합으로 변경), 단가란에 숫자가 아닌 값을 넣으면 조용히 0원으로 처리되던 부분을 사용자에게 안내 메시지로 알리도록 수정, 수량·단가·환율·부대비용 등에 음수·0 방지 제약조건 추가. 모든 SQL 수정은 로컬 PostgreSQL 16 인스턴스에 파일럿별 임시 DB를 만들어 마이그레이션 전체를 실제로 실행하고, 고쳐진 로직이 "정상 처리되어야 하는 경우"와 "차단되어야 하는 경우" 양쪽 시나리오에서 의도대로 동작하는지 직접 재현해서 검증함. BJ는 자체 로직 버그는 발견되지 않았고 방어적 동시성 가드만 추가됨. 상세 내역은 Claude 프로젝트의 모듈_BE/BH/BI/BJ파일럿 각 문서의 "배포 전 코드점검" 절 참고.`,
+                files: ['BE-pilot3.html', 'BH-pilot4.html', 'BI-pilot5.html', 'BJ-pilot6.html', 'data/pilot3_erp_migration.sql', 'data/pilot4_erp_migration.sql', 'data/pilot5_erp_migration.sql', 'data/pilot6_erp_migration.sql']
+            },
+            {
+                date: '2026-09-18', time: '15:20', badge: 'new',
+                title: '파일럿: 프로그램 3(BE) — 확정 전표 취소(cancel) 기능 추가',
+                desc: `사용자 요청으로 데모 ERP 추가 작업을 검토한 결과, 확정된 구매/출고 전표를 되돌릴 방법이 없다는 점("취소 기능은 추후 지원 예정"이라고만 문서화된 채 미착수)을 확인, 착수 확정("네, 취소 기능부터"). 서버에 신규 RPC 2개 추가: p3_admin_cancel_purchase_doc(구매전표 취소 — 이미 출고되었거나 통관완료 처리된 품목이 있으면 재고 정합성 보호를 위해 거부), p3_admin_cancel_outbound_doc(출고전표 취소 — 배치를 삭제하지 않고 수량만 되돌리므로 항상 안전). 둘 다 status 체크 제약에 이미 'canceled'가 포함돼 있어 테이블 변경 없이 함수 추가만으로 반영됨(idempotent). 화면(BE-pilot3.html)에는 확정 상태 전표 목록에 "⛔ 취소" 버튼을 추가, 클릭 시 사유를 입력받아 해당 RPC를 호출하고 "취소됨" 배지로 표시(취소됨 배지·인쇄 미리보기 문구는 이미 준비돼 있던 상태). node --check 문법 검증 + 태그 균형 검사 + jsdom 이벤트 시뮬레이션(취소 버튼 클릭 → RPC 호출 파라미터 확인 등 14개 항목) 전부 통과. ⚠️ 신규 SQL 함수는 아직 사용자가 Supabase SQL Editor에서 실행하지 않은 상태 — 실행 전까지는 취소 버튼을 눌러도 "관리자 인증 실패"가 아니라 함수 자체가 없다는 오류가 날 수 있음. 상세는 Claude 프로젝트 문서 "모듈_BE파일럿3_가상ERP.md" 참고.`,
+                files: ['BE-pilot3.html']
+            },
+            {
+                date: '2026-09-18', time: '15:00', badge: 'new',
+                title: '일정관리에 신규 "일정 캘린더(CE)" 추가 — 프로젝트 일정 + 개인 일정 통합 월간 캘린더',
+                desc: `사용자 요청: "일정관리에 일별/주간별/월간별 업무를 기입하거나 일정관리를 할 달력 같은 프로그램이 필요할 것 같다." 후속 확인 결과, 목적은 도출된(프로젝트) 업무 일정과 개인 일상 업무를 별도로 표시해서 경영진이 따로 묻지 않아도 진행 상황을 알 수 있게 "기록을 공개"하려는 것으로 확정됨. 이에 따라 월간 캘린더 그리드 UI로 새 페이지 CE-calendar.html을 만들어 "일정관리" 카테고리에 CD(중요 이벤트) 다음 새 항목으로 추가: 프로젝트 일정(CC-schedule-detail.html의 Phase 1-5, 16개 업무)은 파란색 칩으로, 개인 일정은 초록색 칩으로 구분 표시, 날짜를 클릭하면 하단 상세 패널에 그날의 프로젝트 업무 카드(단계/담당/진행률/상태)와 개인 일정 카드(관리자만 추가·삭제 가능)를 보여줌. 저장은 기존 Supabase 공유 패턴(app_settings 키-값, get_dashboard_settings/admin_update_setting RPC)을 그대로 재사용해 새 마이그레이션 없이 dash_calendar_personal 키만 추가(관리자가 입력하면 800ms 디바운스로 자동 클라우드 저장, 모든 사용자가 새로고침 시 동일하게 봄). CC와 CE 둘 다 같은 프로젝트 일정 데이터를 각자 하드코딩해서 보여주는 중복은 알려진 한계로 문서에 남겨둠(추후 통합 검토 대상). node --check 문법 검증 + 태그 균형 검사 + jsdom 이벤트 시뮬레이션(월 이동, 날짜 선택, 개인 일정 추가/삭제 등 15개 항목) 전부 통과. ⚠️ 사용자 컴퓨터 연결이 일시적으로 끊긴 상태에서 작업해, 실제 배포는 연결이 복구되는 대로 이어서 진행 예정.`,
+                files: ['CE-calendar.html (신규)', 'menu.html']
+            },
+            {
+                date: '2026-09-18', time: '14:07', badge: 'fix',
+                title: '별점 UI 정리 — X 지우기 버튼 제거, 행별 텍스트 제거, 상단 범례로 척도 설명 통일',
+                desc: '사용자 논의 결과 반영: "X 버튼이 이미 별 재클릭 취소랑 기능이 겹치는 중복 아니냐", "미입력 텍스트가 지저분해 보인다"는 지적에 따라 두 방향을 논의 후 다음과 같이 확정함(1안: 별만 남기기 vs 2안: 범례로 설명 — 둘을 결합). ✕ 지우기 버튼은 완전히 제거(별 재클릭으로 취소하는 기능만 남김, 별에 마우스를 올리면 "다시 클릭하면 취소" 툴팁으로 안내). 각 항목(행)마다 붙어있던 "n/5"·"미입력" 텍스트도 전부 제거해서 이제 순수하게 별만 남음(정확한 값은 마우스를 올리면 툴팁으로 확인). 대신 점수표/점수카드 맨 위에 척도 범례를 한 번만 추가함 — "★☆☆☆☆ 1점(미흡) · ★★★☆☆ 3점(보통) · ★★★★★ 5점(우수)"와 (관리자 화면에서는) "별을 클릭해 평가 · 선택된 별을 다시 클릭하면 취소"라는 안내 문구. 반복되던 잡다한 텍스트를 없애 화면은 더 깔끔해지고, 척도 설명은 한 곳에 명확히 모여있어 오히려 기준이 더 투명하게 드러남. jsdom으로 범례 렌더링·별 재클릭 취소·점수 반영까지 재확인 후 배포.',
+                files: ['BA-evaluation.html', 'BF-eval-detail.html']
+            },
+            {
+                date: '2026-09-18', time: '13:58', badge: 'fix',
+                title: '별점 위젯 — 클릭할 때마다 위치가 밀리던 문제 + 선택 해제(토글) 기능 추가',
+                desc: '사용자 피드백 두 가지를 반영: (1) "클릭시 텍스트가 움직이며 별과 텍스트 위치가 변한다" — "미입력"↔"n/5" 글자 길이 차이, ✕ 지우기 버튼이 있다 없다 하면서 전체 너비가 바뀌어 별 그룹 자체가 좌우로 밀리던 문제였음. 숫자 표시칸(34px)과 지우기 버튼 자리(14px)를 항상 고정폭으로 예약해두고, 값이 없을 때는 버튼을 아예 안 그리는 대신 투명(visibility:hidden)하게만 처리해서 자리는 그대로 차지하도록 바꿈 — 이제 값이 바뀌어도 별의 클릭 위치가 화면에서 고정되어 있어 "클릭한 자리를 다시 클릭"할 수 있음. (2) "다시 클릭하면 별이 해제되어야지" — 라디오 버튼은 원래 이미 선택된 걸 다시 눌러도 저절로 꺼지지 않는데, 지금 선택된 값과 같은 별에만 별도 클릭 처리를 달아서 "이미 켜진 별을 다시 클릭하면 미입력 상태로 돌아가도록" 함(다른 값으로 바꾸는 클릭은 그대로 동작). BA(종합 비교)·BF(개별 상세) 양쪽 다 동일하게 반영, jsdom으로 "5점 선택 → 같은 별 재클릭 → 미입력 복귀"까지 시뮬레이션해서 확인 후 배포.',
+                files: ['BA-evaluation.html', 'BF-eval-detail.html']
+            },
+            {
+                date: '2026-09-18', time: '13:52', badge: 'fix',
+                title: '별점 클릭 시 반응이 이상하던 버그 수정 — 클릭할 때마다 화면 전체가 즉시 갱신되도록 함',
+                desc: '사용자 확인: "별 클릭 후 반응이 이상함." 원인 확인 결과, 별을 클릭하면 브라우저가 라디오 버튼 자체는 바로 채워 보여주지만(기본 동작), 그 옆의 "n/5" 숫자·"✕ 지우기" 버튼과 표 하단의 표준기준/우리기준 합계·최종 평균 점수는 화면을 다시 그려주는 코드가 없어서 계속 예전 값에 멈춰 있었음(방금 5점을 줬는데 합계는 그대로인 것처럼 보이는 상태). BA-evaluation.html의 updateEvalValue()와 BF-eval-detail.html의 updateScore()에 각각 화면 재렌더 호출(refreshCompareScreen()/renderScores())을 추가해서, 별을 클릭할 때마다 숫자·지우기 버튼·합계·최종 평균이 항상 그 자리에서 바로 최신 값으로 맞춰지도록 수정함. 실제 브라우저 대신 jsdom으로 클릭 이벤트를 시뮬레이션해 "클릭 전 0.0점 → 클릭 후 12.5점"처럼 값이 즉시 반영되는 것까지 확인 후 배포.',
+                files: ['BA-evaluation.html', 'BF-eval-detail.html']
+            },
+            {
+                date: '2026-09-18', time: '13:46', badge: 'fix',
+                title: '도입평가 점수 입력 — 숫자 드롭다운(1~5) 대신 별점(★) 위젯으로 개선',
+                desc: '사용자 피드백: "5점을 줘도 기준을 아는 사람 기준이니, 보는 사람은 5점이 어느 위치인지 몰라." 기존엔 점수를 1~5 드롭다운으로 입력받아 숫자만 보여줬는데, 이 방식은 채점 기준을 모르는 사람이 화면만 봐서는 "5점이 척도에서 어디쯤인지"를 직관적으로 알기 어려웠음. 이를 별 5개를 채우는 방식(★★★☆☆ 같은 시각적 위치 표시)으로 바꿔서, 숫자를 몰라도 채워진 비율만 보고 바로 감이 오도록 개선함. 관리자 화면에서는 별을 직접 클릭해서 점수를 매길 수 있고(마우스를 올리면 미리보기도 됨), 옆에 작은 숫자("3/5")도 함께 표시해 정확한 값도 확인 가능. 다시 미입력 상태로 되돌리는 "✕" 버튼도 추가함. 관리자가 아닌 화면에서는 클릭 없이 채워진/빈 별만 정적으로 보여줌. BA(종합 비교 표)·BF(개별 상세 페이지) 19개 항목 전부에 동일하게 적용.',
+                files: ['BA-evaluation.html', 'BF-eval-detail.html']
+            },
+            {
+                date: '2026-09-18', time: '13:35', badge: 'new',
+                title: '도입평가 고도화: 표준·우리기준 19항목 가중치 채점제 전면 개편 + 신규 "단계별 잔존가치 분석(BG)" 페이지 추가',
+                desc: '기존엔 도입평가가 표준/맞춤 구분 없이 8개 항목을 단순 텍스트로 입력받는 방식이었음. 이를 두 트랙(표준기준 7항목 100점, 우리기준 12항목 100점)으로 나누고, 각 항목을 1~5점으로 채점하면 가중치대로 자동 환산(가중치×원점수/5)해 트랙 합계와 최종 평균(두 트랙 합계의 평균)을 실시간으로 보여주는 방식으로 전면 개편함(BA-evaluation.html의 종합 비교 표, BF-eval-detail.html의 개별 상세 페이지 모두 동일 기준 적용, 어느 쪽에서 입력해도 서로 반영). 우리기준에 신규 12번째 항목 "정부지원사업 적합성(실사용 로그·존속의무 대응력)"을 추가함 — 자체개발 ERP를 나중에 스핀오프해 다른 업체에 영업할 경우, 고객사가 정부지원사업(스마트공장 보급·확산 등)으로 도입하면서 받는 평가(실사용 로그 제출, 5년 존속의무)를 최소 운영부담으로 통과할 수 있는 구조인지 미리 점검하기 위함(근거: Claude 프로젝트 문서 "모듈_도입평가_고도화.md" 4-2절). 기존 8개 항목의 값은 새 19개 항목과 키가 겹치지 않아 자동 이관되지 않으며, 논의에 따라 전체 초기화함. 추가로 "도입평가" 사이드 메뉴에 신규 페이지 BG "단계별 잔존가치 분석"을 BA 바로 다음(항상 고정 위치)에 추가함 — 프로그램별로 진행률 시작(0%)·끝(100%) 시점의 누적비용·잔존가치만 입력하면 나머지는 선형보간되고, 전역 슬라이더 하나로 "지금 중단하면?" 시나리오를 모든 프로그램에 대해 실시간으로 계산(누적비용/잔존가치/손실률)해서 보여줌. 정부지원사업 존속의무(5년) 관련 참고 안내도 화면 상단에 포함.',
+                files: ['BA-evaluation.html', 'BF-eval-detail.html', 'BG-잔존가치분석.html (신규)', 'menu.html']
+            },
+            {
+                date: '2026-09-18', time: '12:10', badge: 'new',
+                title: '도입평가: 종합 비교(BA)에 프로그램을 추가하면 사이드 메뉴에도 자동으로 생기도록 연동',
+                desc: '기존엔 자체개발(BB)/파일럿1(BC)/파일럿2(BD)가 각각 별도 고정 파일로 하드코딩돼 있어, BA(종합 비교)에서 "+ 프로그램 추가"로 열을 늘려도 사이드 메뉴엔 반영되지 않고 그 프로그램만의 상세 페이지도 없었음. 이제는 BA의 프로그램 목록(evalPrograms) 자체를 사이드 메뉴가 함께 읽어서, 프로그램이 추가/삭제/이름변경될 때마다 "도입평가" 사이드 메뉴 항목도 그 자리에서 자동으로 늘어나거나 줄어듬 — BB/BC/BD 3개의 개별 파일 대신, 하나의 범용 상세 페이지(BF-eval-detail.html)가 어떤 프로그램인지 전달받아 그 프로그램의 화면을 보여주는 방식으로 바뀜(기존 3개 프로그램의 장점/단점/리스크/권고 내용은 그대로 이 화면의 기본값으로 옮겨 유지함). 추가로, 예전엔 BA 표에서만 점수를 입력할 수 있었지만, 이제 각 프로그램의 개별 상세 페이지에서도 점수·장점·단점·리스크·권고를 직접 입력할 수 있고, 어느 쪽에서 입력하든 즉시 서로 반영됨(BA ↔ 개별 페이지 양방향 공유). 파일럿3(가상 ERP, BE)은 평가 점수 비교 대상이 아니라 별도의 실제 동작하는 데모이므로 이번 변경과 무관하게 그대로 고정 메뉴로 남겨둠.',
+                files: ['menu.html', 'BA-evaluation.html', 'BF-eval-detail.html (신규)']
+            },
+            {
+                date: '2026-09-18', time: '11:45', badge: 'new',
+                title: '학습&분석 메뉴 순서를 "결론 먼저" 원칙에 맞춰 재배치 (Best Practice → 교훈 도출 → 실패사항 → 구조분석)',
+                desc: '기존엔 실패사항(DA) → 교훈 도출(DB) → Best Practice(DC) → 구조분석(DD) 순으로, 일이 실제로 진행된 시간 순서를 그대로 따르고 있었음. 경영진은 과정(1-2-3)보다 결과(4)를 먼저 봐야 한다는 원칙에 맞춰, Best Practice(원칙) → 교훈 도출 → 실패사항 → 구조분석 순으로 바꿈 — 가장 실행지침에 가까운 것부터, 가장 상세한 기술 근거(구조도)는 맨 뒤로. 파일명(DA/DB/DC/DD)과 페이지 내용은 그대로이며 사이드바에 나열되는 순서만 바뀜. "학습 & 분석" 탭을 누르면 이제 Best Practice가 기본으로 먼저 열림.',
+                files: ['menu.html']
+            },
+            {
+                date: '2026-09-18', time: '11:30', badge: 'fix',
+                title: 'DD "기존 ERP 구조 분석" — DB 용량 수치 정정 (11GB → 약 11.9GB)',
+                desc: '원본 자료에 "11GB"로 반올림 기재돼 있던 레거시 DB 용량을, 실제 백업 파일 크기(12,782,296,576바이트 ≈ 11.9GB)로 확인해 정정함. 텍스트로 옮겨 적은 구조 부분(DB 레이어 표시)은 정확한 수치로 고쳤고, 원본 확정 이미지(스캔 다이어그램)에 그려진 "11GB" 텍스트는 원본 보존 취지에 맞게 그대로 둠 — 그 이미지를 볼 때는 "당시 반올림 기재됐던 수치"로 이해하면 됨.',
+                files: ['DD-legacy-structure.html']
+            },
+            {
+                date: '2026-09-18', time: '11:15', badge: 'fix',
+                title: 'DD "기존 ERP 구조 분석" — 이미지 대신 검색·복사 가능한 텍스트 구조로 재구성',
+                desc: '기존엔 메뉴구조도 v1/v2를 이미지(SVG)로만 보여줘서 내용을 검색하거나 복사해 분석하기 어려웠던 문제를 해결. 카테고리·하위그룹·메뉴항목을 실제 HTML 목록/카드로 옮겨 텍스트 그대로 선택·검색이 가능하게 하고, 확정된 원본 이미지는 "원본 확정 이미지 보기" 섹션에 손대지 않은 채로 그대로 남겨둠(접힌 상태) — 분석 편의성과 원본 보존을 모두 확보.',
+                files: ['DD-legacy-structure.html']
+            },
+            {
+                date: '2026-09-18', time: '10:45', badge: 'new',
+                title: '학습&분석에 DD "기존 ERP 구조 분석" 신규 메뉴 추가 (버전1/버전2 구조도)',
+                desc: '기존 ERP(JAEHO) 분석 당시 만들어졌던 메뉴구조도 v1.0(DLL 기반 추정)·v2.0(실제 화면 기반 확정) 두 다이어그램을 학습&분석 카테고리에 새 메뉴(DD)로 추가함. 경영진이 과정을 다 몰라도 되도록, 페이지 최상단에 "결론"(무역관리/USANCE 도메인 발견, BOM 연계가 원가 핵심, 초기 추정이 놓쳤던 부분)을 먼저 배치하고, 실제 구조도·비교표 같은 상세 근거는 아래 "펼쳐서 보기" 섹션에 접어둠 — 궁금한 사람만 펼쳐보는 구조. 이 "결론 먼저, 과정은 펼쳐서" 배치 원칙은 앞으로 다른 메뉴 페이지에도 같은 방식으로 적용하기로 함.',
+                files: ['DD-legacy-structure.html', 'menu.html']
+            },
+            {
+                date: '2026-09-18', time: '10:15', badge: 'new',
+                title: '학습&분석(DA/DB/DC) — 기존 ERP "JAEHO" 실사례 항목 추가',
+                desc: 'tool2 폴더에 보관돼 있던 예전 레거시 ERP(태성S&C 개발, WinForms, 2019년 도입~2022년 운영중단) 분석 자료를 확인해, 실패사항(DA)·교훈 도출(DB)·Best Practice(DC)에 실제 사례로 각각 1건씩 추가함. 벤더 종속 배포구조·10년 넘은 UI 프레임워크(DevExpress/FarPoint)로 인해 운영이 중단된 실제 원인과, 거기서 도출한 "레거시 인수 전 벤더 종속도·수명주기 체크" 교훈을 담음. 기존의 가상 사례(과거 A/B/C)와 구분되도록 보라색 "실사례" 배지를 새로 추가. tool2 폴더 자체는 변경하지 않음.',
+                files: ['DA-failures.html', 'DB-lessons.html', 'DC-best-practice.html']
+            },
+            {
+                date: '2026-09-18', time: '09:30', badge: 'new',
+                title: '시스템 게시판(GD) — 기록이 계속 길어지는 문제 해결 (페이지네이션 + 검색)',
+                desc: '작업이 쌓일수록 이 화면을 아래로 한없이 스크롤해야 하던 문제를 해결. 기본으로는 최신 20건만 보여주고 "이전 기록 더보기" 버튼을 누를 때마다 20건씩 더 표시하도록 바꿨고, 제목·설명·파일명을 검색할 수 있는 검색창을 추가해 필요한 기록을 바로 찾을 수 있게 함. LOG_ENTRIES 배열 자체는 계속 누적되어도 화면은 항상 가볍게 유지됨.',
+                files: ['GD-log.html']
+            },
+            {
+                date: '2026-09-18', time: '09:10', badge: 'fix',
+                title: '파일럿: 프로그램 3(BE) — 구매/출고 전표 목록에 "비고" 미표시 버그 수정',
+                desc: '구매·출고 전표 작성 시 입력한 비고(note)가 저장은 되지만 화면(전표 목록)에서는 인쇄 미리보기를 열기 전까지 보이지 않던 문제를 발견해 수정. 전표번호 아래에 작게 "📝 비고내용"을 바로 표시하도록 목록 행을 개선함.',
+                files: ['BE-pilot3.html']
+            },
+            {
+                date: '2026-09-18', time: '02:30', badge: 'fix',
+                title: '파일럿: 프로그램 3(BE) DB 설계 — 향후 유통→보세창고→무역→식품제도 확장을 대비해 재설계',
+                desc: '사용자 지시: "디비 설계 시 사업 구조를 유통, 보세창고, 무역, 식품제도 순으로 확장 붙일 것을 염두에 두고 작성." 아직 실제 Supabase에 한 번도 배포되지 않은 상태였어서, pilot3_erp_migration.sql과 BE-pilot3.html을 처음부터 다시 짜는 대신 스키마를 확장 가능한 구조로 재설계했습니다(마이그레이션 파일은 idempotent라 재실행해도 안전). 바뀐 점: ① 창고 마스터(p3_warehouses) 신설 — 일반/보세/냉장/냉동 유형과 보세구역 지정번호·관할세관 필드를 갖춰, 보세창고 단계에서 창고를 추가만 하면 되도록 함. ② 재고를 품목 합계가 아니라 "입고 배치(Lot)" 단위로 관리하는 p3_stock_lots 신설 — 배치마다 제조일자·유통기한(식품제도)·원산지(무역/식품표시)·통관상태(cleared=통관완료/bonded=보세, 보세창고)를 기록. current_qty(가용재고)는 통관완료된 배치 합계만 반영하고, 보세 배치는 관리자가 실제로 "통관완료 처리"(신규 RPC p3_admin_release_bonded_lot)를 실행해야 가용재고로 넘어옵니다 — 이 흐름을 로컬 PostgreSQL로 실제 실행해 검증했습니다(보세 배치 생성→출고 시 재고 부족으로 정상 차단→통관완료 처리→이후 정상 출고까지 전부 확인). ③ 출고 확정 로직을 FEFO(유통기한이 빠른 배치부터 자동 소진) 방식으로 교체 — 창고별 통관완료 재고만 가용재고로 계산하도록 정확도도 높임. ④ 품목 마스터에 HS코드·원산지·식품유형·표준유통기한(일), 거래처 마스터에 국가코드·해외거래처 여부·사업자(해외 식별)번호 필드 추가 — 지금은 화면에 입력만 받고 실제 무역/식품제도 기능은 만들지 않았지만, 나중에 그 기능을 붙일 때 테이블을 다시 갈아엎지 않아도 되도록 미리 반영. ⑤ 화면(BE-pilot3.html)에 창고 마스터 관리 탭, 구매 전표의 창고/거래유형(국내·수입)/수입신고번호/배치별 제조일자·유통기한·원산지·통관상태 입력, 재고현황의 유통기한 임박(D-day) 배지·보세재고 배지·"배치 보기"(배치별 상세 + 통관완료 처리 버튼)를 추가했습니다. 기존 화면 흐름(임시저장→확정, 재고부족 차단)과 인쇄 기능은 그대로 유지하면서 필드만 확장했습니다. 로컬 PostgreSQL 16에 재설계된 마이그레이션을 다시 실행해 기존 RPC(인증 실패, 확정 시 재고반영, 이중확정 차단)와 신규 로직(배치 생성, FEFO 소진, 창고별 가용재고 계산, 보세 통관완료 처리, 이중 통관완료 처리 차단)을 전부 재검증했습니다.',
+                files: ['pilot3_erp_migration.sql', 'BE-pilot3.html']
+            },
+            {
+                date: '2026-09-18', time: '01:45', badge: 'new',
+                title: '도입평가 > 파일럿: 프로그램 3(BE) — SAP ERP 구조를 참고한 가상 ERP(구매·재고·출고) 신설',
+                desc: 'SAP ERP의 MM(자재관리) 모듈 구조를 참고해, 식품 유통 업무에 맞춘 가상 ERP를 새 파일럿 슬롯(BE, 기존 BC/파일럿1·BD/파일럿2는 그대로 유지)으로 추가했습니다. 구매(입고)·재고·출고 3개 기능을 실제로 동작하는 형태로 구현했고, 데이터는 전부 Supabase 새 테이블(p3_items/p3_partners/p3_purchase_docs/p3_purchase_lines/p3_outbound_docs/p3_outbound_lines/p3_stock_ledger)에 저장됩니다. 핵심은 SAP의 PO(발주)와 GR/GI(실제 입출고 전표) 구분을 그대로 반영한 "임시저장 → 확정" 흐름입니다: 구매/출고 전표를 작성한 시점(임시저장, draft)에는 재고에 아무 영향이 없고, 관리자가 "확정" 버튼을 눌러야만 재고수량이 실제로 변동하고 재고원장(p3_stock_ledger)에 이력이 남습니다. 출고 확정 시에는 품목별 요청수량 합계가 현재고를 초과하면 어느 품목이 얼마나 부족한지 구체적으로 알려주며 전표 전체를 막고, 일부만 반영되는 일이 없도록 했습니다(부분 처리 금지). 전표 번호는 SAP 명명 관례를 참고해 입고는 GR-YYYYMMDD-###(Goods Receipt), 출고는 GI-YYYYMMDD-###(Goods Issue) 형식으로 당일 순번을 자동 채번합니다. 화면에는 재고현황 탭(품목별 현재고·안전재고 경고, 인쇄 가능), 구매(입고) 탭과 출고 탭(각각 임시저장 목록 + 확정된 전표 목록, 확정된 전표는 SAP 스타일 입고전표/출고전표 양식으로 인쇄 가능), 품목·거래처 마스터 관리 탭이 있습니다. 식품 유통을 가정한 시드 데이터(식품 품목 6종, 거래처 4곳, 데모 전표 각 1건)를 마이그레이션에 포함했습니다. 이 기능을 쓰려면 새 SQL 파일 pilot3_erp_migration.sql을 Supabase SQL Editor에서 반드시 먼저 실행해야 합니다(기존에 대기 중인 documents_board_migration_v5.sql과는 별개로, 순서 상관없이 추가 실행). 로컬 PostgreSQL 16 인스턴스에 실제로 마이그레이션을 실행하고 모든 RPC(인증 실패, 임시저장→확정 재고 반영, 이중 확정 차단, 재고 부족 시 부분처리 없이 전체 차단, 참조무결성으로 보호되는 삭제 등)를 직접 실행해 검증했습니다.',
+                files: ['BE-pilot3.html', 'pilot3_erp_migration.sql', 'menu.html', 'GC-layout.html']
+            },
+            {
+                date: '2026-09-18', time: '01:20', badge: 'fix',
+                title: '전체 24개 메뉴 모바일 호환성 · 코드 오류 검토 및 수정',
+                desc: '사용자 요청으로 전체 파일에 대해 (1) node --check 구문 검사 (2) 모바일 화면 대응 (3) 크로스 파일 로직 일관성을 점검했습니다. 발견해서 바로 고친 것들: ① AB-kpi-1col.html 편집 모드에서 입력할 때마다 카드 전체를 다시 그려서 입력칸 포커스가 매번 풀리던 버그(한 글자씩만 입력되던 문제) — 입력 필드에 data-field를 붙여 재렌더 후 포커스·커서 위치를 복원하도록 수정. ② menu.html 상단 "⚙ 설정" 버튼이 파일명 규칙 변경 전 이름인 존재하지 않는 settings.html을 가리키던 깨진 링크 — GB-settings.html로 수정. ③ GA-users.html의 유저목록·감사기록 표 2개가 다른 화면들과 달리 가로 스크롤 처리가 없어 좁은 화면에서 잘리던 문제 — table-responsive와 동일한 방식으로 스크롤 처리 추가, 관리자 액션 버튼 그리드도 480px 이하에서 1열로 접히도록 미디어쿼리 추가, 로그인 횟수 합계가 값이 없을 때 NaN으로 깨지던 부분도 방어 처리. ④ GB-settings.html 하단 고정 저장바가 좁은 화면에서 버튼이 줄바꿈되며 높이가 커져 콘텐츠를 가리던 문제 — 바 높이를 실측해서 본문 여백을 동적으로 확보하도록 수정. ⑤ FA/FB/FC/FD 게시판의 보기/다운로드/수정/삭제 버튼이 너무 작고 촘촘해 모바일에서 오탭 위험이 있던 부분 — 버튼 크기·간격 확대. ⑥ CC-schedule-detail.html의 Phase 필터 칩 탭 영역이 작던 부분 — 크기 확대. 모두 수정 후 재구문검사 통과.',
+                files: ['AB-kpi-1col.html', 'menu.html', 'GA-users.html', 'GB-settings.html', 'FA-reports-1col.html', 'FB-proposal.html', 'FC-changelog.html', 'FD-archive.html', 'CC-schedule-detail.html']
+            },
+            {
+                date: '2026-09-18', time: '00:40', badge: 'new',
+                title: 'KPI 모니터링(AB)을 입력값 기반 자동 계산 로직으로 재설계',
+                desc: 'AB-kpi-1col.html이 그동안 68%, 6/10 같은 숫자를 하드코딩해 두었던 걸, 관리자가 핵심 원본 숫자(진행률/마일스톤/리스크/예산/팀/업데이트)만 입력하면 각 카드의 상태 라벨과 배지 색상(ON TRACK/AT RISK/CRITICAL 등)을 임계값 기준으로 자동 계산해서 보여주는 방식으로 바꿨습니다. 화면 오른쪽 위 "✏️ 편집" 버튼(관리자만 보임)을 누르면 카드마다 입력 필드가 나타나고, 값을 바꾸면 0.7초 후 자동 저장됩니다. 나중에 실제 DB 집계로 바꾸더라도 카드 렌더링·임계값 로직은 그대로 두고 데이터 불러오는 부분만 바꾸면 되도록 설계했습니다. 기존 app_settings 테이블과 admin_update_setting / get_dashboard_settings 함수를 그대로 재사용(새 키: dash_kpi_inputs)했기 때문에 별도 SQL 마이그레이션은 필요 없습니다.',
+                files: ['AB-kpi-1col.html']
+            },
+            {
+                date: '2026-09-18', time: '00:05', badge: 'new',
+                title: '남은 메뉴 10개(AC/BB/BC/BD/DA/DB/DC/EA/EB/EC) 전부 구현',
+                desc: '경영진 보고(일정·리스크 공유)와 ERP 도입 의사결정 지원이라는 목적에 맞춰 나머지 항목을 모두 만들었습니다. 대시보드 리스크 현황(AC)은 리스크 레지스터. 도입평가의 자체개발(BB)·파일럿1(BC)·파일럿2(BD)는 종합비교(BA)와 같은 Supabase 공유 점수 데이터를 읽어와 보여주는 상세 프로파일(장점/단점/리스크/권고)입니다. 학습&분석의 기존실패사항(DA)→교훈도출(DB)→Best Practice(DC)는 서로 연결된 흐름으로 구성했습니다. 구축설계의 아키텍처(EA)는 기술 계층 구조 Mermaid 다이어그램, 도출 로직(EB)은 평가 가중치·점수산정 방식 설명과 BA 데이터 기반 자동 순위 계산, 데이터 맵핑(EC)은 레거시→신규 필드 매핑표 초안입니다. menu.html의 모든 placeholder 항목이 실제 파일로 연결되어 이제 미구현 메뉴가 없습니다.',
+                files: ['AC-risk.html', 'BB-inhouse.html', 'BC-pilot1.html', 'BD-pilot2.html', 'DA-failures.html', 'DB-lessons.html', 'DC-best-practice.html', 'EA-architecture.html', 'EB-logic.html', 'EC-data-map.html', 'menu.html']
+            },
+            {
+                date: '2026-09-17', time: '23:35', badge: 'new',
+                title: '일정관리 상세 일정(CC)·중요 이벤트(CD) 구현',
+                desc: '지금까지 placeholder였던 일정관리의 두 항목을 실제 파일로 구현했습니다. CC-schedule-detail.html은 마일스톤(CA)·단계별진행도(CB)보다 세부적인 Phase별 작업 목록(담당/진행률/상태)을 보여주고 Phase 필터가 있습니다. CD-events.html은 킥오프/검토/마일스톤/오픈 등 핵심 이벤트를 날짜순으로 정리하고 오늘 날짜 기준 D-day를 자동 계산해서 보여줍니다. 둘 다 CA/CB와 동일하게 정적 데이터 방식(Supabase 미사용)입니다. menu.html의 CC/CD 항목을 placeholder에서 실제 파일 연결로 변경했습니다.',
+                files: ['CC-schedule-detail.html', 'CD-events.html', 'menu.html']
+            },
+            {
+                date: '2026-09-17', time: '18:15', badge: 'fix',
+                title: '문서 게시판 4종에 "수정" 기능 추가',
+                desc: '지금까지는 업로드(등록)와 삭제만 가능했는데, 관리자가 기존 문서의 제목/설명/타입/보고날짜를 고치거나 파일 자체를 새 파일로 교체할 수 있는 수정 기능을 FA/FB/FC/FD 4개 게시판 모두에 추가했습니다. 목록의 "✎ 수정" 버튼을 누르면 같은 등록 패널이 "문서 수정" 모드로 열리고, 파일을 새로 고르지 않으면 기존 파일이 그대로 유지됩니다. 파일을 새로 올리면 기존 파일은 Storage에서 자동으로 정리됩니다. documents 테이블에 admin_update_document 함수를 추가하는 마이그레이션(v5)이 필요합니다.',
+                files: ['FA-reports-1col.html', 'FB-proposal.html', 'FC-changelog.html', 'FD-archive.html', 'data/documents_board_migration_v5.sql']
+            },
+            {
+                date: '2026-09-17', time: '17:55', badge: 'fix',
+                title: '주간 리포트를 날짜순 + 타입 배지 형식으로 재구성',
+                desc: '게시판으로 바꾼 직후 원래 있던 예시(날짜 우선, 주간보고/리스크/승인/전략 타입 배지)가 더 낫다는 판단에 따라, 다른 게시판(FB/FC/FD)과 다르게 날짜 컬럼을 맨 앞에 두고 업로드 시 타입을 선택하게 만들었습니다. documents 테이블에 tag 컬럼을 추가하는 마이그레이션(v3)이 필요합니다.',
+                files: ['FA-reports-1col.html', 'data/documents_board_migration_v3.sql']
+            },
+            {
+                date: '2026-09-17', time: '17:50', badge: 'fix',
+                title: '주간 리포트(FA)도 실제 게시판으로 전환',
+                desc: 'FA-reports-1col.html이 하드코딩된 샘플 표(가짜 보기/다운로드 버튼)였던 걸, FB/FC/FD와 똑같은 게시판 방식으로 다시 만들었습니다. 이제 문서&리포팅 카테고리 4개 항목(FA/FB/FC/FD)이 전부 동일한 방식(Supabase Storage 업로드, 관리자만 등록·삭제, 실제 열람/다운로드)으로 동작합니다. documents 테이블의 category 체크 제약과 admin_insert_document 함수에 weekly-report 값을 추가하는 마이그레이션(documents_board_migration_v2.sql)이 필요합니다.',
+                files: ['FA-reports-1col.html', 'data/documents_board_migration_v2.sql']
+            },
+            {
+                date: '2026-09-17', time: '17:24', badge: 'fix',
+                title: '전체 메뉴 파일에 카테고리 코드 접두어 부여 (A~G + 두 자리)',
+                desc: '앞으로 파일을 찾기 쉽도록, 메뉴 카테고리를 A(대시보드)~G(시스템) 순서로 정하고 그 아래 항목은 A/B/C... 순번을 붙여 두 자리 코드로 만들었습니다. 실제 파일이 있는 항목은 전부 "코드-원래이름.html" 형식으로 이름을 바꿨습니다 (예: reports-1col.html → FA-reports-1col.html). 코드 전체 목록은 menu.html의 CATEGORIES 배열 주석과 프로젝트 문서에 정리해뒀습니다.',
+                files: [
+                    'kpi-1col.html → AB-kpi-1col.html', 'evaluation.html → BA-evaluation.html',
+                    'timeline-1col.html → CA-timeline-1col.html', 'progress-1col.html → CB-progress-1col.html',
+                    'reports-1col.html → FA-reports-1col.html', 'users.html → GA-users.html',
+                    'settings.html → GB-settings.html', 'layout.html → GC-layout.html', 'log.html → GD-log.html'
+                ]
+            },
+            {
+                date: '2026-09-17', time: '17:19', badge: 'new',
+                title: '문서&리포팅 게시판 3종 신설 (사업기안서/변경이력/아카이브)',
+                desc: '문서&리포팅 아래 미구현 상태였던 3개 메뉴를 실제 게시판으로 구현했습니다. 목록 조회는 누구나 가능하고, 문서 등록·삭제는 관리자만 가능합니다. 파일은 Supabase Storage(documents 버킷)에 실제 업로드되고, 메타데이터는 documents 테이블에 저장됩니다. 함께 도입평가 표의 좌우 여백을 다른 화면들과 동일하게 맞췄습니다(evaluation.html → BA-evaluation.html).',
+                files: ['FB-proposal.html', 'FC-changelog.html', 'FD-archive.html', 'menu.html', 'BA-evaluation.html', 'data/documents_board_migration.sql']
+            },
+            {
+                date: '2026-09-17', time: '17:10', badge: 'new',
+                title: '시스템 > 레이아웃 메뉴 신설 (layout.html)',
+                desc: '[3] 폴더의 파일 연결 구조도(Mermaid)를 볼 수 있는 화면을 시스템 &gt; 로그 바로 위에 추가했습니다. 로그와 같은 방식(파일 임베드)으로 연결했고, "구조를 한눈에 보는 화면"과 "시간순 변경 이력을 보는 화면"의 역할을 분리했습니다.',
+                files: ['layout.html', 'menu.html']
+            },
+            {
+                date: '2026-09-17', time: '16:59', badge: 'deleted',
+                title: '미사용 파일 정리 (삭제)',
+                desc: '메뉴에 연결되지 않은 실험판·백업 파일들을 폴더에서 정리했습니다. dashboard-master.html은 menu.html과 내용이 완전히 같은 복사본이면서 실제로는 어디서도 링크되지 않고 있어 함께 삭제했고, 이제 셸 파일은 menu.html 하나만 남았습니다. (삭제 전 사용자 백업 완료)',
+                files: ['dashboard-master.html', 'dashboard-master2.html', 'kpi-2col.html', 'timeline-2col.html', 'progress-2col.html', 'reports-2col.html', 'menu_old_backup.html', 'Claude outputs/style-options.html'],
+                filesUnused: true
+            },
+            {
+                date: '2026-09-17', time: '16:45', badge: 'new',
+                title: '파일 연결 구조도 작성 · 작업 로그 페이지(log.html) 신설',
+                desc: '[3] 폴더 전체 파일이 셸을 통해 어떻게 연결되는지 정리한 구조도를 만들고, 셸을 무겁게 하지 않도록 별도 모듈(log.html)로 이 작업 로그 화면을 분리해 시스템 &gt; 로그 메뉴에 연결했습니다.',
+                files: ['log.html']
+            },
+            {
+                date: '2026-09-17', time: '16:25', badge: 'fix',
+                title: 'KPI · 일정관리 · 사용자관리 화면 스타일 통일',
+                desc: '각 화면마다 제각각이던 헤더/배경 색상을 셸과 동일한 공용 테마 변수로 교체하고, 로그인 가드가 없던 4개 화면에 로그인 체크를 추가했습니다.',
+                files: ['kpi-1col.html', 'timeline-1col.html', 'progress-1col.html', 'reports-1col.html', 'users.html']
+            },
+            {
+                date: '2026-09-17', time: '16:17', badge: 'fix',
+                title: '셸에서 도입평가 인라인 로직 제거 + iframe 높이 계산 버그 수정',
+                desc: '도입평가·종합비교 기능을 evaluation.html로 분리하면서 셸 안에 남아있던 관련 코드를 정리했고, 파일 임베드 시 하단에 빈 공간이 생기던 iframe 높이 계산 버그를 함께 고쳤습니다.',
+                files: ['dashboard-master.html', 'menu.html']
+            },
+            {
+                date: '2026-09-17', time: '16:13', badge: 'new',
+                title: '도입평가 · 종합비교 모듈 분리',
+                desc: '셸 안에 인라인으로 있던 도입평가 종합비교 기능을 독립 파일로 분리했습니다. 셸에 임베드된 상태와 단독 접속 상태 모두에서 동작합니다.',
+                files: ['evaluation.html']
+            },
+            {
+                date: '2026-09-17', time: '10:56', badge: 'new',
+                title: '권한 설정 화면 및 DB 마이그레이션',
+                desc: '권한 설정(설정값 저장) 화면과 그에 필요한 Supabase 테이블 마이그레이션 스크립트를 추가했습니다.',
+                files: ['settings.html', 'data/dashboard_settings_migration.sql']
+            },
+            {
+                date: '2026-09-17', time: '10:12', badge: null, unused: true,
+                title: '스타일 시안 파일',
+                desc: '헤더/색상 스타일 옵션을 비교해보기 위한 참고용 시안 파일입니다. 메뉴에는 연결되어 있지 않습니다.',
+                files: ['Claude outputs/style-options.html'], filesUnused: true
+            },
+            {
+                date: '2026-09-17', time: '09:25', badge: null, unused: true,
+                title: '이전 메뉴 백업',
+                desc: '구조 변경 전 메뉴 파일을 백업해둔 것입니다. 현재는 사용하지 않습니다.',
+                files: ['menu_old_backup.html'], filesUnused: true
+            },
+            {
+                date: '2026-09-17', time: '08:55', badge: null, unused: true,
+                title: '2열 레이아웃 실험판',
+                desc: 'KPI·일정관리·리포트 화면을 2열 레이아웃으로 만들어본 실험판입니다. 현재는 1열 레이아웃(각 -1col.html)을 채택해 사용 중이며, 이 파일들은 메뉴에 연결되어 있지 않습니다.',
+                files: ['kpi-2col.html', 'timeline-2col.html', 'progress-2col.html', 'reports-2col.html'], filesUnused: true
+            },
+            {
+                date: '2026-09-16', time: '18:38', badge: null, unused: true,
+                title: '셸 대체 초안',
+                desc: '현재 셸(dashboard-master.html)을 대체해보려고 만들었던 초안입니다. 채택되지 않아 메뉴에는 연결되어 있지 않습니다.',
+                files: ['dashboard-master2.html'], filesUnused: true
+            },
+            {
+                date: '2026-09-11', time: '16:40 ~ 17:15', badge: null,
+                title: '구축설계 참고 도구 파일 추가',
+                desc: '구축설계 관련 참고 자료 파일이 추가되었습니다.',
+                files: ['tool5/index5-1.html', 'tool5/index5.html']
+            },
+            {
+                date: '2026-09-09', time: '01:34 ~ 17:07', badge: 'new',
+                title: '로그인 화면 및 Supabase 연동 기반 구축',
+                desc: '로그인 화면과 공용 Supabase 클라이언트, DB 스키마 초안을 만들어 전체 시스템의 데이터 연동 기반을 마련했습니다.',
+                files: ['index.html', 'js/supabaseClient.js', 'js/geoClient.js', 'data/supabase_schema.sql']
+            },
+            {
+                date: '2026-09-04', time: '08:58', badge: null,
+                title: '메뉴 설정 참고 파일',
+                desc: '초기 메뉴 구성을 검토하기 위해 만들어둔 설정 파일입니다.',
+                files: ['data/menuConfig.json']
+            },
+            {
+                date: '2026-09-03', time: '16:53 ~ 16:54', badge: null,
+                title: '구축설계 참고 도구 파일 최초 등록',
+                desc: '구축설계 관련 참고 자료 파일들이 처음 등록되었습니다.',
+                files: ['tool1/index1.html', 'tool2/index2.html', 'tool3/index3.html', 'tool4/index4.html']
+            },
+        ];
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        function badgeHTML(entry) {
+            if (entry.unused) return '<span class="badge-inline badge-unused">미사용</span>';
+            if (entry.badge === 'new') return '<span class="badge-inline badge-new">신규</span>';
+            if (entry.badge === 'fix') return '<span class="badge-inline badge-fix">수정</span>';
+            if (entry.badge === 'deleted') return '<span class="badge-inline badge-deleted">삭제</span>';
+            return '';
+        }
+
+        // 로그가 계속 길어지는 문제 대응: 검색어가 없을 땐 최근 N건만 보여주고
+        // "이전 기록 더보기"로 필요할 때만 이어서 불러온다. 검색 중엔 전체에서 필터링.
+        const LOG_PAGE_SIZE = 20;
+        let logSearchTerm = '';
+        let logShownCount = LOG_PAGE_SIZE;
+
+        function esc2(s) { return esc(String(s == null ? '' : s)); }
+
+        function matchesSearch(e, term) {
+            if (!term) return true;
+            const hay = [e.title, e.desc, ...(e.files || [])].join(' ').toLowerCase();
+            return hay.includes(term);
+        }
+
+        function renderLog() {
+            const root = document.getElementById('logRoot');
+            const moreWrap = document.getElementById('logMoreWrap');
+            const countLabel = document.getElementById('logCountLabel');
+            const term = logSearchTerm.trim().toLowerCase();
+
+            const filtered = term ? LOG_ENTRIES.filter(e => matchesSearch(e, term)) : LOG_ENTRIES;
+            const visible = term ? filtered : filtered.slice(0, logShownCount);
+
+            let html = '';
+            let lastDate = null;
+            visible.forEach((e) => {
+                if (e.date !== lastDate) {
+                    html += `<div class="day-divider"><span class="label">${esc(e.date)}</span><span class="line"></span></div>`;
+                    lastDate = e.date;
+                }
+                const filesHTML = e.files.map(f => `<span class="file-chip${e.filesUnused ? ' unused' : ''}">${esc(f)}</span>`).join('');
+                html += `
+                    <div class="log-item">
+                        <div class="log-dot${e.unused ? ' unused' : ''}"></div>
+                        <div class="log-head">
+                            <span class="log-time">${esc(e.time)}</span>
+                        </div>
+                        <div class="log-title">${esc(e.title)}${badgeHTML(e)}</div>
+                        <div class="log-desc">${e.desc}</div>
+                        <div class="log-files">${filesHTML}</div>
+                    </div>`;
+            });
+            root.innerHTML = html || `<div style="padding:24px;text-align:center;color:var(--text-tertiary,#94a3b8);">검색 결과가 없습니다.</div>`;
+
+            countLabel.textContent = term
+                ? `검색결과 ${filtered.length}건 / 전체 ${LOG_ENTRIES.length}건`
+                : `${visible.length} / 전체 ${LOG_ENTRIES.length}건 표시 중`;
+
+            if (!term && filtered.length > logShownCount) {
+                moreWrap.innerHTML = `<button type="button" class="ghost-btn" style="cursor:pointer;" onclick="loadMoreLog()">이전 기록 더보기 (${filtered.length - logShownCount}건 남음)</button>`;
+            } else {
+                moreWrap.innerHTML = '';
+            }
+        }
+        function loadMoreLog() { logShownCount += LOG_PAGE_SIZE; renderLog(); }
+        function onLogSearch(v) { logSearchTerm = v; renderLog(); }
+        renderLog();
+
+        document.getElementById('snapshotDate').textContent = '2026-09-17 16:59 KST';
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

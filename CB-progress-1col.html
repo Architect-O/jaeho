@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진행도 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* 대시보드(dashboard-master.html)와 동일한 헤더/콘텐츠 변수 — 테마 선택 시 이 페이지도 같이 바뀝니다 */
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+
+        /* ===== Header — 대시보드와 동일한 구조 (테마 색상 실시간 반영) ===== */
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+        .card { background: var(--card-bg); border-radius: 10px; padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+        th { padding: 12px 16px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--text-secondary); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        tbody tr:hover { background: var(--gray-100); }
+        .progress-bar { width: 100%; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--primary); }
+        .card-badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; }
+        .badge-success { background: var(--success-soft); color: var(--success); }
+        .badge-info { background: var(--info-soft); color: var(--info); }
+        .badge-warning { background: var(--warning-soft); color: #b45309; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-secondary { background: var(--gray-100); color: var(--text); border: 1px solid var(--border); }
+        .btn-small { padding: 4px 8px; font-size: 11px; }
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">📊 단계별 진행도</div>
+                <div class="brand-sub">각 단계별 작업 진행도</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">📊 단계별 진행 현황</h1>
+            <p class="page-subtitle">각 단계별 작업 진행도</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📊 단계별 진행 현황</div>
+                <button class="btn btn-secondary btn-small">상세 보기</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>단계</th>
+                            <th>작업 항목</th>
+                            <th>담당</th>
+                            <th>진행률</th>
+                            <th>상태</th>
+                            <th>기한</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>3-1</strong></td>
+                            <td>모듈별 개발</td>
+                            <td>IT팀 (5명)</td>
+                            <td><div class="progress-bar"><div class="progress-bar-fill" style="width: 85%"></div></div></td>
+                            <td><span class="card-badge badge-success">진행중</span></td>
+                            <td>2025-11-30</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3-2</strong></td>
+                            <td>데이터 마이그레이션</td>
+                            <td>DB팀 (3명)</td>
+                            <td><div class="progress-bar"><div class="progress-bar-fill" style="width: 60%"></div></div></td>
+                            <td><span class="card-badge badge-info">진행중</span></td>
+                            <td>2025-12-10</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3-3</strong></td>
+                            <td>통합 테스트 계획</td>
+                            <td>QA팀 (2명)</td>
+                            <td><div class="progress-bar"><div class="progress-bar-fill" style="width: 40%"></div></div></td>
+                            <td><span class="card-badge badge-warning">진행중</span></td>
+                            <td>2025-12-15</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3-4</strong></td>
+                            <td>사용자 교육 자료</td>
+                            <td>교육팀 (2명)</td>
+                            <td><div class="progress-bar"><div class="progress-bar-fill" style="width: 30%"></div></div></td>
+                            <td><span class="card-badge badge-info">계획</span></td>
+                            <td>2026-01-15</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3-5</strong></td>
+                            <td>거버넌스 체계 구축</td>
+                            <td>PMO (1명)</td>
+                            <td><div class="progress-bar"><div class="progress-bar-fill" style="width: 100%"></div></div></td>
+                            <td><span class="card-badge badge-success">완료</span></td>
+                            <td>2025-09-30</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

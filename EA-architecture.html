@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아키텍처 - JAEHO ERP Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 22px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .card { background: var(--card-bg); border-radius: 10px; padding: 20px 22px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; display:flex; align-items:center; gap:8px; }
+
+        .diagram-scroll { overflow-x: auto; }
+        pre.mermaid { margin: 0; min-width: 640px; }
+
+        .legend { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border); }
+        .legend-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-secondary); }
+        .swatch { width:20px; height:0; border-top-width:2px; border-top-style:solid; flex-shrink:0; }
+        .swatch.dash { border-top-style:dashed; }
+
+        ul.plain { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+        ul.plain li { font-size:12.5px; line-height:1.5; padding-left:16px; position:relative; color:var(--text-secondary); }
+        ul.plain li::before { content:'—'; position:absolute; left:0; color:var(--text-tertiary); }
+        ul.plain code { font-size:11.5px; background:var(--gray-100); color:var(--text); padding:1px 5px; border-radius:4px; }
+
+        .badge-inline { display:inline-block; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 7px; border-radius:20px; margin-left:6px; }
+        .badge-warn { background:var(--warning-soft); color:#b45309; }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">🎨 아키텍처</div>
+                <div class="brand-sub">구축 설계 · 시스템 기술 아키텍처</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">🎨 시스템 아키텍처</h1>
+            <p class="page-subtitle">"[3] 폴더 파일 연결 구조"(시스템 &gt; 레이아웃)가 화면 간 이동을 보여준다면, 이 페이지는 기술 계층 관점에서 이 시스템이 어떻게 구성되어 있는지를 보여줍니다.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🏗️ 계층 구조</div>
+            <div class="diagram-scroll">
+<pre class="mermaid">
+flowchart TB
+    subgraph CLIENT["클라이언트 (브라우저)"]
+        direction LR
+        UI["정적 HTML/CSS/JS 모듈<br/><span style='font-size:11px'>메뉴별 파일 (AB, BA, CA... 등)</span>"]
+        SHELL2["menu.html 셸<br/><span style='font-size:11px'>3분할 레이아웃 · 테마/언어 상태</span>"]
+    end
+
+    subgraph AUTH["인증"]
+        SESSION["세션스토리지 기반 로그인<br/><span style='font-size:11px'>Supabase Auth 미사용, users 테이블 직접 대조</span>"]
+    end
+
+    subgraph BACKEND["Supabase (백엔드)"]
+        direction LR
+        PG[("Postgres<br/><span style='font-size:11px'>users · app_settings · documents · audit_logs</span>")]
+        RPC["SECURITY DEFINER RPC 함수<br/><span style='font-size:11px'>admin_* 함수가 관리자 자격을 서버에서 검증</span>"]
+        STORAGE[("Storage 버킷<br/><span style='font-size:11px'>documents (문서 게시판 파일)</span>")]
+    end
+
+    subgraph FUTURE["향후 확장 (미구현)"]
+        VENDOR["도입 후보 ERP API<br/><span style='font-size:11px'>파일럿 프로그램 1·2 연동 시</span>"]
+    end
+
+    UI --> SHELL2
+    SHELL2 --> SESSION
+    SESSION -.검증.-> PG
+    UI --> RPC
+    RPC --> PG
+    UI --> STORAGE
+    UI -.향후 연동.-> VENDOR
+
+    classDef client fill:#eef2f5,stroke:#16324f,stroke-width:1.5px,color:#16324f;
+    classDef auth fill:#fef3e2,stroke:#b45309,stroke-width:1.5px,color:#6b4e00;
+    classDef backend fill:#fbf3df,stroke:#b8860b,stroke-width:1.5px,color:#6b4e00;
+    classDef future fill:#ffffff,stroke:#c9ccd1,stroke-width:1px,stroke-dasharray: 4 3,color:#9aa3ad;
+    class UI,SHELL2 client;
+    class SESSION auth;
+    class PG,RPC,STORAGE backend;
+    class VENDOR future;
+</pre>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="swatch" style="border-color:#16324f;"></span> 직접 호출/데이터 흐름</div>
+                <div class="legend-item"><span class="swatch dash" style="border-color:#9aa3ad;"></span> 향후 확장 예정 (미구현)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📌 설계 원칙</div>
+            <ul class="plain">
+                <li>서버(백엔드) 로직 없이 정적 파일 + Supabase만으로 구성 — 별도 서버 배포/운영 부담이 없음</li>
+                <li>모든 관리자 전용 쓰기 작업은 <code>SECURITY DEFINER</code> RPC 함수가 아이디·비밀번호를 서버에서 재검증한 뒤에만 실행 (화면의 버튼 숨김은 보조 수단)</li>
+                <li>테마/언어/평가값 등은 <code>app_settings</code> 테이블을 통해 전 사용자·전 기기에 실시간 공유</li>
+                <li>화면 단위로 파일을 완전히 분리 — 한 화면을 고쳐도 다른 화면에 영향이 없음 (파일명 코드 규칙은 시스템 &gt; 레이아웃 참고)</li>
+                <li>도입 후보 ERP(파일럿 프로그램)가 최종 선정되면, 해당 벤더 API 연동을 이 아키텍처의 "향후 확장" 영역에 추가</li>
+            </ul>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+            <div class="card-title">🔗 관련 화면</div>
+            <ul class="plain">
+                <li><a href="./GC-layout.html" style="color:var(--primary);font-weight:600;">시스템 &gt; 레이아웃</a> — 화면(파일) 간 이동 구조도</li>
+                <li><a href="./EB-logic.html" style="color:var(--primary);font-weight:600;">구축 설계 &gt; 도출 로직</a> — 도입평가 점수를 의사결정으로 연결하는 방법</li>
+                <li><a href="./EC-data-map.html" style="color:var(--primary);font-weight:600;">구축 설계 &gt; 데이터 맵핑</a> — 레거시 데이터 이관 매핑표</li>
+            </ul>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>

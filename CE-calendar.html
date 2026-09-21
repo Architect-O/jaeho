@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>일정 캘린더 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+    --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+    --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+    --border:#e8eaed; --primary:#16324f;
+    --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+    --danger:#ef4444; --danger-soft:#fef2f2; --info:#3b82f6; --info-soft:#eff6ff;
+    --gray-100:#f8f9fa; --gray-200:#eceef0;
+  }
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:var(--content-bg);color:var(--text);min-height:100vh;}
+  a{color:inherit;}
+
+  header{
+    height:56px; background:var(--header-bg); color:var(--header-text);
+    border-bottom:var(--header-border-width) solid var(--header-border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+  .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+  .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+  .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+  .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .ghost-btn{
+    background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+    padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+    text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+  }
+  .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+  main{width:100%;padding:30px;}
+  @media (max-width:768px){ main{padding:16px;} }
+
+  .page-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+  .page-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:16px;}
+  .card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,0.03);margin-bottom:18px;}
+  .card-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+  /* ===== 범례 ===== */
+  .legend-bar{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-secondary);margin-bottom:14px;}
+  .legend-item{display:inline-flex;align-items:center;gap:6px;}
+  .legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0;}
+
+  /* ===== 월 내비게이션 ===== */
+  .cal-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .cal-nav{display:flex;align-items:center;gap:8px;}
+  .cal-month-label{font-size:17px;font-weight:700;min-width:120px;text-align:center;}
+  .nav-btn{
+    width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--text);
+    font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .nav-btn:hover{background:var(--gray-100);}
+
+  /* ===== 캘린더 그리드 ===== */
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .cal-weekday{background:var(--gray-100);padding:8px 0;text-align:center;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;border-bottom:1px solid var(--border);}
+  .cal-weekday.sun{color:#dc2626;}
+  .cal-weekday.sat{color:#2563eb;}
+  .cal-day{
+    min-height:88px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+    padding:6px;cursor:pointer;background:#fff;transition:background .12s;position:relative;
+  }
+  .cal-day:hover{background:var(--gray-100);}
+  .cal-day.other-month{background:#fcfcfd;}
+  .cal-day.other-month .day-num{color:var(--text-tertiary);}
+  .cal-day.this-week{background:#fbfdff;}
+  .cal-day.selected{outline:2px solid var(--primary);outline-offset:-2px;}
+  .cal-day.today .day-num{
+    background:var(--primary);color:#fff;border-radius:50%;width:22px;height:22px;
+    display:inline-flex;align-items:center;justify-content:center;font-weight:700;
+  }
+  .day-num{font-size:12px;font-weight:600;color:var(--text);}
+  .day-num.sun{color:#dc2626;}
+  .day-num.sat{color:#2563eb;}
+  .evt-chip{
+    display:block;font-size:10.5px;padding:2px 5px;border-radius:4px;margin-top:3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;
+  }
+  .evt-chip.project{background:var(--info);}
+  .evt-chip.personal{background:var(--success);}
+  .evt-more{font-size:10px;color:var(--text-tertiary);margin-top:2px;padding-left:5px;}
+
+  @media (max-width:768px){
+    .cal-day{min-height:56px;padding:4px;}
+    .evt-chip{font-size:9px;padding:1px 4px;}
+  }
+
+  /* ===== 날짜 상세 패널 ===== */
+  .detail-date{font-size:15px;font-weight:700;margin-bottom:10px;}
+  .detail-section{margin-bottom:14px;}
+  .detail-section-title{font-size:11.5px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .task-item{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+  .task-item:last-child{margin-bottom:0;}
+  .task-name{font-weight:600;font-size:13px;}
+  .task-desc{font-size:11.5px;color:var(--text-tertiary);margin-top:2px;}
+  .task-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:11px;color:var(--text-secondary);}
+  .progress-bar{width:70px;height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;}
+  .progress-bar-fill{height:100%;background:var(--info);}
+  .badge{display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;padding:3px 7px;border-radius:3px;white-space:nowrap;}
+  .badge-success{background:var(--success-soft);color:#047857;}
+  .badge-info{background:var(--info-soft);color:#1d4ed8;}
+  .badge-warning{background:var(--warning-soft);color:#b45309;}
+  .badge-pending{background:var(--gray-100);color:var(--text-secondary);}
+
+  .personal-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--success-soft);}
+  .personal-item:last-child{margin-bottom:0;}
+  .personal-item .ptitle{font-weight:600;font-size:13px;}
+  .personal-item .pdesc{font-size:11.5px;color:var(--text-secondary);margin-top:2px;white-space:pre-wrap;}
+  .personal-item .pmeta{font-size:10px;color:var(--text-tertiary);margin-top:4px;}
+  .del-btn{border:none;background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0;}
+  .del-btn:hover{color:var(--danger);}
+
+  .empty-hint{font-size:12px;color:var(--text-tertiary);padding:6px 0;}
+
+  .add-form{display:flex;flex-direction:column;gap:8px;margin-top:6px;padding:12px;background:var(--gray-100);border-radius:8px;}
+  .add-form input, .add-form textarea{
+    font:inherit;font-size:12.5px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;color:var(--text);background:#fff;width:100%;
+  }
+  .add-form textarea{resize:vertical;min-height:50px;}
+  .add-form-row{display:flex;gap:8px;justify-content:flex-end;}
+  .primary-btn{
+    background:var(--primary);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+  .primary-btn:hover{opacity:0.9;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo" id="brandLogo">J</div>
+    <div class="brand-info">
+      <div class="brand-title" id="brandTitle">📅 일정 캘린더</div>
+      <div class="brand-sub" id="brandSub">프로젝트 공식 업무와 개인 업무를 한 화면에서 확인합니다</div>
+    </div>
+  </div>
+  <div class="hbtns">
+    <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+  </div>
+</header>
+
+<main>
+  <div id="calContent"></div>
+</main>
+
+<script>
+  if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+  const myUsername = sessionStorage.getItem('username');
+  const myPw = sessionStorage.getItem('pw');
+  const isAdmin = sessionStorage.getItem('role') === 'admin';
+
+  /* ===== 헤더 테마 — 사이트 공통 값 ===== */
+  const HEADER_THEMES = {
+    A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+    B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+    C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+  };
+  function applyHeaderTheme(key){
+    const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+    Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+  }
+  applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+
+  /* ===== 언어 ===== */
+  let currentLang = localStorage.getItem('dashLang') || 'ko';
+  function L(ko, en) {
+    if (currentLang === 'en') return en;
+    if (currentLang === 'both') return ko + ' · ' + en;
+    return ko;
+  }
+  function renderHeaderTexts(){
+    document.getElementById('brandTitle').textContent = '📅 ' + L('일정 캘린더', 'Schedule Calendar');
+    document.getElementById('brandSub').textContent = L('프로젝트 공식 업무와 개인 업무를 한 화면에서 확인합니다', 'View official project work and personal tasks in one place');
+    document.querySelector('.hbtns .ghost-btn').textContent = '← ' + L('메뉴로', 'Menu');
+  }
+  renderHeaderTexts();
+
+  function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function dateStr(dt) { return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate()); }
+
+  /* ===== Supabase 연동: 조회는 누구나, 저장은 관리자만 (BA/BG와 동일 패턴, 새 SQL 불필요 — 기존 app_settings 재사용) ===== */
+  async function fetchDashboardSettings(){
+    try {
+      const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+      if (!sb) return null;
+      const { data, error } = await sb.rpc('get_dashboard_settings');
+      if (error) throw error;
+      return data || {};
+    } catch(e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+  }
+  async function saveDashboardSetting(key, value){
+    try {
+      const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+      if (!sb || !myUsername || !myPw) return { success:false, message:'로그인 정보가 없습니다.' };
+      const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
+      if (error) throw error;
+      return data;
+    } catch(e) { console.error('공유 설정 저장 실패:', e); return { success:false, message: e.message }; }
+  }
+  async function syncFromCloud(){
+    const remote = await fetchDashboardSettings();
+    if (!remote) return;
+    if (remote.dash_theme) { localStorage.setItem('dashTheme', remote.dash_theme); applyHeaderTheme(remote.dash_theme); }
+    if (remote.dash_lang) { currentLang = remote.dash_lang; localStorage.setItem('dashLang', currentLang); renderHeaderTexts(); }
+    if (remote.dash_calendar_personal !== undefined) localStorage.setItem('calendarPersonal', remote.dash_calendar_personal);
+  }
+
+  let _calSaveTimer = null;
+  function scheduleCalendarCloudSave() {
+    if (!isAdmin) return;
+    clearTimeout(_calSaveTimer);
+    _calSaveTimer = setTimeout(persistCalendarToCloud, 800);
+  }
+  async function persistCalendarToCloud() {
+    if (!isAdmin) return;
+    await saveDashboardSetting('dash_calendar_personal', JSON.stringify(loadPersonal()));
+  }
+
+  /* =========================================================================
+     프로젝트 공식 업무 — CC-schedule-detail.html의 SCHEDULE 배열과 동일한 데이터입니다.
+     ⚠️ 유지보수 주의: CC-schedule-detail.html의 작업 일정을 수정하면 이 배열도 함께
+     갱신해야 두 화면의 내용이 어긋나지 않습니다(현재는 두 파일이 독립된 정적 데이터를
+     가지고 있음 — Supabase로 단일화하는 것은 향후 개선 과제로 모듈 문서에 기록).
+     ========================================================================= */
+  const PROJECT_TASKS = [
+    { phase: 1, name: '이해관계자 인터뷰', desc: '현업 부서별 요구사항 수집', start: '2025-06-15', end: '2025-06-25', owner: 'PMO', progress: 100, status: '완료' },
+    { phase: 1, name: '현행 프로세스 분석', desc: 'AS-IS 업무 흐름도 작성', start: '2025-06-20', end: '2025-07-05', owner: '컨설팅팀', progress: 100, status: '완료' },
+    { phase: 1, name: '요구사항 정의서 작성', desc: 'TO-BE 요구사항 확정 및 승인', start: '2025-07-05', end: '2025-07-30', owner: 'PMO', progress: 100, status: '완료' },
+    { phase: 2, name: '아키텍처 설계', desc: '전체 시스템 구조 및 연동 방식 정의', start: '2025-08-01', end: '2025-08-20', owner: '설계팀', progress: 100, status: '완료' },
+    { phase: 2, name: '데이터 모델 설계', desc: 'ERD 및 마이그레이션 매핑표 작성', start: '2025-08-10', end: '2025-09-01', owner: 'DB팀', progress: 100, status: '완료' },
+    { phase: 2, name: '화면 설계(UI/UX)', desc: '주요 화면 와이어프레임 및 리뷰', start: '2025-08-20', end: '2025-09-10', owner: '설계팀', progress: 100, status: '완료' },
+    { phase: 3, name: '모듈별 개발', desc: '대시보드/도입평가/일정관리 등 핵심 모듈', start: '2025-09-12', end: '2025-11-30', owner: 'IT팀 (5명)', progress: 85, status: '진행중' },
+    { phase: 3, name: '데이터 마이그레이션', desc: '레거시 시스템 데이터 이관', start: '2025-10-01', end: '2025-12-10', owner: 'DB팀 (3명)', progress: 60, status: '진행중' },
+    { phase: 3, name: '통합 테스트 계획 수립', desc: '테스트 시나리오 및 케이스 작성', start: '2025-11-15', end: '2025-12-15', owner: 'QA팀 (2명)', progress: 40, status: '진행중' },
+    { phase: 3, name: '사용자 교육 자료 제작', desc: '매뉴얼 및 교육 커리큘럼', start: '2025-11-20', end: '2026-01-15', owner: '교육팀 (2명)', progress: 30, status: '계획' },
+    { phase: 4, name: '통합 테스트(SIT)', desc: '모듈 간 연동 시나리오 검증', start: '2025-12-15', end: '2026-01-10', owner: 'QA팀', progress: 0, status: '예정' },
+    { phase: 4, name: '사용자 인수 테스트(UAT)', desc: '현업 담당자 대상 실사용 검증', start: '2026-01-05', end: '2026-01-25', owner: '현업 TF', progress: 0, status: '예정' },
+    { phase: 4, name: '보안 점검', desc: '취약점 점검 및 조치', start: '2026-01-15', end: '2026-01-31', owner: '보안팀', progress: 0, status: '예정' },
+    { phase: 5, name: '오픈(Go-Live) 준비', desc: '운영 전환 체크리스트 점검', start: '2026-02-01', end: '2026-02-15', owner: 'PMO', progress: 0, status: '예정' },
+    { phase: 5, name: '병행 운영', desc: '신규/레거시 시스템 병행 운영', start: '2026-02-15', end: '2026-03-15', owner: 'IT팀', progress: 0, status: '예정' },
+    { phase: 5, name: '안정화 및 이슈 대응', desc: '초기 운영 이슈 수집 및 조치', start: '2026-03-01', end: '2026-03-31', owner: 'IT팀 + PMO', progress: 0, status: '예정' },
+  ];
+  const STATUS_BADGE = { '완료': 'badge-success', '진행중': 'badge-info', '계획': 'badge-warning', '예정': 'badge-pending' };
+
+  function projectTasksForDate(ds) {
+    return PROJECT_TASKS.filter(t => t.start <= ds && ds <= t.end);
+  }
+
+  /* ===== 개인 업무 — Supabase(dash_calendar_personal)로 공유, 관리자만 등록/삭제 =====
+     저장 형태: [{ id, date:'YYYY-MM-DD', title, desc, by, createdAt }, ...] */
+  function loadPersonal() {
+    try { const raw = localStorage.getItem('calendarPersonal'); return raw ? JSON.parse(raw) : []; }
+    catch (e) { return []; }
+  }
+  function savePersonal(arr) { localStorage.setItem('calendarPersonal', JSON.stringify(arr)); }
+  function personalForDate(ds) { return loadPersonal().filter(e => e.date === ds); }
+
+  function addPersonalEvent(ds) {
+    if (!isAdmin) return;
+    const titleEl = document.getElementById('newEvtTitle');
+    const descEl = document.getElementById('newEvtDesc');
+    const title = (titleEl.value || '').trim();
+    if (!title) { titleEl.focus(); return; }
+    const arr = loadPersonal();
+    arr.push({ id: 'p' + Date.now(), date: ds, title, desc: (descEl.value || '').trim(), by: myUsername || '', createdAt: new Date().toISOString() });
+    savePersonal(arr);
+    scheduleCalendarCloudSave();
+    titleEl.value = ''; descEl.value = '';
+    renderCalendarScreen();
+  }
+  function deletePersonalEvent(id) {
+    if (!isAdmin) return;
+    if (!confirm(L('이 일정을 삭제할까요?', 'Delete this entry?'))) return;
+    savePersonal(loadPersonal().filter(e => e.id !== id));
+    scheduleCalendarCloudSave();
+    renderCalendarScreen();
+  }
+
+  /* ===== 캘린더 상태 ===== */
+  const todayDate = new Date(); todayDate.setHours(0, 0, 0, 0);
+  const todayStr = dateStr(todayDate);
+  let viewYear = todayDate.getFullYear();
+  let viewMonth = todayDate.getMonth(); // 0-indexed
+  let selectedDate = todayStr;
+
+  const weekStart = new Date(todayDate); weekStart.setDate(todayDate.getDate() - todayDate.getDay());
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+
+  function buildMonthCells(year, month) {
+    const firstDay = new Date(year, month, 1);
+    const startWeekday = firstDay.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+    const cells = [];
+    for (let i = 0; i < totalCells; i++) cells.push(new Date(year, month, 1 - startWeekday + i));
+    return cells;
+  }
+
+  function prevMonth() { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendarScreen(); }
+  function nextMonth() { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendarScreen(); }
+  function goToday() { viewYear = todayDate.getFullYear(); viewMonth = todayDate.getMonth(); selectedDate = todayStr; renderCalendarScreen(); }
+  function selectDate(ds) { selectedDate = ds; renderCalendarScreen(); }
+
+  function legendHTML() {
+    return `
+      <div class="legend-bar">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--info);"></span>${L('프로젝트 공식 업무 (상세 일정 연동)', 'Official project work (synced from Detailed Schedule)')}</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--success);"></span>${L('개인 업무 (직접 기록)', 'Personal work (self-logged)')}</span>
+      </div>`;
+  }
+
+  function toolbarHTML() {
+    return `
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button class="nav-btn" onclick="prevMonth()">◀</button>
+          <div class="cal-month-label">${viewYear}${L('년', '.')} ${viewMonth + 1}${L('월', '')}</div>
+          <button class="nav-btn" onclick="nextMonth()">▶</button>
+        </div>
+        <div class="hbtns">
+          <button class="ghost-btn" onclick="goToday()">${L('오늘', 'Today')}</button>
+          <button class="ghost-btn" onclick="syncFromCloud().then(renderCalendarScreen)">🔄 ${L('새로고침', 'Refresh')}</button>
+        </div>
+      </div>`;
+  }
+
+  const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+  function gridHTML() {
+    const cells = buildMonthCells(viewYear, viewMonth);
+    const weekdayRow = WEEKDAY_LABELS.map((w, i) => `<div class="cal-weekday ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</div>`).join('');
+    const dayCells = cells.map(dt => {
+      const ds = dateStr(dt);
+      const otherMonth = dt.getMonth() !== viewMonth;
+      const isToday = ds === todayStr;
+      const isThisWeek = dt >= weekStart && dt <= weekEnd;
+      const isSelected = ds === selectedDate;
+      const dow = dt.getDay();
+      const projTasks = projectTasksForDate(ds);
+      const persEvts = personalForDate(ds);
+      const chips = [];
+      projTasks.slice(0, 2).forEach(t => chips.push(`<span class="evt-chip project" title="${esc(t.name)}">${esc(t.name)}</span>`));
+      persEvts.slice(0, Math.max(0, 3 - chips.length)).forEach(e => chips.push(`<span class="evt-chip personal" title="${esc(e.title)}">${esc(e.title)}</span>`));
+      const shown = Math.min(projTasks.length, 2) + Math.min(persEvts.length, Math.max(0, 3 - Math.min(projTasks.length, 2)));
+      const totalCount = projTasks.length + persEvts.length;
+      const moreCount = totalCount - shown;
+      const classes = ['cal-day'];
+      if (otherMonth) classes.push('other-month');
+      if (isToday) classes.push('today');
+      if (isThisWeek) classes.push('this-week');
+      if (isSelected) classes.push('selected');
+      return `
+        <div class="${classes.join(' ')}" onclick="selectDate('${ds}')">
+          <span class="day-num ${dow === 0 ? 'sun' : dow === 6 ? 'sat' : ''}">${dt.getDate()}</span>
+          ${chips.join('')}
+          ${moreCount > 0 ? `<div class="evt-more">+${moreCount}</div>` : ''}
+        </div>`;
+    }).join('');
+    return `<div class="cal-grid">${weekdayRow}${dayCells}</div>`;
+  }
+
+  function formatDetailDate(ds) {
+    const dt = new Date(ds + 'T00:00:00');
+    const w = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
+    return L(`${dt.getFullYear()}년 ${dt.getMonth() + 1}월 ${dt.getDate()}일 (${w})`, dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }));
+  }
+
+  function detailPanelHTML() {
+    const ds = selectedDate;
+    const projTasks = projectTasksForDate(ds);
+    const persEvts = personalForDate(ds);
+    const projHTML = projTasks.length ? projTasks.map(t => `
+      <div class="task-item">
+        <div class="task-name">${esc(t.name)}</div>
+        <div class="task-desc">${esc(t.desc)}</div>
+        <div class="task-meta">
+          <span>Phase ${t.phase}</span>
+          <span>${esc(t.owner)}</span>
+          <span><span class="progress-bar"><span class="progress-bar-fill" style="width:${t.progress}%"></span></span> ${t.progress}%</span>
+          <span class="badge ${STATUS_BADGE[t.status] || 'badge-pending'}">${esc(t.status)}</span>
+        </div>
+      </div>`).join('') : `<div class="empty-hint">${L('이 날짜에 해당하는 프로젝트 공식 업무가 없습니다.', 'No official project work on this date.')}</div>`;
+
+    const persHTML = persEvts.length ? persEvts.map(e => `
+      <div class="personal-item">
+        <div>
+          <div class="ptitle">${esc(e.title)}</div>
+          ${e.desc ? `<div class="pdesc">${esc(e.desc)}</div>` : ''}
+          <div class="pmeta">${esc(e.by || '')} · ${esc((e.createdAt || '').slice(0, 16).replace('T', ' '))}</div>
+        </div>
+        ${isAdmin ? `<button class="del-btn" onclick="deletePersonalEvent('${e.id}')" title="${L('삭제', 'Delete')}">✕</button>` : ''}
+      </div>`).join('') : `<div class="empty-hint">${L('등록된 개인 업무가 없습니다.', 'No personal entries yet.')}</div>`;
+
+    const addFormHTML = isAdmin ? `
+      <div class="add-form">
+        <input type="text" id="newEvtTitle" placeholder="${L('업무 제목', 'Task title')}" maxlength="80">
+        <textarea id="newEvtDesc" placeholder="${L('메모 (선택)', 'Notes (optional)')}"></textarea>
+        <div class="add-form-row">
+          <button class="primary-btn" onclick="addPersonalEvent('${ds}')">+ ${L('이 날짜에 추가', 'Add to this date')}</button>
+        </div>
+      </div>` : '';
+
+    return `
+      <div class="card">
+        <div class="detail-date">🗓️ ${formatDetailDate(ds)}</div>
+        <div class="detail-section">
+          <div class="detail-section-title">🔵 ${L('프로젝트 공식 업무', 'Official Project Work')}</div>
+          ${projHTML}
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">🟢 ${L('개인 업무', 'Personal Work')}</div>
+          ${persHTML}
+          ${addFormHTML}
+          ${!isAdmin ? `<p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">${L('개인 업무를 등록하려면 관리자로 로그인하세요.', 'Log in as admin to add personal entries.')}</p>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function renderCalendarScreen() {
+    document.getElementById('calContent').innerHTML = `
+      <div class="page-title">📅 ${L('일정 캘린더', 'Schedule Calendar')}</div>
+      <div class="page-subtitle">${L('상세 일정(CC)의 공식 작업과, 직접 기록하는 개인 업무를 함께 볼 수 있습니다. 날짜를 클릭하면 그 날의 상세 내용이 아래에 표시됩니다.', 'See official work from Detailed Schedule (CC) together with your own logged personal work. Click a date to see its details below.')}</div>
+      ${legendHTML()}
+      <div class="card">
+        ${toolbarHTML()}
+        ${gridHTML()}
+      </div>
+      ${detailPanelHTML()}
+    `;
+  }
+
+  /* ===== 초기 렌더: 로컬 캐시로 즉시 표시 → 최신 공유 데이터로 갱신 ===== */
+  renderCalendarScreen();
+  syncFromCloud().then(renderCalendarScreen);
+
+  /* 다른 탭에서 테마/언어/개인 일정이 바뀌면 이 페이지도 동기화 */
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C');
+    if (e.key === 'dashLang') { currentLang = e.newValue || 'ko'; renderHeaderTexts(); renderCalendarScreen(); }
+    if (e.key === 'calendarPersonal') renderCalendarScreen();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 맵핑 - JAEHO ERP Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+            --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+            --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+            --border:#e8eaed; --primary: var(--logo-bg);
+            --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+            --info:#3b82f6; --info-soft:#eff6ff; --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+        a { color: inherit; }
+        header{
+            height:56px; background:var(--header-bg); color:var(--header-text);
+            border-bottom:var(--header-border-width) solid var(--header-border);
+            display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+            transition:background .2s,color .2s,border-color .2s;
+        }
+        .brand{display:flex;align-items:center;gap:10px;}
+        .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+        .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+        .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+        .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+        .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+        .ghost-btn{
+            background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+            padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+            text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+        }
+        .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+        .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+        .page-header { margin-bottom: 22px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 16px; }
+        .card-title { font-size: 14px; font-weight: 700; color: var(--text); padding: 18px 20px 0; }
+        .group-label { font-size: 11.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; padding: 10px 20px; background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+        th { padding: 10px 16px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--text-secondary); white-space:nowrap; }
+        td { padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:last-child td { border-bottom: none; }
+        code { font-size: 12px; background: var(--gray-100); padding: 2px 6px; border-radius: 4px; }
+        .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; white-space:nowrap; }
+        .badge-direct { background: var(--success-soft); color: var(--success); }
+        .badge-transform { background: var(--warning-soft); color: #b45309; }
+        .badge-manual { background: var(--info-soft); color: var(--info); }
+        .note-cell { font-size: 11.5px; color: var(--text-tertiary); }
+
+        @media (max-width: 768px) { .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="brand-logo" id="brandLogo">J</div>
+            <div class="brand-info">
+                <div class="brand-title">🗂️ 데이터 맵핑</div>
+                <div class="brand-sub">구축 설계 · 레거시 → 신규 시스템 데이터 매핑</div>
+            </div>
+        </div>
+        <div class="hbtns">
+            <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="page-title">🗂️ 데이터 맵핑</h1>
+            <p class="page-subtitle">기존(레거시) 시스템 데이터를 신규 시스템으로 이관할 때 사용하는 필드 매핑표 초안입니다. 상세 일정(CC) Phase 3 "데이터 마이그레이션" 작업의 근거 자료로 사용합니다.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📋 매핑 현황</div>
+            <div id="mapGroups"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+            <div class="card-title" style="padding-bottom:14px;">ℹ️ 범례</div>
+            <div style="padding:0 20px 18px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary);">
+                <span><span class="badge badge-direct">직접 매핑</span> 형식 변환 없이 값만 옮김</span>
+                <span><span class="badge badge-transform">변환 필요</span> 코드 체계·단위 등 변환 로직 필요</span>
+                <span><span class="badge badge-manual">수기 확인</span> 자동 이관 어려워 담당자 확인 필요</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+        // 데이터 마이그레이션 매핑표 초안. 실제 레거시 시스템 스키마가 확정되면
+        // 이 배열을 실제 필드명으로 교체하면 됩니다.
+        const MAP_GROUPS = [
+            {
+                group: '거래처 (Vendor / Customer)',
+                rows: [
+                    { src: '레거시.거래처마스터.거래처코드', dst: 'partners.code', type: 'direct', note: '' },
+                    { src: '레거시.거래처마스터.거래처명', dst: 'partners.name', type: 'direct', note: '' },
+                    { src: '레거시.거래처마스터.사업자번호', dst: 'partners.biz_reg_no', type: 'transform', note: '하이픈 포함/미포함 형식 통일 필요' },
+                    { src: '레거시.거래처마스터.거래처구분코드', dst: 'partners.type', type: 'transform', note: '레거시 코드값 → 신규 enum(고객/공급처/기타) 매핑표 별도 작성' },
+                ]
+            },
+            {
+                group: '품목 (Item)',
+                rows: [
+                    { src: '레거시.품목마스터.품목코드', dst: 'items.sku', type: 'direct', note: '' },
+                    { src: '레거시.품목마스터.품목명', dst: 'items.name', type: 'direct', note: '' },
+                    { src: '레거시.품목마스터.단위코드', dst: 'items.unit', type: 'transform', note: '단위 코드 체계 상이 (예: EA/BOX 등) — 변환표 필요' },
+                    { src: '레거시.품목마스터.표준원가', dst: 'items.standard_cost', type: 'manual', note: '기준 시점(연도) 확인 후 담당자가 최신값으로 재입력' },
+                ]
+            },
+            {
+                group: '재고 (Inventory)',
+                rows: [
+                    { src: '레거시.재고현황.창고코드', dst: 'inventory.warehouse_id', type: 'transform', note: '창고 코드 체계 재정의 필요' },
+                    { src: '레거시.재고현황.현재수량', dst: 'inventory.qty_on_hand', type: 'manual', note: '이관 시점(마감일) 기준 실사 후 확정치로 입력 권장' },
+                ]
+            },
+            {
+                group: '회계 (General Ledger)',
+                rows: [
+                    { src: '레거시.전표.전표번호', dst: 'gl_entries.entry_no', type: 'direct', note: '' },
+                    { src: '레거시.전표.계정과목코드', dst: 'gl_entries.account_code', type: 'transform', note: '계정과목 체계 재분류 매핑표 필요 (회계팀 확인)' },
+                    { src: '레거시.전표.금액', dst: 'gl_entries.amount', type: 'direct', note: '통화 단일(KRW) 가정' },
+                ]
+            },
+            {
+                group: '사용자 (User)',
+                rows: [
+                    { src: '레거시.사원마스터.사번', dst: 'users.employee_no', type: 'direct', note: '' },
+                    { src: '레거시.사원마스터.부서코드', dst: 'users.dept_code', type: 'manual', note: '조직 개편 이력 반영해 최신 부서로 담당자 확인 후 입력' },
+                    { src: '레거시.사원마스터.권한등급', dst: 'users.role', type: 'transform', note: '레거시 권한등급 → admin/user 2단계로 단순화' },
+                ]
+            },
+        ];
+
+        const TYPE_LABEL = { direct: '직접 매핑', transform: '변환 필요', manual: '수기 확인' };
+        const TYPE_BADGE = { direct: 'badge-direct', transform: 'badge-transform', manual: 'badge-manual' };
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+        function render() {
+            document.getElementById('mapGroups').innerHTML = MAP_GROUPS.map(g => `
+                <div class="group-label">${esc(g.group)}</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>원본 (레거시)</th><th>대상 (신규)</th><th>처리 방식</th><th>비고</th></tr>
+                        </thead>
+                        <tbody>
+                            ${g.rows.map(r => `
+                                <tr>
+                                    <td><code>${esc(r.src)}</code></td>
+                                    <td><code>${esc(r.dst)}</code></td>
+                                    <td><span class="badge ${TYPE_BADGE[r.type]}">${esc(TYPE_LABEL[r.type])}</span></td>
+                                    <td class="note-cell">${esc(r.note) || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `).join('');
+        }
+        render();
+
+        const HEADER_THEMES = {
+            A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+            B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+            C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+        };
+        function applyHeaderTheme(key){
+            const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+            Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+        }
+        applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+        window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+    </script>
+</body>
+</html>
