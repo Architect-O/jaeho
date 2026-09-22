@@ -682,14 +682,17 @@
             // 루프를 일으켜 스크롤바가 무한정 길어지거나, 렌더링 초반 미스타일된
             // 원본 화면이 잠깐 노출되는 문제가 있었다(2026-09-22 사용자 리포트).
             // iframe으로 임베드하지 않고 새 탭으로 직접 열어 이 문제를 원천 차단한다.
+            // 2026-09-22 추가 수정: 처음엔 사이드 메뉴를 클릭하는 순간 자동으로
+            // window.open()까지 같이 호출했는데, 사용자가 "새 창 열기 버튼을 누를 때만
+            // 열리게 해달라"고 요청 — 메뉴 클릭은 이 안내 카드만 보여주고, 새 탭은
+            // 카드 안의 버튼을 직접 눌러야만 열리도록 분리함(자동 팝업 제거).
             contentFrame.style.display = 'none';
             contentFrame.srcdoc = '';
             contentInner.style.display = 'block';
-            const opened = window.open(item.file, '_blank');
             contentInner.innerHTML = `
                 <div class="launch-box" style="text-align:center;">
                     <strong>${L(item.label, item.labelEn)}은(는) 새 창에서 열립니다.</strong>
-                    <p>${opened ? '새 탭이 열렸습니다. 열리지 않았다면 아래 버튼을 눌러주세요.' : '팝업이 차단되었을 수 있습니다. 아래 버튼을 눌러 직접 열어주세요.'}</p>
+                    <p>아래 버튼을 눌러 새 탭에서 열어주세요.</p>
                     <button class="launch-btn" onclick="window.open('${item.file}', '_blank')">🧩 ${L(item.label, item.labelEn)} 새 창에서 열기</button>
                 </div>
             `;
