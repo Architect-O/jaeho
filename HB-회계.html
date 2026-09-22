@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HB-회계 (표준 모듈: 회계/재무 데모) - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+        --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 18px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .note-card { background: var(--info-soft); border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 12.5px; color: #1e40af; line-height:1.6; margin-bottom: 18px; }
+    .note-card a { color: #1e40af; font-weight: 700; text-decoration: underline; }
+    .note-card code { background: rgba(30,64,175,0.08); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+
+    /* 탭 */
+    .tab-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+    .tab-btn {
+        padding: 10px 16px; min-height: 38px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
+        background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* 요약 카드 */
+    .summary-row { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    @media (max-width: 700px) { .summary-row { grid-template-columns: 1fr; } }
+    .summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .summary-label { font-size: 11.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px; }
+    .summary-value { font-size: 22px; font-weight: 700; color: var(--text); }
+    .summary-value.warn { color: #b45309; }
+
+    /* 표 공통 */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+    th { padding: 10px 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10.5px; color: var(--text-secondary); white-space:nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:hover { background: var(--gray-100); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .empty-state { padding: 40px 20px; text-align:center; color: var(--text-tertiary); font-size: 13px; }
+
+    .badge { display:inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space:nowrap; }
+    .badge-ok { background: var(--success-soft); color: var(--success); }
+    .badge-warn { background: var(--warning-soft); color: #b45309; }
+    .badge-info { background: var(--info-soft); color: var(--info); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); }
+    .badge-dim { background: var(--gray-100); color: var(--text-secondary); }
+
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; display:inline-flex; align-items:center; gap:6px; min-height: 34px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:disabled { background: var(--gray-300); color: var(--text-tertiary); cursor: not-allowed; }
+    .btn-secondary { background: var(--gray-100); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger-soft); color: var(--danger); }
+    .btn-small { padding: 6px 11px; font-size: 11px; min-height: 30px; }
+    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+    /* 전표/마스터 작성 패널 */
+    .form-panel { display:none; background: var(--gray-100); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+    .form-panel.open { display:block; }
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; display:block; }
+    .form-input, .form-select, .form-textarea {
+        width:100%; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font:inherit; font-size:13px; background:#fff; color:var(--text);
+    }
+    .line-table { width:100%; border-collapse: collapse; margin-bottom: 10px; }
+    .line-table th, .line-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+    .line-table select, .line-table input { width:100%; padding:6px 8px; font-size:12.5px; border:1px solid var(--border); border-radius:5px; font-family:inherit; }
+    .line-remove { background: var(--danger-soft); color: var(--danger); border:none; border-radius:5px; padding:5px 9px; cursor:pointer; font-size:11px; min-height:30px; }
+    .form-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+    .form-status { font-size:12px; margin-top:8px; }
+    .form-status.err { color: var(--danger); }
+    .form-status.ok { color: var(--success); }
+
+    /* 인쇄 오버레이 */
+    #printOverlay { display:none; position:fixed; inset:0; background:rgba(15,23,32,0.55); z-index:999; padding:24px; overflow-y:auto; }
+    #printOverlay.open { display:flex; justify-content:center; align-items:flex-start; }
+    .print-sheet { background:#fff; width:100%; max-width:720px; border-radius:10px; padding:36px 40px; }
+    .print-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 22px; border-bottom: 2px solid #16324f; padding-bottom: 16px; }
+    .print-head h2 { font-size: 20px; color:#16324f; }
+    .print-head .doc-no { font-size: 12px; color:#6b7280; margin-top:4px; }
+    .print-meta { display:grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 12.5px; margin-bottom: 20px; }
+    .print-meta .k { color:#6b7280; }
+    .print-total { text-align:right; font-size: 15px; font-weight:700; margin-top: 10px; color:#16324f; }
+    .print-controls { display:flex; justify-content:flex-end; gap:8px; margin-top: 20px; }
+    @media print {
+        body * { visibility: hidden; }
+        #printOverlay, #printOverlay * { visibility: visible; }
+        #printOverlay { position: absolute; inset:0; background:#fff; padding:0; display:block !important; }
+        .print-sheet { box-shadow:none; max-width:100%; }
+        .no-print { display:none !important; }
+    }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title">📒 회계</div>
+            <div class="brand-sub">표준 모듈 · 업종에 종속되지 않는 회계/재무 데모</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📒 회계 — 표준 모듈 데모</h1>
+            <p class="page-subtitle">복식부기 표준 분개 인터페이스(acc_post_entry)를 정의한 회계/재무 데모입니다.</p>
+        </div>
+    </div>
+
+    <div class="note-card">
+        ℹ️ 이 화면은 실제로 등록·저장이 되는 <b>동작하는 데모</b>입니다 (Supabase에 저장, 모든 사용자가 같은 데이터를 봅니다). 이 모듈은 유통(HC)·보세창고운영(HD)·무역(HE)·식품제조(HF) 등 업종에 종속되지 않는 <b>표준 모듈</b>입니다 — <code>acc_post_entry</code>라는 <b>표준 분개 인터페이스</b>를 RPC 하나로 명확히 정의해뒀고, 나중에 업종 데모의 확정 전표(구매확정/출고확정 등)가 이 인터페이스를 그대로 호출하도록 붙이면 운영→회계 자동연동이 완성되는 구조입니다. 지금 당장은 각 업종 데모와 실시간으로 연동하지 않고 독립 스키마를 유지하며, 아래 "분개 입력" 탭에서 관리자가 직접 이 표준 인터페이스를 호출해 분개를 입력해볼 수 있습니다 — 이것이 인터페이스가 실제로 동작한다는 것을 보여주는 데모입니다.
+    </div>
+
+    <div class="summary-row" id="summaryRow"></div>
+
+    <div class="tab-bar" id="tabBar"></div>
+    <div id="tabContent"></div>
+</main>
+
+<div id="printOverlay">
+    <div class="print-sheet" id="printSheet"></div>
+</div>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    const myUsername = sessionStorage.getItem('username') || '';
+    const myPw = sessionStorage.getItem('pw') || '';
+    const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
+    const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+    function fmtNum(n) { const v = Number(n) || 0; return v.toLocaleString('ko-KR'); }
+    function fmtDate(iso) {
+        if (!iso) return '-';
+        const d = new Date(iso);
+        return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    function todayStr() { return new Date().toISOString().slice(0, 10); }
+    function currentYM() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+
+    let ACCOUNTS = [];
+    let ENTRIES = [];
+    let ALL_LINES = [];
+    let currentTab = 'accounts';
+    let selectedLedgerAccountId = '';
+
+    const TABS = [
+        { key: 'accounts', label: '📋 계정과목 관리' },
+        { key: 'journal', label: '✍️ 분개 입력' },
+        { key: 'ledger', label: '📖 총계정원장' },
+        { key: 'trial', label: '⚖️ 시산표' },
+    ];
+
+    function renderTabBar() {
+        document.getElementById('tabBar').innerHTML = TABS.map(t => `
+            <button type="button" class="tab-btn ${t.key === currentTab ? 'active' : ''}" onclick="switchTab('${t.key}')">${t.label}</button>
+        `).join('');
+    }
+    function switchTab(key) {
+        currentTab = key;
+        renderTabBar();
+        renderTabContent();
+    }
+    function renderTabContent() {
+        const el = document.getElementById('tabContent');
+        if (currentTab === 'accounts') el.innerHTML = accountsHTML();
+        else if (currentTab === 'journal') el.innerHTML = journalHTML();
+        else if (currentTab === 'ledger') el.innerHTML = ledgerHTML();
+        else if (currentTab === 'trial') el.innerHTML = trialHTML();
+    }
+
+    /* ══════════════════ 요약 카드 ══════════════════ */
+    function renderSummary() {
+        const ym = currentYM();
+        const activeEntries = ENTRIES.filter(e => e.status !== 'canceled');
+        const monthLines = ALL_LINES.filter(l => l.entry_status !== 'canceled' && String(l.entry_date || '').slice(0, 7) === ym);
+        const monthRevenue = monthLines.filter(l => l.account_type === 'revenue').reduce((s, l) => s + Number(l.credit_amount || 0), 0);
+        const monthExpense = monthLines.filter(l => l.account_type === 'expense').reduce((s, l) => s + Number(l.debit_amount || 0), 0);
+        document.getElementById('summaryRow').innerHTML = `
+            <div class="summary-card"><div class="summary-label">총 분개 건수 (취소 제외)</div><div class="summary-value">${activeEntries.length}건</div></div>
+            <div class="summary-card"><div class="summary-label">이번달 매출</div><div class="summary-value">${fmtNum(monthRevenue)}원</div></div>
+            <div class="summary-card"><div class="summary-label">이번달 비용</div><div class="summary-value">${fmtNum(monthExpense)}원</div></div>
+        `;
+    }
+
+    /* ══════════════════ 계정과목 관리 ══════════════════ */
+    function typeBadge(t) {
+        const map = { asset: ['badge-info', '자산'], liability: ['badge-warn', '부채'], equity: ['badge-dim', '자본'], revenue: ['badge-ok', '수익'], expense: ['badge-danger', '비용'] };
+        const pair = map[t] || ['badge-dim', t];
+        return `<span class="badge ${pair[0]}">${pair[1]}</span>`;
+    }
+    function balanceLabel(b) { return b === 'debit' ? '차변' : '대변'; }
+
+    function accountsHTML() {
+        const rows = ACCOUNTS.length ? ACCOUNTS.map(a => `
+            <tr>
+                <td>${esc(a.account_code)}</td>
+                <td>${esc(a.account_name)}</td>
+                <td>${typeBadge(a.account_type)}</td>
+                <td>${balanceLabel(a.normal_balance)}</td>
+                <td>${a.is_active ? '<span class="badge badge-ok">사용</span>' : '<span class="badge badge-dim">비활성</span>'}</td>
+                <td>${isAdmin ? `<div class="row-actions">
+                    <button class="btn btn-secondary btn-small" onclick='openAccountForm(${JSON.stringify(a).replace(/&/g, "&amp;").replace(/'/g, "&#39;")})'>수정</button>
+                    <button class="btn btn-danger btn-small" onclick="deleteAccount('${a.id}')">삭제</button>
+                </div>` : ''}</td>
+            </tr>`).join('') : `<tr><td colspan="6"><div class="empty-state">등록된 계정과목이 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <span>📋 계정과목 (Chart of Accounts)</span>
+                    ${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="openAccountForm()">+ 계정과목 등록</button>` : ''}
+                </div>
+                <div class="form-panel" id="accountFormPanel">
+                    <div class="form-grid">
+                        <input type="hidden" id="accountId">
+                        <div><label class="form-label">계정코드</label><input class="form-input" id="accountCode" placeholder="예: 1000"></div>
+                        <div><label class="form-label">계정명</label><input class="form-input" id="accountName" placeholder="예: 현금"></div>
+                        <div>
+                            <label class="form-label">계정유형</label>
+                            <select class="form-select" id="accountType">
+                                <option value="asset">자산</option>
+                                <option value="liability">부채</option>
+                                <option value="equity">자본</option>
+                                <option value="revenue">수익</option>
+                                <option value="expense">비용</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">정상잔액</label>
+                            <select class="form-select" id="accountNormalBalance">
+                                <option value="debit">차변</option>
+                                <option value="credit">대변</option>
+                            </select>
+                        </div>
+                        <div class="full">
+                            <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);">
+                                <input type="checkbox" id="accountActive" checked> 사용 중
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeAccountForm()">취소</button>
+                        <button type="button" class="btn btn-primary" onclick="submitAccount()">저장</button>
+                    </div>
+                    <div class="form-status" id="accountFormStatus"></div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>코드</th><th>계정명</th><th>유형</th><th>정상잔액</th><th>상태</th><th>동작</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    }
+
+    function openAccountForm(a) {
+        document.getElementById('accountFormPanel').classList.add('open');
+        document.getElementById('accountId').value = a ? a.id : '';
+        document.getElementById('accountCode').value = a ? a.account_code : '';
+        document.getElementById('accountName').value = a ? a.account_name : '';
+        document.getElementById('accountType').value = a ? a.account_type : 'asset';
+        document.getElementById('accountNormalBalance').value = a ? a.normal_balance : 'debit';
+        document.getElementById('accountActive').checked = a ? !!a.is_active : true;
+        document.getElementById('accountFormStatus').textContent = '';
+    }
+    function closeAccountForm() { document.getElementById('accountFormPanel').classList.remove('open'); }
+
+    async function submitAccount() {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('accountFormStatus');
+        const id = document.getElementById('accountId').value || null;
+        const code = document.getElementById('accountCode').value.trim();
+        const name = document.getElementById('accountName').value.trim();
+        if (!code || !name) { statusEl.textContent = '계정코드/계정명은 필수입니다.'; statusEl.className = 'form-status err'; return; }
+        statusEl.textContent = '저장 중...'; statusEl.className = 'form-status';
+        try {
+            const { data, error } = await sb.rpc('acc_admin_upsert_account', {
+                p_admin_username: myUsername, p_admin_password: myPw,
+                p_id: id, p_account_code: code, p_account_name: name,
+                p_account_type: document.getElementById('accountType').value,
+                p_normal_balance: document.getElementById('accountNormalBalance').value,
+                p_is_active: document.getElementById('accountActive').checked,
+            });
+            if (error) throw error;
+            if (data && data.success) { closeAccountForm(); await loadAll(); }
+            else { statusEl.textContent = '❌ ' + ((data && data.message) || '저장 실패'); statusEl.className = 'form-status err'; }
+        } catch (e) { statusEl.textContent = '❌ 저장 실패: ' + e.message; statusEl.className = 'form-status err'; }
+    }
+    async function deleteAccount(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 계정과목을 삭제할까요? (분개에서 이미 사용 중이면 삭제할 수 없습니다)')) return;
+        try {
+            const { data, error } = await sb.rpc('acc_admin_delete_account', { p_admin_username: myUsername, p_admin_password: myPw, p_id: id });
+            if (error) throw error;
+            if (data && data.success) await loadAll();
+            else alert('삭제 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('삭제 실패: ' + e.message); }
+    }
+
+    /* ══════════════════ 분개 입력 (표준 분개 인터페이스 데모) ══════════════════ */
+    function journalHTML() {
+        const accountOptions = ACCOUNTS.filter(a => a.is_active).map(a => `<option value="${esc(a.account_code)}">${esc(a.account_code)} · ${esc(a.account_name)}</option>`).join('');
+
+        const rows = ENTRIES.length ? ENTRIES.map(e => {
+            const statusBadge = e.status === 'posted' ? '<span class="badge badge-ok">확정</span>'
+                : e.status === 'draft' ? '<span class="badge badge-warn">임시</span>'
+                : '<span class="badge badge-dim">취소됨</span>';
+            const refText = e.ref_type ? esc(e.ref_type) + (e.ref_doc_no ? ' · ' + esc(e.ref_doc_no) : '') : '-';
+            const canCancel = isAdmin && e.status === 'posted';
+            return `
+                <tr>
+                    <td>${esc(e.entry_no)}</td>
+                    <td>${esc(e.entry_date)}</td>
+                    <td>${refText}</td>
+                    <td>${esc(e.description || '-')}</td>
+                    <td class="num">${fmtNum(e.total_debit)}</td>
+                    <td class="num">${fmtNum(e.total_credit)}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn btn-secondary btn-small" onclick="viewEntry('${e.id}')">상세</button>
+                            ${canCancel ? `<button class="btn btn-danger btn-small" onclick="cancelEntry('${e.id}')">⛔ 취소</button>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('') : `<tr><td colspan="8"><div class="empty-state">등록된 분개가 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <span>✍️ 분개 입력 — 표준 분개 인터페이스(acc_post_entry) 데모</span>
+                    ${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="toggleJournalForm()">+ 새 분개 작성</button>` : ''}
+                </div>
+
+                <div class="form-panel" id="journalFormPanel">
+                    <div class="form-grid">
+                        <div><label class="form-label">전표일자</label><input class="form-input" type="date" id="journalEntryDate"></div>
+                        <div><label class="form-label">참조유형 (선택, 예: manual / HC-purchase)</label><input class="form-input" id="journalRefType" placeholder="manual"></div>
+                        <div><label class="form-label">참조 전표번호 (선택)</label><input class="form-input" id="journalRefDocNo" placeholder="선택 입력"></div>
+                        <div class="full"><label class="form-label">적요</label><input class="form-input" id="journalDescription" placeholder="예: 9월 임차료 지급"></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="line-table" id="journalLineTable">
+                            <thead><tr><th style="width:24%;">계정과목</th><th style="width:14%;">차변</th><th style="width:14%;">대변</th><th style="width:20%;">적요</th><th style="width:16%;">거래처(자유텍스트)</th><th></th></tr></thead>
+                            <tbody id="journalLineBody"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="addJournalLineRow()">+ 라인 추가</button>
+                    <div style="margin-top:14px;font-size:13px;">
+                        차변 합계: <b id="journalDebitSum">0</b>원 &nbsp;/&nbsp; 대변 합계: <b id="journalCreditSum">0</b>원
+                        &nbsp; <span id="journalBalanceBadge" class="badge badge-dim">-</span>
+                    </div>
+                    <div class="form-actions" style="margin-top:14px;">
+                        <button type="button" class="btn btn-secondary" onclick="toggleJournalForm(false)">취소</button>
+                        <button type="button" class="btn btn-primary" id="journalSubmitBtn" onclick="submitJournal()" disabled>분개 저장</button>
+                    </div>
+                    <div class="form-status" id="journalFormStatus"></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>분개번호</th><th>일자</th><th>참조</th><th>적요</th><th>차변합계</th><th>대변합계</th><th>상태</th><th>동작</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <p style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px;">저장 버튼은 위 RPC와 동일하게 차변/대변 합계가 정확히 일치할 때만 활성화됩니다. 확정된 분개는 삭제하지 않고 "취소"로만 처리합니다(비파괴적 취소).</p>
+            </div>
+            <template id="journalAccountOptionsTpl">${accountOptions}</template>`;
+    }
+
+    function toggleJournalForm(force) {
+        const panel = document.getElementById('journalFormPanel');
+        const willOpen = force !== undefined ? force : !panel.classList.contains('open');
+        panel.classList.toggle('open', willOpen);
+        if (willOpen) {
+            document.getElementById('journalLineBody').innerHTML = '';
+            document.getElementById('journalEntryDate').value = todayStr();
+            document.getElementById('journalRefType').value = '';
+            document.getElementById('journalRefDocNo').value = '';
+            document.getElementById('journalDescription').value = '';
+            addJournalLineRow();
+            addJournalLineRow();
+            document.getElementById('journalFormStatus').textContent = '';
+            recomputeJournalTotals();
+        }
+    }
+
+    function addJournalLineRow() {
+        const tpl = document.getElementById('journalAccountOptionsTpl');
+        const opts = tpl ? tpl.innerHTML : '';
+        const tbody = document.getElementById('journalLineBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><select class="line-account-select"><option value="">계정 선택</option>${opts}</select></td>
+            <td><input type="number" min="0" step="1" class="line-debit" value="0" oninput="recomputeJournalTotals()"></td>
+            <td><input type="number" min="0" step="1" class="line-credit" value="0" oninput="recomputeJournalTotals()"></td>
+            <td><input type="text" class="line-desc" placeholder="선택 입력"></td>
+            <td><input type="text" class="line-partner" placeholder="선택 입력"></td>
+            <td><button type="button" class="line-remove" onclick="this.closest('tr').remove(); recomputeJournalTotals();">삭제</button></td>`;
+        tbody.appendChild(row);
+        recomputeJournalTotals();
+    }
+
+    function recomputeJournalTotals() {
+        const rows = Array.from(document.querySelectorAll('#journalLineBody tr'));
+        let debitSum = 0, creditSum = 0;
+        rows.forEach(row => {
+            debitSum += parseFloat(row.querySelector('.line-debit').value) || 0;
+            creditSum += parseFloat(row.querySelector('.line-credit').value) || 0;
+        });
+        const debitEl = document.getElementById('journalDebitSum');
+        const creditEl = document.getElementById('journalCreditSum');
+        const badge = document.getElementById('journalBalanceBadge');
+        const btn = document.getElementById('journalSubmitBtn');
+        if (!debitEl || !creditEl || !badge || !btn) return;
+        debitEl.textContent = fmtNum(debitSum);
+        creditEl.textContent = fmtNum(creditSum);
+        const balanced = debitSum > 0 && Math.abs(debitSum - creditSum) < 0.005;
+        badge.textContent = balanced ? '✅ 차대변 일치' : '⚠ 차대변 불일치';
+        badge.className = 'badge ' + (balanced ? 'badge-ok' : 'badge-danger');
+        btn.disabled = !balanced;
+    }
+
+    async function submitJournal() {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('journalFormStatus');
+        const entryDate = document.getElementById('journalEntryDate').value || todayStr();
+        const refType = document.getElementById('journalRefType').value.trim() || null;
+        const refDocNo = document.getElementById('journalRefDocNo').value.trim() || null;
+        const description = document.getElementById('journalDescription').value.trim();
+        const rows = Array.from(document.querySelectorAll('#journalLineBody tr'));
+        const lines = [];
+        for (const row of rows) {
+            const code = row.querySelector('.line-account-select').value;
+            const debit = parseFloat(row.querySelector('.line-debit').value) || 0;
+            const credit = parseFloat(row.querySelector('.line-credit').value) || 0;
+            if (!code || (debit <= 0 && credit <= 0)) continue;
+            lines.push({
+                account_code: code, debit: debit, credit: credit,
+                desc: row.querySelector('.line-desc').value.trim() || null,
+                partner_ref: row.querySelector('.line-partner').value.trim() || null,
+            });
+        }
+        if (!lines.length) { statusEl.textContent = '라인을 1개 이상 정상적으로 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        if (!sb || !myUsername || !myPw) { statusEl.textContent = '로그인 정보가 없습니다.'; statusEl.className = 'form-status err'; return; }
+
+        statusEl.textContent = '저장 중...'; statusEl.className = 'form-status';
+        try {
+            const { data, error } = await sb.rpc('acc_post_entry', {
+                p_admin_username: myUsername, p_admin_password: myPw,
+                p_entry_date: entryDate, p_ref_type: refType, p_ref_doc_no: refDocNo,
+                p_description: description || null, p_lines: lines,
+            });
+            if (error) throw error;
+            if (data && data.success) {
+                statusEl.textContent = '✅ ' + data.entry_no + ' 분개 완료';
+                statusEl.className = 'form-status ok';
+                toggleJournalForm(false);
+                await loadAll();
+            } else {
+                statusEl.textContent = '❌ ' + ((data && data.message) || '저장 실패');
+                statusEl.className = 'form-status err';
+            }
+        } catch (e) {
+            statusEl.textContent = '❌ 저장 실패: ' + e.message;
+            statusEl.className = 'form-status err';
+        }
+    }
+
+    async function cancelEntry(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 분개를 취소할까요? (삭제되지 않고 상태만 "취소됨"으로 바뀝니다)')) return;
+        const reason = prompt('취소 사유를 입력하세요 (선택 입력):', '') || '';
+        try {
+            const { data, error } = await sb.rpc('acc_admin_cancel_entry', { p_admin_username: myUsername, p_admin_password: myPw, p_entry_id: id, p_reason: reason || null });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); }
+            else alert('취소 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('취소 실패: ' + e.message); }
+    }
+
+    function viewEntry(id) {
+        const entry = ENTRIES.find(e => e.id === id);
+        const lines = ALL_LINES.filter(l => l.entry_id === id);
+        const rows = lines.length ? lines.map(l => `
+            <tr>
+                <td>${esc(l.account_code)}</td><td>${esc(l.account_name)}</td>
+                <td style="text-align:right;">${Number(l.debit_amount) > 0 ? fmtNum(l.debit_amount) : '-'}</td>
+                <td style="text-align:right;">${Number(l.credit_amount) > 0 ? fmtNum(l.credit_amount) : '-'}</td>
+                <td>${esc(l.line_desc || '-')}</td>
+                <td>${esc(l.partner_ref || '-')}</td>
+            </tr>`).join('') : `<tr><td colspan="6" style="padding:16px;text-align:center;color:#9ca3af;">라인 없음</td></tr>`;
+        const total = lines.reduce((s, l) => s + Number(l.debit_amount || 0), 0);
+        const statusText = entry ? (entry.status === 'posted' ? '확정' : entry.status === 'canceled' ? '취소됨' : '임시') : '-';
+
+        document.getElementById('printSheet').innerHTML = `
+            <div class="print-head">
+                <div><h2>분개 상세</h2><div class="doc-no">JAEHO ERP Suite · HB-회계</div></div>
+                <div class="doc-no">분개번호: ${esc(entry ? entry.entry_no : '')}</div>
+            </div>
+            <div class="print-meta">
+                <div><span class="k">일자:</span> ${esc(entry ? entry.entry_date : '-')}</div>
+                <div><span class="k">상태:</span> ${statusText}</div>
+                <div><span class="k">참조유형:</span> ${esc((entry && entry.ref_type) || '-')}</div>
+                <div><span class="k">참조전표번호:</span> ${esc((entry && entry.ref_doc_no) || '-')}</div>
+                <div style="grid-column:1/-1;"><span class="k">적요:</span> ${esc((entry && entry.description) || '-')}</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                <thead><tr style="border-bottom:2px solid #16324f;">
+                    <th style="text-align:left;padding:6px;">계정코드</th><th style="text-align:left;padding:6px;">계정명</th>
+                    <th style="text-align:right;padding:6px;">차변</th><th style="text-align:right;padding:6px;">대변</th>
+                    <th style="text-align:left;padding:6px;">적요</th><th style="text-align:left;padding:6px;">거래처</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="print-total">차변 합계: ${fmtNum(total)}원</div>
+            <div class="print-controls no-print">
+                <button class="btn btn-secondary" onclick="closePrint()">닫기</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨 인쇄</button>
+            </div>`;
+        document.getElementById('printOverlay').classList.add('open');
+    }
+    function closePrint() { document.getElementById('printOverlay').classList.remove('open'); }
+
+    /* ══════════════════ 총계정원장 ══════════════════ */
+    function ledgerHTML() {
+        if (!selectedLedgerAccountId && ACCOUNTS.length) selectedLedgerAccountId = ACCOUNTS[0].id;
+        const accOptions = ACCOUNTS.map(a => `<option value="${a.id}" ${a.id === selectedLedgerAccountId ? 'selected' : ''}>${esc(a.account_code)} · ${esc(a.account_name)}</option>`).join('');
+        const account = ACCOUNTS.find(a => a.id === selectedLedgerAccountId);
+        const isDebitNormal = account ? account.normal_balance === 'debit' : true;
+        const lines = ALL_LINES.filter(l => l.account_id === selectedLedgerAccountId && l.entry_status !== 'canceled')
+            .slice().sort((a, b) => {
+                if (a.entry_date !== b.entry_date) return a.entry_date < b.entry_date ? -1 : 1;
+                return a.entry_no < b.entry_no ? -1 : (a.entry_no > b.entry_no ? 1 : 0);
+            });
+
+        let balance = 0;
+        const rows = lines.length ? lines.map(l => {
+            const debit = Number(l.debit_amount || 0);
+            const credit = Number(l.credit_amount || 0);
+            balance += isDebitNormal ? (debit - credit) : (credit - debit);
+            return `
+                <tr>
+                    <td>${esc(l.entry_date)}</td>
+                    <td>${esc(l.entry_no)}</td>
+                    <td>${esc(l.entry_desc || '-')}</td>
+                    <td>${esc(l.line_desc || '-')}</td>
+                    <td class="num">${debit > 0 ? fmtNum(debit) : '-'}</td>
+                    <td class="num">${credit > 0 ? fmtNum(credit) : '-'}</td>
+                    <td class="num">${fmtNum(balance)}</td>
+                </tr>`;
+        }).join('') : `<tr><td colspan="7"><div class="empty-state">이 계정의 분개 라인이 없습니다.</div></td></tr>`;
+
+        const totalDebit = lines.reduce((s, l) => s + Number(l.debit_amount || 0), 0);
+        const totalCredit = lines.reduce((s, l) => s + Number(l.credit_amount || 0), 0);
+
+        return `
+            <div class="card">
+                <div class="card-title"><span>📖 총계정원장 (General Ledger)</span></div>
+                <div class="form-grid" style="margin-bottom:16px;max-width:420px;">
+                    <div class="full">
+                        <label class="form-label">계정 선택</label>
+                        <select class="form-select" onchange="selectedLedgerAccountId=this.value; renderTabContent();">${accOptions}</select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>일자</th><th>분개번호</th><th>적요</th><th>라인 적요</th><th>차변</th><th>대변</th><th>잔액</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <p style="font-size:12.5px;margin-top:12px;">차변 합계: <b>${fmtNum(totalDebit)}</b>원 / 대변 합계: <b>${fmtNum(totalCredit)}</b>원 / 기말잔액: <b>${fmtNum(balance)}</b>원 (${isDebitNormal ? '차변' : '대변'} 기준 · 취소된 분개 제외)</p>
+            </div>`;
+    }
+
+    /* ══════════════════ 시산표 ══════════════════ */
+    function trialHTML() {
+        const typeOrder = ['asset', 'liability', 'equity', 'revenue', 'expense'];
+        const typeLabel = { asset: '자산', liability: '부채', equity: '자본', revenue: '수익', expense: '비용' };
+        let grandDebit = 0, grandCredit = 0;
+
+        const sections = typeOrder.map(type => {
+            const accts = ACCOUNTS.filter(a => a.account_type === type);
+            if (!accts.length) return '';
+            let sectionDebit = 0, sectionCredit = 0;
+            const rows = accts.map(a => {
+                const lines = ALL_LINES.filter(l => l.account_id === a.id && l.entry_status !== 'canceled');
+                const debit = lines.reduce((s, l) => s + Number(l.debit_amount || 0), 0);
+                const credit = lines.reduce((s, l) => s + Number(l.credit_amount || 0), 0);
+                sectionDebit += debit; sectionCredit += credit;
+                if (debit === 0 && credit === 0) return '';
+                return `
+                    <tr>
+                        <td>${esc(a.account_code)}</td><td>${esc(a.account_name)}</td>
+                        <td class="num">${fmtNum(debit)}</td><td class="num">${fmtNum(credit)}</td>
+                    </tr>`;
+            }).join('');
+            grandDebit += sectionDebit; grandCredit += sectionCredit;
+            return `
+                <tr style="background:var(--gray-100);font-weight:700;"><td colspan="2">${typeLabel[type]}</td><td class="num">${fmtNum(sectionDebit)}</td><td class="num">${fmtNum(sectionCredit)}</td></tr>
+                ${rows}`;
+        }).join('');
+
+        const balanced = Math.abs(grandDebit - grandCredit) < 0.005;
+
+        return `
+            <div class="card">
+                <div class="card-title">
+                    <span>⚖️ 시산표 (Trial Balance)</span>
+                    <span class="badge ${balanced ? 'badge-ok' : 'badge-danger'}">${balanced ? '✅ 차대변 일치' : '⚠ 차대변 불일치'}</span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>계정코드</th><th>계정명</th><th>차변합계</th><th>대변합계</th></tr></thead>
+                        <tbody>
+                            ${sections}
+                            <tr style="border-top:2px solid var(--text);font-weight:700;"><td colspan="2">합계</td><td class="num">${fmtNum(grandDebit)}</td><td class="num">${fmtNum(grandCredit)}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px;">취소된 분개는 집계에서 제외됩니다. 계정유형별 소계 행(회색 배경) 아래에는 실제 거래가 있는 계정만 표시합니다.</p>
+            </div>`;
+    }
+
+    /* ══════════════════ 데이터 로드 ══════════════════ */
+    async function loadAll() {
+        if (!sb) { document.getElementById('tabContent').innerHTML = '<div class="card"><div class="empty-state">Supabase 설정이 필요합니다.</div></div>'; return; }
+        try {
+            const [accRes, entriesRes, linesRes] = await Promise.all([
+                sb.rpc('acc_get_accounts'),
+                sb.rpc('acc_get_journal_entries'),
+                sb.rpc('acc_get_all_lines'),
+            ]);
+            ACCOUNTS = accRes.data || [];
+            ENTRIES = entriesRes.data || [];
+            ALL_LINES = linesRes.data || [];
+        } catch (e) {
+            console.error('데이터 로드 실패:', e);
+        }
+        renderSummary();
+        renderTabContent();
+    }
+
+    renderTabBar();
+    loadAll();
+
+    /* ══════════════════ 헤더 테마 (공용) ══════════════════ */
+    const HEADER_THEMES = {
+        A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+        B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+        C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+    };
+    function applyHeaderTheme(key) {
+        const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+        Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+    }
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+</script>
+</body>
+</html>

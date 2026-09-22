@@ -121,6 +121,20 @@
         // deleted: true 로 표시된 항목은 실제로 폴더에서 삭제되어 더 이상 존재하지 않는 파일입니다.
         const LOG_ENTRIES = [
             {
+                date: '2026-09-22', time: '10:15', badge: 'new',
+                title: '데모 제작에 표준 모듈 2종(HA 기준정보·HB 회계) 신규 추가 + 기존 BE/BH/BI/BJ를 HC~HF로 재배치',
+                desc: `사용자 요청: "데모 제작에 1,2번 추천해줘 기준정보와 회계같은". 기존 "데모 제작" 카테고리는 유통/보세창고운영/무역/식품제조 4개 업종별 실동작 데모(BE/BH/BI/BJ)만 있었는데, 특정 업종에 종속되지 않는 "표준 모듈"이 빠져 있다는 문제 제기 — 벤더 3사(Odoo/K-System/MS Dynamics) 견적서에도 "기준정보/데이터마이그레이션"과 "회계/재무관리"가 별도 구축 단계로 명시돼 있어, 자체개발이 이 영역을 못 보여주면 벤더 비교에서 약점이 될 수 있다는 점도 근거로 확인함.
+
+사용자와 논의 후 확정된 방향: 기준정보·회계는 지금 당장 4개 업종 데모에 실시간 연동시키지 않고, 각자 독립적이고 표준화된 모듈로 만들어서 "나중에 실제 업체에 적용할 때 유통업체 = HA(기준정보)+HB(회계)+HC(유통) 처럼 표준모듈+업종모듈을 조합하는 마이그레이션을 테스트할 수 있는 상태"로 둔다(2026-09-19 모듈화 분석 문서의 B안 — 스키마 독립 유지 + 코드자산 표준화 — 의 연장선, 이번엔 "기준모듈↔업종모듈" 간 표준 인터페이스라는 점이 새로움).
+
+코드 배정 과정에서 사용자가 처음 "데모 제작에 C 코드를 주자"고 제안했으나, C는 이미 일정관리(CA~CE)가 쓰고 있어 충돌함을 확인 — 전체 카테고리 문자를 재배정하는 대규모 방안(B안, 34개 파일 전부 리네임)과 데모 제작만 새 문자를 쓰는 소규모 방안(A안) 중 A안을 사용자가 선택. 데모 제작 전용 코드 문자로 <b>H</b>를 새로 배정.
+
+**구현**: (1) 기존 BE-pilot3.html/BH-pilot4.html/BI-pilot5.html/BJ-pilot6.html을 각각 HC-pilot3.html/HD-pilot4.html/HE-pilot5.html/HF-pilot6.html로 복사(원본은 참고용으로 보존, BB/BC/BD와 동일한 관례). 페이지 본문 안의 "파일럿3(BE·유통)" 같은 상호 코드 언급 텍스트도 HC/HD로 갱신. docPrefix('BI'/'BO'/'GR'/'GI' 등 인쇄 전표번호 접두사)는 사이트 코드와 무관한 별도 네임스페이스임을 확인하고 건드리지 않음. Supabase 테이블 접두사(p3_~p6_)도 코드와 무관하므로 그대로 유지. (2) menu.html의 CATEGORIES 'demo' 카테고리에 HA/HB를 HC 앞에 추가하고 BE/BH/BI/BJ 항목을 HC/HD/HE/HF로 갱신. (3) 신규 <b>HA-기준정보.html</b>(거래처·품목·공통코드 관리, mst_ 테이블) — 레거시 JAEHO DB 분석(2026-09-20)에서 확인된 "정본 테이블 없이 백업본만 쌓이던" 문제에 대한 답으로 설계, partner_code/item_code 중복 등록을 막는 검증이 핵심 기능. (4) 신규 <b>HB-회계.html</b>(계정과목·분개·총계정원장·시산표, acc_ 테이블) — 표준 분개 인터페이스 RPC <code>acc_post_entry()</code>를 정의해 차변/대변 합계 일치를 서버에서 검증(복식부기 핵심 규칙), 향후 업종모듈의 확정 전표가 이 인터페이스를 호출하도록 붙이면 실연동이 가능한 구조. 둘 다 기존 HC-pilot3.html과 동일한 UI 스타일(:root 변수·카드·탭·뱃지)과 관리자 인증 패턴(RPC에 p_admin_username/p_admin_password 전달, 서버에서 users 테이블로 검증)을 그대로 재사용. (5) GC-layout.html 구조도의 CAT_DEMO subgraph에 HA/HB 노드 추가, P3~P6 라벨을 HC~HF로 갱신, "현재 상태" 카드 설명 문구도 총 36개 코드 기준으로 갱신.
+
+node --check 문법 검증(menu.html·GC-layout.html·HA-기준정보.html·HB-회계.html 전부) + div/table/tr/td 태그 균형 검사 + GC-layout.html Mermaid 구조 검증(subgraph/end 쌍 8/8, 노드 ID 39개 전부 고유, SHELL 엣지 8개) + menu.html getCategoryItems() 함수 테스트(demo 카테고리 6개 항목, 중복 key 없음) 전부 통과. SQL(data/master_data_migration.sql, data/accounting_migration.sql)은 Supabase 접근이 막혀 있어 실제 실행 검증은 못 했고, $$ 블록 짝·괄호 짝·함수 개수 대 인증체크 개수 일치를 육안 검증함 — <b>사용자가 Supabase SQL Editor에서 직접 실행해야 함(아직 미실행)</b>.`,
+                files: ['menu.html', 'GC-layout.html', 'HA-기준정보.html', 'HB-회계.html', 'data/master_data_migration.sql', 'data/accounting_migration.sql', 'HC-pilot3.html', 'HD-pilot4.html', 'HE-pilot5.html', 'HF-pilot6.html']
+            },
+            {
                 date: '2026-09-22', time: '09:30', badge: 'new',
                 title: '도입평가 사이드 메뉴를 "도입 평가"와 "데모 제작" 두 카테고리로 분리',
                 desc: `사용자 요청: "도입평가 사이드를 메뉴를 구분해서 도입평가+하위, 데모 제작+하위 그렇게 나누어줘". 기존엔 도입평가(evaluation) 카테고리 하나에 점수·비교용 화면(BA 종합비교, BG 잔존가치분석, BC/BD 파일럿1·2 자리예약, BF 동적 프로그램별 상세)과 실제로 동작하는 4개 사업군 가상 ERP 데모(BE 유통, BH 보세창고운영, BI 무역, BJ 식품제조)가 함께 섞여 있었음 — 성격이 다른 두 그룹(평가·비교 도구 vs 실동작 체험 데모)이 사이드 하나에 묶여 있어 사용자가 구분을 요청.
