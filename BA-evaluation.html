@@ -180,6 +180,10 @@
      트랙 합계 = 그 트랙 항목 환산점수의 합(100점 만점), 최종점수 = (표준+우리)/2.
      상세 설계 근거는 Claude Project 문서 `모듈_도입평가_고도화.md` 참고.
      BF-eval-detail.html에도 완전히 동일한 EVAL_TRACKS가 있음 — 항목을 고치면 두 파일 모두 갱신할 것. */
+  // ⚠️ 이 배열(평가 항목·가중치)과 finalScore() 계산 공식을 바꾸면 EB-logic.html(구축설계 >
+  // 도출 로직)에 복제해둔 동일 배열·공식도 같이 갱신할 것 — 안 그러면 그 화면의 순위·점수가
+  // 조용히 낡아진다(2026-09-22, 채점 방식이 개편된 뒤 EB가 갱신 안 돼 항상 "입력 필요"만
+  // 뜨던 버그로 발견).
   const EVAL_TRACKS = [
     { key: 'std', ko: '표준기준', en: 'Standard Criteria', items: [
       { key: 'std_feature', ko: '기능 충족도', en: 'Feature Fit', w: 25 },

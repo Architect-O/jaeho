@@ -121,7 +121,7 @@
     <div class="card" style="margin-bottom:0;">
         <div class="card-title">📊 현재 종합 점수 비교 (도입평가와 실시간 공유)</div>
         <div id="rankList"></div>
-        <p class="note">숫자로 입력된 "종합 점수"만 자동으로 순위가 매겨집니다. 값을 입력·수정하려면 <a href="./BA-evaluation.html" style="color:var(--primary);font-weight:600;">도입평가 &gt; 종합 비교</a>에서 관리자로 입력하세요.</p>
+        <p class="note">위 표(19개 항목 가중치 채점)의 별점을 하나라도 입력한 후보만 자동으로 최종 평균 점수가 계산·순위 매겨집니다. 값을 입력·수정하려면 <a href="./BA-evaluation.html" style="color:var(--primary);font-weight:600;">도입평가 &gt; 종합 비교</a>에서 관리자로 입력하세요.</p>
     </div>
 </main>
 
@@ -152,11 +152,52 @@
         try { const raw = localStorage.getItem('evalValues'); return raw ? JSON.parse(raw) : {}; } catch(e) { return {}; }
     }
 
+    // ⚠️ 아래 EVAL_TRACKS(19개 평가항목·가중치)와 점수 계산 공식은 BA-evaluation.html의
+    // 것을 그대로 복제한 것이다 — 이 화면 자체는 정적 문서라 BA의 JS를 직접 import할 수
+    // 없어서(파일마다 독립 실행) 부득이 복제했다. BA에서 항목/가중치/채점 방식을 바꾸면
+    // 이 배열도 반드시 같이 갱신할 것 — 2026-09-18 BA가 "종합 점수" 직접입력 방식에서
+    // 19항목 가중치 채점제로 개편됐을 때 이 파일은 갱신되지 않아, values[pid].overall이라는
+    // BA가 더 이상 쓰지 않는(한 번도 저장한 적 없는) 필드를 계속 읽고 있었고, 그 결과 실제
+    // 점수를 입력해도 이 화면에는 항상 "입력 필요"만 뜨는 상태로 방치돼 있었다
+    // (2026-09-22 사용자 리포트로 발견). BA/EB 두 파일 모두에 상호 참조 주석을 남겨둔다.
+    const EVAL_TRACKS = [
+        { key: 'std', items: [
+            { key: 'std_feature', w: 25 }, { key: 'std_initCost', w: 15 }, { key: 'std_maintCost', w: 15 },
+            { key: 'std_buildTime', w: 15 }, { key: 'std_customization', w: 10 }, { key: 'std_support', w: 10 },
+            { key: 'std_security', w: 10 },
+        ]},
+        { key: 'ours', items: [
+            { key: 'ours_trade', w: 10 }, { key: 'ours_bom', w: 12 }, { key: 'ours_prod', w: 9 },
+            { key: 'ours_sales', w: 9 }, { key: 'ours_master', w: 7 }, { key: 'ours_security', w: 7 },
+            { key: 'ours_hr', w: 10 }, { key: 'ours_multitenancy', w: 7 }, { key: 'ours_roleAccount', w: 7 },
+            { key: 'ours_pnl', w: 7 }, { key: 'ours_residual', w: 6 }, { key: 'ours_govfit', w: 9 },
+        ]},
+    ];
+    function itemScoreContribution(values, pid, item) {
+        const raw = Number((values[pid] || {})[item.key]);
+        if (!raw || raw < 1 || raw > 5) return 0;
+        return item.w * (raw / 5);
+    }
+    function trackTotal(values, pid, trackKey) {
+        const track = EVAL_TRACKS.find(t => t.key === trackKey);
+        return track.items.reduce((sum, it) => sum + itemScoreContribution(values, pid, it), 0);
+    }
+    function finalScore(values, pid) {
+        return (trackTotal(values, pid, 'std') + trackTotal(values, pid, 'ours')) / 2;
+    }
+    function fmtScore(n) { return (Math.round(n * 10) / 10).toFixed(1); }
+    // 19개 항목 중 하나라도 별점이 입력됐는지(=완전히 미입력 상태와 "전부 낮은 점수" 상태를
+    // 구분하기 위한 것) 확인 — finalScore만으로는 둘 다 0.0으로 보여 구분이 안 된다.
+    function hasAnyScore(values, pid) {
+        const v = values[pid] || {};
+        return EVAL_TRACKS.some(t => t.items.some(it => Number(v[it.key]) >= 1 && Number(v[it.key]) <= 5));
+    }
+
     function renderRanking(programs, values) {
         const rows = programs.map(p => {
-            const raw = (values[p.id] || {}).overall;
-            const num = raw != null ? parseFloat(String(raw).replace(/[^0-9.\-]/g, '')) : NaN;
-            return { id: p.id, name: p.name, icon: p.icon || '🧪', raw, num: isNaN(num) ? null : num };
+            const scored = hasAnyScore(values, p.id);
+            const num = scored ? finalScore(values, p.id) : null;
+            return { id: p.id, name: p.name, icon: p.icon || '🧪', num };
         });
         const withNum = rows.filter(r => r.num !== null).sort((a, b) => b.num - a.num);
         const withoutNum = rows.filter(r => r.num === null);
@@ -166,7 +207,7 @@
             <div class="rank-row ${i === 0 && r.num !== null ? 'top' : ''}">
                 <div class="rank-num">${i + 1}</div>
                 <div class="rank-name">${r.icon} ${esc(r.name)}</div>
-                <div class="rank-value ${r.raw ? '' : 'empty'}">${r.raw ? esc(r.raw) : '입력 필요'}</div>
+                <div class="rank-value ${r.num !== null ? '' : 'empty'}">${r.num !== null ? fmtScore(r.num) + "점" : '입력 필요'}</div>
             </div>
         `).join('');
     }
