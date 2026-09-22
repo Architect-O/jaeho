@@ -414,20 +414,28 @@
             { key: 'risk', code: 'AC', icon: '⚠️', label: '리스크 현황', labelEn: 'Risk Status', type: 'file', file: 'AC-risk.html' },
         ]},
         { key: 'evaluation', icon: '🔬', label: '도입 평가', labelEn: 'Adoption Evaluation', items: [
-            // 2026-09-18: 개별 평가 후보(자체개발/파일럿1/2/신규 프로그램 등)는 더 이상 이 배열에
-            // 하나씩 고정 등록하지 않는다. BA(종합 비교)에서 "+ 프로그램 추가"로 열을 만들면
+            // 2026-09-18: 자체개발/신규 프로그램 등 "평가 후보"는 이 배열에 하나씩 고정
+            // 등록하지 않는다. BA(종합 비교)에서 "+ 프로그램 추가"로 열을 만들면
             // getCategoryItems()가 그 목록(evalPrograms, BA와 완전히 동일한 데이터)을 읽어와
-            // 자동으로 사이드 메뉴 항목을 만들어준다 — 아래에는 항상 고정인 3개만 남겨둔다.
-            // 순서: BA(종합 비교, 맨 앞) → BG(단계별 잔존가치 분석) → (동적 프로그램들) →
-            // BE(파일럿3·유통) → BH(파일럿4·보세창고운영) → BI(파일럿5·무역) → BJ(파일럿6·식품제조).
+            // 자동으로 사이드 메뉴 항목을 만들어준다.
+            // 2026-09-22: 파일럿1/2(BC/BD)는 예외 — 위 동적 프로그램 방식과 별개로, 아직 내용을
+            // 만들기 전 자리만 미리 예약해둔 고정 항목이다. 사용자가 GitHub의 BC-pilot1.html /
+            // BD-pilot2.html 파일 내용을 실제로 채워 올리면 메뉴 코드 변경 없이 그대로 연동된다.
+            // 두 파일은 2026-09-17에 만들어진 옛 "평가후보 스코어카드" 시안이 그대로 남아있는
+            // 상태이므로, 실제 내용을 올리기 전까지는 클릭 시 그 옛 화면이 뜬다(빈 화면 아님).
+            // 순서: BA(종합 비교, 맨 앞) → BG(단계별 잔존가치 분석) → BC/BD(파일럿1/2, 자리 예약) →
+            // (동적 프로그램들) → BE(파일럿3·유통) → BH(파일럿4·보세창고운영) → BI(파일럿5·무역) →
+            // BJ(파일럿6·식품제조).
             // 2026-09-18: 4개 사업군(유통/보세창고운영/무역/식품제조)을 각각 독립 파일럿으로
             // 구축해 나중에 통합 모듈화 방향을 판단하기 위한 것 — 모듈_BH/BI/BJ 문서 참고.
             { key: 'eval-compare', code: 'BA', icon: '⚖️', label: '종합 비교', labelEn: 'Comparison', type: 'file', file: 'BA-evaluation.html' },
             { key: 'eval-residual', code: 'BG', icon: '📉', label: '단계별 잔존가치 분석', labelEn: 'Phased Residual Value', type: 'file', file: 'BG-잔존가치분석.html' },
-            { key: 'eval-p3', code: 'BE', icon: '🏭', label: '파일럿: 프로그램 3 (가상 ERP · 유통)', labelEn: 'Pilot: Program 3 (Virtual ERP · Distribution)', type: 'file', file: 'BE-pilot3.html' },
-            { key: 'eval-p4', code: 'BH', icon: '🏗', label: '파일럿4: 보세창고 운영', labelEn: 'Pilot 4: Bonded Warehouse Ops', type: 'file', file: 'BH-pilot4.html' },
-            { key: 'eval-p5', code: 'BI', icon: '🚢', label: '파일럿5: 무역', labelEn: 'Pilot 5: Trading', type: 'file', file: 'BI-pilot5.html' },
-            { key: 'eval-p6', code: 'BJ', icon: '🍱', label: '파일럿6: 식품제조', labelEn: 'Pilot 6: Food Manufacturing', type: 'file', file: 'BJ-pilot6.html' },
+            { key: 'eval-pilot1', code: 'BC', icon: '🧪', label: '파일럿1', labelEn: 'Pilot 1', type: 'file', file: 'BC-pilot1.html' },
+            { key: 'eval-pilot2', code: 'BD', icon: '🧪', label: '파일럿2', labelEn: 'Pilot 2', type: 'file', file: 'BD-pilot2.html' },
+            { key: 'eval-p3', code: 'BE', icon: '🏭', label: '파일럿3 : 유통', labelEn: 'Pilot 3 : Distribution', type: 'file', file: 'BE-pilot3.html' },
+            { key: 'eval-p4', code: 'BH', icon: '🏗', label: '파일럿4 : 보세창고운영', labelEn: 'Pilot 4 : Bonded Warehouse Operations', type: 'file', file: 'BH-pilot4.html' },
+            { key: 'eval-p5', code: 'BI', icon: '🚢', label: '파일럿5 : 무역', labelEn: 'Pilot 5 : Trading', type: 'file', file: 'BI-pilot5.html' },
+            { key: 'eval-p6', code: 'BJ', icon: '🍱', label: '파일럿6 : 식품제조', labelEn: 'Pilot 6 : Food Manufacturing', type: 'file', file: 'BJ-pilot6.html' },
         ]},
         { key: 'schedule', icon: '📅', label: '일정 관리', labelEn: 'Schedule', items: [
             { key: 'timeline', code: 'CA', icon: '🚀', label: '마일스톤', labelEn: 'Milestones', type: 'file', file: 'CA-timeline-1col.html' },
@@ -446,6 +454,7 @@
             { key: 'arch', code: 'EA', icon: '🎨', label: '아키텍처', labelEn: 'Architecture', type: 'file', file: 'EA-architecture.html' },
             { key: 'logic', code: 'EB', icon: '🔗', label: '도출 로직', labelEn: 'Derivation Logic', type: 'file', file: 'EB-logic.html' },
             { key: 'data-map', code: 'EC', icon: '🗂️', label: '데이터 맵핑', labelEn: 'Data Mapping', type: 'file', file: 'EC-data-map.html' },
+            { key: 'archlab', code: 'ED', icon: '🧩', label: '설계 도구 (Architect-LAB)', labelEn: 'Design Tool (Architect-LAB)', type: 'file', file: 'tool1/index1.html' },
         ]},
         { key: 'reports', icon: '📑', label: '문서 & 리포팅', labelEn: 'Documents & Reporting', items: [
             { key: 'weekly-report', code: 'FA', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports-1col.html' },
@@ -485,9 +494,13 @@
             label: p.name || '(이름 없음)', labelEn: p.name || '(unnamed)',
             type: 'file', file: 'BF-eval-detail.html', pid: p.id,
         }));
-        // cat.items[0] = BA(종합 비교, 항상 맨 앞), cat.items[1] = BG(단계별 잔존가치 분석, BA 바로 다음 고정),
-        // cat.items[2..5] = BE→BH→BI→BJ(4개 사업군 파일럿, 동적 프로그램들 바로 다음, 항상 이 순서로 맨 뒤 고정)
-        return [cat.items[0], cat.items[1], ...dynamicItems, cat.items[2], cat.items[3], cat.items[4], cat.items[5]];
+        // cat.items[0]=BA(종합 비교, 항상 맨 앞), cat.items[1]=BG(단계별 잔존가치 분석, BA 바로 다음 고정),
+        // cat.items[2..3]=BC/BD(파일럿1/2, 2026-09-22 자리 예약분, BG 바로 다음 고정),
+        // cat.items[4..7]=BE→BH→BI→BJ(4개 사업군 파일럿, 동적 프로그램들 바로 다음, 항상 이 순서로 맨 뒤 고정)
+        // ⚠️ 이 배열에 항목을 추가/순서변경할 때는 반드시 이 인덱스 목록도 같이 맞출 것 —
+        // 안 맞추면 뒤쪽 항목이 사이드 메뉴에서 조용히 사라진다(2026-09-22, BI/BJ 누락 버그로 발견).
+        return [cat.items[0], cat.items[1], cat.items[2], cat.items[3], ...dynamicItems,
+                cat.items[4], cat.items[5], cat.items[6], cat.items[7]];
     }
 
     function findItem(catKey, itemKey) {
