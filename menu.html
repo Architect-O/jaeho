@@ -419,7 +419,7 @@
     // ===== Menu data model =====
     // type: 'overview' | 'file' | 'placeholder'
     // 파일명 코드 규칙: 카테고리 A~G(대시보드~시스템) + 항목 순번(A,B,C...) = 두 자리 코드.
-    // 실제 파일이 있는 항목은 "코드-원래이름.html"로 저장함 (예: FA-reports-1col.html).
+    // 실제 파일이 있는 항목은 "코드-원래이름.html"로 저장함 (예: FA-reports.html, 2026-09-23 FA-reports-1col.html에서 리네임).
     // 아직 파일이 없는 placeholder 항목도 code만 미리 정해둠 — 나중에 만들 때 그대로 쓰면 됨.
     // ⚠️ 이 배열(사이드 메뉴 항목)을 추가·삭제·이름변경하면 GC-layout.html(시스템 > 레이아웃)의
     // 구조도 다이어그램도 같이 갱신할 것 — 안 그러면 그 문서가 조용히 낡아진다
@@ -488,7 +488,7 @@
             { key: 'archlab', code: 'ED', icon: '🧩', label: '데모 구축', labelEn: 'Demo Build', type: 'external', file: 'tool1/index1.html' },
         ]},
         { key: 'reports', icon: '📑', label: '문서 & 리포팅', labelEn: 'Documents & Reporting', items: [
-            { key: 'weekly-report', code: 'FA', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports-1col.html' },
+            { key: 'weekly-report', code: 'FA', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports.html' },
             { key: 'proposal', code: 'FB', icon: '📖', label: '사업기안서', labelEn: 'Business Proposal', type: 'file', file: 'FB-proposal.html' },
             { key: 'changelog', code: 'FC', icon: '📝', label: '변경 이력', labelEn: 'Changelog', type: 'file', file: 'FC-changelog.html' },
             { key: 'archive', code: 'FD', icon: '💾', label: '아카이브', labelEn: 'Archive', type: 'file', file: 'FD-archive.html' },
