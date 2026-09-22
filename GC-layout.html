@@ -56,6 +56,7 @@
         .legend-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-secondary); }
         .swatch { width:20px; height:0; border-top-width:2px; border-top-style:solid; flex-shrink:0; }
         .swatch.dash { border-top-style:dashed; }
+        .swatch-box { width:16px; height:16px; border-radius:4px; flex-shrink:0; display:inline-block; }
 
         ul.plain { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
         ul.plain li { font-size:12.5px; line-height:1.5; padding-left:16px; position:relative; color:var(--text-secondary); }
@@ -96,111 +97,128 @@ flowchart TD
     IDX["index.html<br/><span style='font-size:11px'>로그인 화면</span>"]
     SHELL["menu.html<br/><span style='font-size:11px'>3분할 셸(메뉴·사이드·본문) · 유일한 셸 파일</span>"]
     JS["js/supabaseClient.js<br/><span style='font-size:11px'>공용 Supabase 클라이언트</span>"]
-    SB[("Supabase<br/><span style='font-size:11px'>users · app_settings · audit_logs</span>")]
+    SB[("Supabase<br/><span style='font-size:11px'>users · app_settings · audit_logs · p3~p6_* 등</span>")]
 
     IDX -- 로그인 성공 --> SHELL
-
-    subgraph EMBED["본문 영역에 fetch + iframe으로 로드 (코드-파일명)"]
-        direction TB
-        KPI["AB-kpi-1col.html<br/><span style='font-size:11px'>대시보드 · KPI 모니터링</span>"]
-        RISK["AC-risk.html<br/><span style='font-size:11px'>대시보드 · 리스크 현황</span>"]
-        EVAL["BA-evaluation.html<br/><span style='font-size:11px'>도입평가 · 종합비교 (Supabase)</span>"]
-        INHOUSE["BB-inhouse.html<br/><span style='font-size:11px'>도입평가 · 자체개발 프로파일 (Supabase)</span>"]
-        P1["BC-pilot1.html<br/><span style='font-size:11px'>도입평가 · 파일럿1 프로파일 (Supabase)</span>"]
-        P2["BD-pilot2.html<br/><span style='font-size:11px'>도입평가 · 파일럿2 프로파일 (Supabase)</span>"]
-        P3["BE-pilot3.html<br/><span style='font-size:11px'>도입평가 · 파일럿3 가상 ERP 데모 (Supabase)</span>"]
-        TL["CA-timeline-1col.html<br/><span style='font-size:11px'>일정관리 · 마일스톤</span>"]
-        PROG["CB-progress-1col.html<br/><span style='font-size:11px'>일정관리 · 단계별 진행도</span>"]
-        SCHED["CC-schedule-detail.html<br/><span style='font-size:11px'>일정관리 · 상세 일정</span>"]
-        EVT["CD-events.html<br/><span style='font-size:11px'>일정관리 · 중요 이벤트</span>"]
-        FAIL["DA-failures.html<br/><span style='font-size:11px'>학습&분석 · 기존 실패사항</span>"]
-        LESSON["DB-lessons.html<br/><span style='font-size:11px'>학습&분석 · 교훈 도출</span>"]
-        BEST["DC-best-practice.html<br/><span style='font-size:11px'>학습&분석 · Best Practice</span>"]
-        SYSARCH["EA-architecture.html<br/><span style='font-size:11px'>구축설계 · 아키텍처</span>"]
-        LOGIC["EB-logic.html<br/><span style='font-size:11px'>구축설계 · 도출 로직 (Supabase)</span>"]
-        DMAP["EC-data-map.html<br/><span style='font-size:11px'>구축설계 · 데이터 맵핑</span>"]
-        REP["FA-reports-1col.html<br/><span style='font-size:11px'>문서&리포팅 · 주간 리포트 (Supabase)</span>"]
-        PROP["FB-proposal.html<br/><span style='font-size:11px'>문서&리포팅 · 사업기안서 (Supabase)</span>"]
-        CHG["FC-changelog.html<br/><span style='font-size:11px'>문서&리포팅 · 변경 이력 (Supabase)</span>"]
-        ARCH["FD-archive.html<br/><span style='font-size:11px'>문서&리포팅 · 아카이브 (Supabase)</span>"]
-        USERS["GA-users.html<br/><span style='font-size:11px'>시스템 · 사용자관리 (관리자 전용, Supabase)</span>"]
-        SET["GB-settings.html<br/><span style='font-size:11px'>시스템 · 권한설정 (Supabase)</span>"]
-        LAYOUT["GC-layout.html<br/><span style='font-size:11px'>시스템 · 레이아웃 (이 화면)</span>"]
-        LOG["GD-log.html<br/><span style='font-size:11px'>시스템 · 작업 로그</span>"]
-    end
-
-    SHELL --> KPI
-    SHELL --> RISK
-    SHELL --> EVAL
-    SHELL --> INHOUSE
-    SHELL --> P1
-    SHELL --> P2
-    SHELL --> P3
-    SHELL --> TL
-    SHELL --> PROG
-    SHELL --> SCHED
-    SHELL --> EVT
-    SHELL --> FAIL
-    SHELL --> LESSON
-    SHELL --> BEST
-    SHELL --> SYSARCH
-    SHELL --> LOGIC
-    SHELL --> DMAP
-    SHELL --> REP
-    SHELL --> PROP
-    SHELL --> CHG
-    SHELL --> ARCH
-    SHELL --> USERS
-    SHELL --> SET
-    SHELL --> LAYOUT
-    SHELL --> LOG
-
     IDX -.-> JS
     SHELL -.-> JS
-    EVAL -.-> JS
-    INHOUSE -.-> JS
-    P1 -.-> JS
-    P2 -.-> JS
-    P3 -.-> JS
-    LOGIC -.-> JS
-    REP -.-> JS
-    PROP -.-> JS
-    CHG -.-> JS
-    ARCH -.-> JS
-    USERS -.-> JS
-    SET -.-> JS
     JS -.-> SB
+
+    subgraph CAT_DASH["📊 대시보드"]
+        direction LR
+        KPI["AB<br/>KPI 모니터링"]
+        RISK["AC<br/>리스크 현황"]
+    end
+
+    subgraph CAT_EVAL["🔬 도입 평가"]
+        direction LR
+        EVAL["BA<br/>종합 비교"]
+        RESID["BG<br/>잔존가치 분석"]
+        P1["BC<br/>파일럿1<br/><span style='font-size:10px'>(자리예약중)</span>"]
+        P2["BD<br/>파일럿2<br/><span style='font-size:10px'>(자리예약중)</span>"]
+        PDETAIL["BF<br/>프로그램별 상세<br/><span style='font-size:10px'>(동적·공유)</span>"]
+        P3["BE<br/>파일럿3·유통"]
+        P4["BH<br/>파일럿4·보세창고운영"]
+        P5["BI<br/>파일럿5·무역"]
+        P6["BJ<br/>파일럿6·식품제조"]
+    end
+
+    subgraph CAT_SCHED["📅 일정 관리"]
+        direction LR
+        TL["CA<br/>마일스톤"]
+        PROG["CB<br/>단계별 진행도"]
+        SCHED["CC<br/>상세 일정"]
+        EVT["CD<br/>중요 이벤트"]
+        CAL["CE<br/>일정 캘린더"]
+    end
+
+    subgraph CAT_LESSON["📚 학습 & 분석"]
+        direction LR
+        BEST["DC<br/>Best Practice"]
+        LESSON["DB<br/>교훈 도출"]
+        FAIL["DA<br/>기존 실패사항"]
+        LEGACY["DD<br/>기존 ERP 구조분석"]
+    end
+
+    subgraph CAT_ARCH["🏗️ 구축 설계"]
+        direction LR
+        SYSARCH["EA<br/>아키텍처"]
+        LOGIC["EB<br/>도출 로직"]
+        DMAP["EC<br/>데이터 맵핑"]
+        DEMO["ED<br/>데모 구축<br/><span style='font-size:10px'>(새 탭으로 열기)</span>"]
+    end
+
+    subgraph CAT_REPORT["📑 문서 & 리포팅"]
+        direction LR
+        REP["FA<br/>주간 리포트"]
+        PROP["FB<br/>사업기안서"]
+        CHG["FC<br/>변경 이력"]
+        ARCH2["FD<br/>아카이브"]
+    end
+
+    subgraph CAT_SYS["⚙️ 시스템"]
+        direction LR
+        USERS["GA<br/>사용자 관리"]
+        SET["GB<br/>권한 설정"]
+        LAYOUT["GC<br/>레이아웃(이 화면)"]
+        LOG["GD<br/>로그"]
+    end
+
+    SHELL --> CAT_DASH
+    SHELL --> CAT_EVAL
+    SHELL --> CAT_SCHED
+    SHELL --> CAT_LESSON
+    SHELL --> CAT_ARCH
+    SHELL --> CAT_REPORT
+    SHELL --> CAT_SYS
+
+    TOOL1["tool1/index1.html<br/><span style='font-size:11px'>Architect-LAB · 별도 상용화 도구</span>"]
+    DEMO -. "새 탭 직접 열기(iframe 아님)" .-> TOOL1
 
     classDef entry fill:#eef2f5,stroke:#16324f,stroke-width:1.5px,color:#16324f;
     classDef shell fill:#16324f,stroke:#16324f,stroke-width:1.5px,color:#ffffff;
     classDef embed fill:#ffffff,stroke:#c9ccd1,stroke-width:1px,color:#1f2328;
-    classDef data fill:#fbf3df,stroke:#b8860b,stroke-width:1.5px,color:#6b4e00;
+    classDef supa fill:#fbf3df,stroke:#b8860b,stroke-width:1.5px,color:#6b4e00;
+    classDef data fill:#eef6ff,stroke:#3b82f6,stroke-width:1px,color:#1d4ed8;
+    classDef external fill:#eef6ff,stroke:#3b82f6,stroke-width:1.5px,stroke-dasharray: 4 2,color:#1d4ed8;
+
     class IDX entry;
     class SHELL shell;
-    class KPI,RISK,EVAL,INHOUSE,P1,P2,P3,TL,PROG,SCHED,EVT,FAIL,LESSON,BEST,SYSARCH,LOGIC,DMAP,REP,PROP,CHG,ARCH,USERS,SET,LAYOUT,LOG embed;
+    class RISK,TL,PROG,SCHED,EVT,FAIL,LESSON,BEST,LEGACY,SYSARCH,DMAP,LAYOUT,LOG embed;
+    class KPI,EVAL,RESID,P1,P2,PDETAIL,P3,P4,P5,P6,CAL,LOGIC,REP,PROP,CHG,ARCH2,USERS,SET supa;
+    class DEMO,TOOL1 external;
     class JS,SB data;
 </pre>
             </div>
             <div class="legend">
-                <div class="legend-item"><span class="swatch" style="border-color:#16324f;"></span> 화면 이동 / 본문 임베드</div>
-                <div class="legend-item"><span class="swatch dash" style="border-color:#9aa3ad;"></span> Supabase 클라이언트 스크립트 포함</div>
+                <div class="legend-item"><span class="swatch-box" style="background:#16324f;"></span> 셸 (menu.html)</div>
+                <div class="legend-item"><span class="swatch-box" style="background:#ffffff;border:1px solid #c9ccd1;"></span> 정적 파일 (Supabase 미사용)</div>
+                <div class="legend-item"><span class="swatch-box" style="background:#fbf3df;border:1px solid #b8860b;"></span> Supabase 연동 파일</div>
+                <div class="legend-item"><span class="swatch-box" style="background:#eef6ff;border:1px dashed #3b82f6;"></span> 새 탭 직접 열기 (iframe 임베드 아님)</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">✅ 전체 메뉴 구현 완료<span class="badge-inline" style="background:var(--success-soft);color:var(--success);">2026-09-18</span></div>
+            <div class="card-title">📌 현재 상태<span class="badge-inline" style="background:var(--success-soft);color:var(--success);">2026-09-22</span></div>
             <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6;">
-                더 이상 placeholder 항목이 없습니다. 구축설계(EA~EC)는 실제 Architect-LAB 도구를 그대로 임베드한 것이 아니라, 아키텍처/도출로직/데이터맵핑을 문서화한 자체 페이지입니다 —
-                Architect-LAB 자체를 화면 안에 넣는 방안은 별도 검토 과제로 남아있습니다 (시스템 &gt; 로그 참고). 도입평가에는 파일럿: 프로그램 3(BE)이 추가되어, SAP ERP 구조를 참고한 실제 동작하는 가상 ERP(구매·재고·출고)로 직접 체험해볼 수 있습니다.
+                총 34개 코드(AA~GD) 중 AA(전체 현황)는 파일 없이 셸에 직접 렌더링되고, 나머지 33개가 위 7개 카테고리로 묶여 있습니다.
+                도입평가(BF)는 고정 항목이 아니라 BA에서 프로그램을 추가할 때마다 사이드 메뉴가 자동 생성되며 이 파일 하나를 프로그램별로 공유합니다.
+                파일럿1·2(BC·BD)는 아직 예전 시안 내용이 남아있는 자리예약 상태입니다. 구축설계 데모 구축(ED)은 Architect-LAB(tool1/index1.html)을
+                iframe으로 넣지 않고 새 탭으로 직접 여는 방식입니다 — 임베드 시 발생한 스크롤 무한 확장 버그 때문에 이 방식으로 전환됨(시스템 &gt; 로그, 2026-09-22 07:35 참고).
             </p>
         </div>
 
         <div class="card" style="margin-bottom:0;">
-            <div class="card-title">ℹ️ 참고</div>
+            <div class="card-title">ℹ️ 참고 · 이 문서를 최신 상태로 유지하는 법</div>
             <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6;">
                 이 화면은 구조를 한눈에 보기 위한 것이고, "언제 어떤 파일이 왜 만들어지거나 바뀌었는지"에 대한 시간순 이력은
                 <a href="./GD-log.html" style="color:var(--primary); font-weight:600;">시스템 &gt; 로그</a>에서 확인할 수 있습니다.
                 파일명 코드 규칙(A~G + 두 자리)은 <code>menu.html</code>의 <code>CATEGORIES</code> 배열 주석 참고.
+            </p>
+            <p style="font-size:12.5px; color:#b45309; line-height:1.6; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
+                ⚠️ <strong>menu.html의 CATEGORIES 배열(사이드 메뉴 항목)을 추가·삭제·이름변경할 때는 이 파일(GC-layout.html)의
+                다이어그램도 같이 갱신할 것.</strong> 안 그러면 이 구조도가 조용히 낡아진다 — 실제로 2026-09-22에 DD·BF·BG·CE·BH·BI·BJ·ED
+                8개 코드가 반영 안 된 채로 오래 방치됐던 적이 있음.
             </p>
         </div>
     </main>

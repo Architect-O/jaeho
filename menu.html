@@ -421,6 +421,9 @@
     // 파일명 코드 규칙: 카테고리 A~G(대시보드~시스템) + 항목 순번(A,B,C...) = 두 자리 코드.
     // 실제 파일이 있는 항목은 "코드-원래이름.html"로 저장함 (예: FA-reports-1col.html).
     // 아직 파일이 없는 placeholder 항목도 code만 미리 정해둠 — 나중에 만들 때 그대로 쓰면 됨.
+    // ⚠️ 이 배열(사이드 메뉴 항목)을 추가·삭제·이름변경하면 GC-layout.html(시스템 > 레이아웃)의
+    // 구조도 다이어그램도 같이 갱신할 것 — 안 그러면 그 문서가 조용히 낡아진다
+    // (2026-09-22, 8개 코드가 반영 안 된 채 방치됐던 적이 있음).
     const CATEGORIES = [
         { key: 'dashboard', icon: '📊', label: '대시보드', labelEn: 'Dashboard', items: [
             { key: 'overview', code: 'AA', icon: '🏠', label: '전체 현황', labelEn: 'Overview', type: 'overview' },
