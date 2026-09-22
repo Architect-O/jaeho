@@ -117,6 +117,10 @@ flowchart TD
         P1["BC<br/>파일럿1<br/><span style='font-size:10px'>(자리예약중)</span>"]
         P2["BD<br/>파일럿2<br/><span style='font-size:10px'>(자리예약중)</span>"]
         PDETAIL["BF<br/>프로그램별 상세<br/><span style='font-size:10px'>(동적·공유)</span>"]
+    end
+
+    subgraph CAT_DEMO["🏭 데모 제작"]
+        direction LR
         P3["BE<br/>파일럿3·유통"]
         P4["BH<br/>파일럿4·보세창고운영"]
         P5["BI<br/>파일럿5·무역"]
@@ -166,6 +170,7 @@ flowchart TD
 
     SHELL --> CAT_DASH
     SHELL --> CAT_EVAL
+    SHELL --> CAT_DEMO
     SHELL --> CAT_SCHED
     SHELL --> CAT_LESSON
     SHELL --> CAT_ARCH
@@ -201,10 +206,12 @@ flowchart TD
         <div class="card">
             <div class="card-title">📌 현재 상태<span class="badge-inline" style="background:var(--success-soft);color:var(--success);">2026-09-22</span></div>
             <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6;">
-                총 34개 코드(AA~GD) 중 AA(전체 현황)는 파일 없이 셸에 직접 렌더링되고, 나머지 33개가 위 7개 카테고리로 묶여 있습니다.
+                총 34개 코드(AA~GD) 중 AA(전체 현황)는 파일 없이 셸에 직접 렌더링되고, 나머지 33개가 위 8개 카테고리로 묶여 있습니다.
                 도입평가(BF)는 고정 항목이 아니라 BA에서 프로그램을 추가할 때마다 사이드 메뉴가 자동 생성되며 이 파일 하나를 프로그램별로 공유합니다.
                 파일럿1·2(BC·BD)는 아직 예전 시안 내용이 남아있는 자리예약 상태입니다. 구축설계 데모 구축(ED)은 Architect-LAB(tool1/index1.html)을
                 iframe으로 넣지 않고 새 탭으로 직접 여는 방식입니다 — 임베드 시 발생한 스크롤 무한 확장 버그 때문에 이 방식으로 전환됨(시스템 &gt; 로그, 2026-09-22 07:35 참고).
+                도입평가(BA/BG/BC/BD/BF)와 실제 동작하는 4개 사업군 데모(BE/BH/BI/BJ)는 성격이 달라 2026-09-22에 "도입 평가"와
+                "데모 제작" 두 카테고리로 분리됨(시스템 &gt; 로그 참고).
             </p>
         </div>
 
@@ -218,7 +225,8 @@ flowchart TD
             <p style="font-size:12.5px; color:#b45309; line-height:1.6; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
                 ⚠️ <strong>menu.html의 CATEGORIES 배열(사이드 메뉴 항목)을 추가·삭제·이름변경할 때는 이 파일(GC-layout.html)의
                 다이어그램도 같이 갱신할 것.</strong> 안 그러면 이 구조도가 조용히 낡아진다 — 실제로 2026-09-22에 DD·BF·BG·CE·BH·BI·BJ·ED
-                8개 코드가 반영 안 된 채로 오래 방치됐던 적이 있음.
+                8개 코드가 반영 안 된 채로 오래 방치됐던 적이 있고, 같은 날 도입평가 카테고리가 "도입 평가"/"데모 제작"으로 분리됐을 때도
+                이 규칙에 따라 이 다이어그램을 같이 갱신함.
             </p>
         </div>
     </main>

@@ -121,6 +121,18 @@
         // deleted: true 로 표시된 항목은 실제로 폴더에서 삭제되어 더 이상 존재하지 않는 파일입니다.
         const LOG_ENTRIES = [
             {
+                date: '2026-09-22', time: '09:30', badge: 'new',
+                title: '도입평가 사이드 메뉴를 "도입 평가"와 "데모 제작" 두 카테고리로 분리',
+                desc: `사용자 요청: "도입평가 사이드를 메뉴를 구분해서 도입평가+하위, 데모 제작+하위 그렇게 나누어줘". 기존엔 도입평가(evaluation) 카테고리 하나에 점수·비교용 화면(BA 종합비교, BG 잔존가치분석, BC/BD 파일럿1·2 자리예약, BF 동적 프로그램별 상세)과 실제로 동작하는 4개 사업군 가상 ERP 데모(BE 유통, BH 보세창고운영, BI 무역, BJ 식품제조)가 함께 섞여 있었음 — 성격이 다른 두 그룹(평가·비교 도구 vs 실동작 체험 데모)이 사이드 하나에 묶여 있어 사용자가 구분을 요청.
+
+수정(menu.html): CATEGORIES 배열의 기존 'evaluation' 카테고리에서 BE/BH/BI/BJ 4개 항목을 떼어내 새 최상위 카테고리 'demo'(🏭 데모 제작)로 옮김. 'evaluation' 카테고리에는 BA/BG/BC/BD(고정 4개)+BF(동적, 프로그램 추가 시 자동 생성)만 남음. 이 작업의 부수 효과로, 기존에 BE~BJ가 'evaluation' 카테고리 끝에 고정 배치돼 있어서 동적 BF 항목들을 그 "사이"에 끼워 넣기 위해 배열 인덱스(cat.items[0]~[7])를 하드코딩해야 했던 getCategoryItems() 함수를 [...cat.items, ...dynamicItems] 형태로 단순화함 — 이 하드코딩 인덱스 패턴은 실제로 이전에(2026-09-22 06:25 로그 참고) 항목이 조용히 사라지는 회귀 버그를 낸 적이 있는 취약한 패턴이었는데, BE~BJ가 다른 카테고리로 옮겨지면서 더 이상 인덱스를 손으로 맞출 필요가 없어져 그 버그 유형 자체가 원천적으로 사라짐.
+
+운영지침.md 3-1절 "상호참조 파일 동기화" 규칙에 따라 menu.html의 CATEGORIES를 바꿨으므로 GC-layout.html 구조도도 함께 갱신: CAT_EVAL subgraph에서 P3~P6(BE/BH/BI/BJ) 노드를 빼서 새 CAT_DEMO["🏭 데모 제작"] subgraph로 옮기고, SHELL→CAT_DEMO 엣지를 추가(SHELL에서 뻗는 카테고리 엣지 7→8개). "현재 상태"·"참고" 카드 설명 문구도 8개 카테고리 기준으로 갱신.
+
+node --check 문법 검증(menu.html·GC-layout.html 모두) + div 태그 균형 검사(GC-layout.html 19/19, menu.html 기존과 동일) + Node 함수 단위 테스트(CATEGORIES·getCategoryItems를 실제 파일에서 추출해 8개 카테고리 전부 실행, 중복 key 없음 확인 — evaluation 7개/demo 4개 정상 분리) + GC-layout.html Mermaid 구조 검증(subgraph/end 쌍 8/8, 노드 ID 37개 전부 고유, SHELL 엣지 8개) 전부 통과.`,
+                files: ['menu.html', 'GC-layout.html']
+            },
+            {
                 date: '2026-09-22', time: '09:00', badge: 'fix',
                 title: '데모 구축(ED) — 메뉴 클릭 시 자동으로 새 탭이 뜨던 것을 버튼 클릭 시에만 열리도록 변경',
                 desc: `사용자 요청: "사이드의 데모구축을 누르면 새창이 뜨는데 페이지 내 새창을 열기를 누를 때만 동작하도록 수정". 기존엔 사이드 메뉴에서 "데모 구축"을 클릭하는 즉시 window.open()이 같이 호출돼 안내 카드가 뜨는 것과 동시에 새 탭도 자동으로 열렸음. renderContent()의 'external' 타입 처리에서 자동 window.open() 호출을 제거하고, 안내 카드 안의 "새 창에서 열기" 버튼을 직접 눌러야만 window.open()이 실행되도록 분리함. 팝업 차단 여부에 따라 문구가 갈리던 부분(opened 변수 참조)도 자동 오픈 제거에 맞춰 고정 문구로 단순화. node --check 문법 검증 + div 태그 균형 검사 통과.`,
