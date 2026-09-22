@@ -121,6 +121,12 @@
         // deleted: true 로 표시된 항목은 실제로 폴더에서 삭제되어 더 이상 존재하지 않는 파일입니다.
         const LOG_ENTRIES = [
             {
+                date: '2026-09-22', time: '05:52', badge: 'fix',
+                title: '문서&리포팅 4개 게시판(FA/FB/FC/FD) — 한글 파일명 업로드 시 "Invalid key" 실패 수정',
+                desc: `사용자가 아카이브(FD)에 실제 파일("견적서 MS 다이나믹스", 원본 파일명에 한글 "구축" 포함)을 올리다가 "업로드 실패: Invalid key: archive/..._구축_SaaS_-2.pdf" 에러를 만남. 원인 확인 결과, 업로드 시 Supabase Storage에 실제 저장되는 내부 경로(스토리지 키)를 만들 때 쓰던 안전화 정규식이 한글은 그대로 통과시키고 오히려 상관없는 괄호만 밑줄로 바꾸는 반대의 문제였음 — Supabase Storage는 스토리지 키에 비ASCII 문자(한글 포함)를 허용하지 않아, 한글이 섞인 실제 업로드 시도에서만 처음으로 드러남(그동안 영문 테스트 파일만 올려서 안 걸렸던 것). 수정: 스토리지 경로용 파일명 정제 정규식을 영문·숫자·점·붙임표만 허용(그 외 전부 밑줄)하도록 변경 — 사용자에게 보이는 문서 제목·다운로드 파일명(file_name 컬럼, 다운로드 시 download 속성으로 지정됨)은 원본 그대로 한글 포함해서 유지되므로 화면상 영향 없음. 동일한 게시판 코드를 복사해 쓰는 FA(주간 리포트)·FB(사업기안서)·FC(변경 이력)·FD(아카이브) 4개 파일 전부(각 2곳, 총 8곳)에 동일하게 수정 적용. node --check 문법 검증 + div/table/tr/td/script 태그 균형 검사 4개 파일 전부 통과.`,
+                files: ['FA-reports-1col.html', 'FB-proposal.html', 'FC-changelog.html', 'FD-archive.html']
+            },
+            {
                 date: '2026-09-19', time: '19:25', badge: 'new',
                 title: 'Supabase SQL 4건 실행 확인 + 일정관리에 "일정 캘린더(CE)" 배포',
                 desc: `사용자가 Supabase SQL Editor에서 pilot3(취소기능+코드점검 수정 반영본)/pilot4/pilot5/pilot6_erp_migration.sql 4건 실행을 완료함("쿼리 3,4,5,6 실행완료")에 따라, BE/BH/BI/BJ 4개 파일럿 전부 화면·SQL이 실제로 살아있는 상태가 됨 — 관련 프로젝트 문서(00_프로젝트_인덱스.md, ERP_Dashboard_메뉴_통합분리_기준.md, 모듈_BE/BH/BI/BJ파일럿 각 문서, 모듈_통합분석_4사업군_모듈화방향.md) 전부에 남아있던 "SQL 실행 대기"·"배포 대기" 등 과거 상태 문구를 최신 상태로 갱신함. 이어서 어제(2026-09-18) 작성해두고도 기기 연결이 끊겨 미배포 상태로 남아있던 "일정 캘린더(CE)"를 배포함 — 일정관리 카테고리에 CD(중요 이벤트) 다음 항목으로 menu.html에 등록. CE는 CC-schedule-detail.html의 프로젝트 공식 업무(파란색)와 근이 직접 기록하는 개인 업무(초록색, 기존 app_settings 테이블의 dash_calendar_personal 키로 Supabase 공유 — 별도 SQL 실행 불필요)를 월간 캘린더 그리드에서 함께 보여줌. 배포 전 node --check 문법 검증 + 태그균형 검사 재확인(신규 코드 변경은 없고 menu.html 등록만 추가) 통과.`,

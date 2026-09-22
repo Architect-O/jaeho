@@ -292,7 +292,7 @@
                     let fileFields = { p_file_name: null, p_file_path: null, p_file_size: null, p_mime_type: null };
                     let replaceFile = false;
                     if (file) {
-                        const safeName = file.name.replace(/[^\w.\-가-힣 ]/g, '_');
+                        const safeName = file.name.replace(/[^A-Za-z0-9.\-]/g, '_');
                         const filePath = `${CATEGORY}/${Date.now()}_${safeName}`;
                         const { error: upErr } = await sb.storage.from(BUCKET).upload(filePath, file, { upsert: false });
                         if (upErr) throw upErr;
@@ -319,7 +319,7 @@
                     statusEl.textContent = '수정 완료!';
                     statusEl.className = 'upload-status ok';
                 } else {
-                    const safeName = file.name.replace(/[^\w.\-가-힣 ]/g, '_');
+                    const safeName = file.name.replace(/[^A-Za-z0-9.\-]/g, '_');
                     const filePath = `${CATEGORY}/${Date.now()}_${safeName}`;
 
                     const { error: upErr } = await sb.storage.from(BUCKET).upload(filePath, file, { upsert: false });
