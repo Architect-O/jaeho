@@ -121,6 +121,12 @@
         // deleted: true 로 표시된 항목은 실제로 폴더에서 삭제되어 더 이상 존재하지 않는 파일입니다.
         const LOG_ENTRIES = [
             {
+                date: '2026-09-22', time: '07:35', badge: 'fix',
+                title: '데모 구축(ED) — 스크롤바 무한정 길어짐 + 화면 전환 시 미스타일 화면 순간 노출 수정',
+                desc: `사용자가 "데모 구축" 화면에서 스크롤바가 아래로 무한정 길어지는 현상과, 구축설계 화면 전환 시 순간적으로 정리 안 된("코딩") 화면이 지나가는 현상을 리포트. 원인: 이 셸(menu.html)은 파일형 콘텐츠(type:'file')를 iframe(srcdoc)으로 불러온 뒤, 내부 문서의 실제 높이만큼 iframe 높이를 자동으로 늘려주는 ResizeObserver 로직을 갖고 있는데(일반 대시보드 페이지들이 스크롤 없이 셸 안에 자연스럽게 표시되도록 하기 위함), Architect-LAB(tool1/index1.html)은 이 로직이 상정한 "문서 흐름대로 길어지는 콘텐츠"가 아니라 자체적으로 뷰포트 전체를 차지하도록 설계된 대형 단일 페이지 앱(캔버스 도구, 내부적으로 window 크기 기준 레이아웃을 다시 계산함)이라, iframe 높이를 키우면 내부 레이아웃이 그 커진 높이를 새 "뷰포트"로 인식해 다시 커지고 → ResizeObserver가 또 감지해 iframe을 더 키우는 되먹임 루프가 발생함. 이는 애초에 프로젝트 문서(ERP_Dashboard_메뉴_통합분리_기준.md 5-5절)에 "Architect-LAB을 실제로 화면에 넣으려면 헤더/스크롤 구조 사전 검토가 필요하다"고 남겨뒀던 위험이 실제로 발생한 것. 수정: 데모 구축(ED) 항목의 type을 'file'(iframe 임베드)에서 'external'로 변경 — 이제 클릭하면 iframe에 넣지 않고 tool1/index1.html을 새 탭으로 직접 열며(팝업 차단 시 수동으로 누를 수 있는 버튼도 함께 표시), 셸의 콘텐츠 영역에는 "새 창에서 열립니다" 안내 카드만 표시함. 이 방식은 iframe 자체를 아예 안 쓰므로 되먹임 루프와 렌더링 중 미스타일 화면 노출 문제를 원천적으로 없앰. 새 CSS 클래스(.launch-box/.launch-btn) 추가, 기존 콘텐츠 렌더링 로직(renderContent)에 'external' 타입 분기 추가. node --check 문법 검증 + div/table/tr/td 태그 균형 검사 통과.`,
+                files: ['menu.html']
+            },
+            {
                 date: '2026-09-22', time: '07:10', badge: 'fix',
                 title: '구축설계 4번째 메뉴(ED) 라벨을 "데모 구축"으로 변경',
                 desc: `사용자가 라이브 사이트에서 ED 항목을 확인하다가 "ED파일도 없다"고 지적 — 실제로 정확한 지적이었음. 프로젝트 문서(ERP_Dashboard_메뉴_통합분리_기준.md 5-5절)를 재확인한 결과, 다른 모든 코드(AA~GD)는 전부 "{코드}-이름.html" 형태의 실제 루트 파일이 있는데 ED만 그런 파일 없이 tool1/index1.html을 직접 가리키고 있었고, 애초에 같은 문서에 "Architect-LAB을 실제로 화면에 넣는 건 헤더/스크롤 구조 사전 검토가 필요해 별도 검토 과제로 남겨둔다"고 명시돼 있던 것을, 그 사전 검토 없이 지난 세션에 바로 연결해버린 것이 원인. 이번엔 사용자 지시로 우선 라벨만 '설계 도구 (Architect-LAB)' → '데모 구축'(영문 'Demo Build')으로 변경, code(ED)·file(tool1/index1.html) 경로는 그대로 유지. ⚠️ 미해결로 남아있는 사전 검토 사항: tool1/index1.html 내부 "☰ 메뉴"/로그아웃 버튼이 상대경로(../menu.html, ../index.html)를 써서, menu.html에 iframe(srcdoc)으로 임베드된 상태로 그 버튼을 누르면 잘못된 경로로 이동함 — 이번 라벨 변경으로는 해결되지 않았고 별도 후속 작업 필요. node --check 문법 검증 + div/table/tr/td 태그 균형 검사 통과(menu.html 자체에 내장된 문자열 리터럴 속 "<script>" 텍스트로 인한 script 태그 카운트 4/3 불일치는 이전부터 있던 false-positive로 확인됨).`,

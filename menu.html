@@ -223,6 +223,20 @@
     .error-box p, .error-box ul { font-size: 13px; color: #991b1b; line-height: 1.7; }
     .error-box ul { margin-top: 8px; padding-left: 20px; }
 
+    .launch-box {
+        background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+        padding: 32px 20px; max-width: 420px; margin: 40px auto;
+    }
+    .launch-box strong { color: var(--text); font-size: 15px; }
+    .launch-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+    .launch-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 10px 18px; border-radius: 8px; border: none;
+        background: var(--accent); color: #fff; font-size: 13px; font-family: inherit;
+        font-weight: 600; cursor: pointer; transition: opacity .15s;
+    }
+    .launch-btn:hover { opacity: .88; }
+
     @media (max-width: 900px) {
         .sidebar { position: static; width: 100%; height: auto; }
         .app-body { flex-direction: column; }
@@ -454,7 +468,7 @@
             { key: 'arch', code: 'EA', icon: '🎨', label: '아키텍처', labelEn: 'Architecture', type: 'file', file: 'EA-architecture.html' },
             { key: 'logic', code: 'EB', icon: '🔗', label: '도출 로직', labelEn: 'Derivation Logic', type: 'file', file: 'EB-logic.html' },
             { key: 'data-map', code: 'EC', icon: '🗂️', label: '데이터 맵핑', labelEn: 'Data Mapping', type: 'file', file: 'EC-data-map.html' },
-            { key: 'archlab', code: 'ED', icon: '🧩', label: '데모 구축', labelEn: 'Demo Build', type: 'file', file: 'tool1/index1.html' },
+            { key: 'archlab', code: 'ED', icon: '🧩', label: '데모 구축', labelEn: 'Demo Build', type: 'external', file: 'tool1/index1.html' },
         ]},
         { key: 'reports', icon: '📑', label: '문서 & 리포팅', labelEn: 'Documents & Reporting', items: [
             { key: 'weekly-report', code: 'FA', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports-1col.html' },
@@ -657,6 +671,27 @@
         const found = findItem(currentCategory, currentItem);
         if (!found) return;
         const { cat, item } = found;
+
+        if (item.type === 'external') {
+            // Architect-LAB(tool1/index1.html)처럼 자체 뷰포트 전체를 차지하도록
+            // 설계된 대형 단일 페이지 앱은 이 셸의 "콘텐츠 높이에 맞춰 iframe을
+            // 자동 확장"하는 로직(윗쪽 contentFrame ResizeObserver)과 서로 되먹임
+            // 루프를 일으켜 스크롤바가 무한정 길어지거나, 렌더링 초반 미스타일된
+            // 원본 화면이 잠깐 노출되는 문제가 있었다(2026-09-22 사용자 리포트).
+            // iframe으로 임베드하지 않고 새 탭으로 직접 열어 이 문제를 원천 차단한다.
+            contentFrame.style.display = 'none';
+            contentFrame.srcdoc = '';
+            contentInner.style.display = 'block';
+            const opened = window.open(item.file, '_blank');
+            contentInner.innerHTML = `
+                <div class="launch-box" style="text-align:center;">
+                    <strong>${L(item.label, item.labelEn)}은(는) 새 창에서 열립니다.</strong>
+                    <p>${opened ? '새 탭이 열렸습니다. 열리지 않았다면 아래 버튼을 눌러주세요.' : '팝업이 차단되었을 수 있습니다. 아래 버튼을 눌러 직접 열어주세요.'}</p>
+                    <button class="launch-btn" onclick="window.open('${item.file}', '_blank')">🧩 ${L(item.label, item.labelEn)} 새 창에서 열기</button>
+                </div>
+            `;
+            return;
+        }
 
         if (item.type === 'file') {
             try {
