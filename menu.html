@@ -241,8 +241,9 @@
 
     @media (max-width: 900px) {
         .sidebar { position: static; width: 100%; height: auto; }
-        .app-body { flex-direction: column; }
+        .app-body { flex-direction: column; align-items: stretch; }
         #contentInner { padding: 24px 20px; }
+        main.content-area { width: 100%; }
     }
         @media (max-width: 480px) {
             header { padding-left: 14px; padding-right: 14px; height: auto; min-height: 56px; flex-wrap: wrap; row-gap: 8px; padding-top: 10px; padding-bottom: 10px; }
