@@ -32,7 +32,7 @@
   .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
   .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
   .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
-  .ghost-btn{
+  .ghost-btn{white-space:nowrap;
     background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
     padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
     text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
@@ -133,6 +133,10 @@
     background:var(--primary);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;
   }
   .primary-btn:hover{opacity:0.9;}
+        @media (max-width: 480px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            main { padding-left: 14px; padding-right: 14px; }
+        }
 </style>
 </head>
 <body>

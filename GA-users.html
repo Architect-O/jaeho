@@ -27,7 +27,7 @@
   .brand-info{display:flex;flex-direction:column;line-height:1.25;}
   .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
   .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
-  .hbtns a, .hbtns button{
+  .hbtns a, .hbtns button{white-space:nowrap;
     background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
     padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;text-decoration:none;
     display:inline-flex;align-items:center;gap:5px;transition:all .15s;
@@ -99,6 +99,10 @@
   @media (max-width: 480px) {
     .action-grid{grid-template-columns:1fr;}
   }
+        @media (max-width: 480px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            main { padding-left: 14px; padding-right: 14px; }
+        }
 </style>
 </head>
 <body>

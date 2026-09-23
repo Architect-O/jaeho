@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자체 개발 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+        --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{white-space:nowrap;
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 24px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+
+    .score-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (max-width: 700px) { .score-grid { grid-template-columns: 1fr; } }
+    .score-item { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .score-label { font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+    .score-value { font-size: 14px; font-weight: 600; color: var(--text); }
+    .score-value.empty { color: var(--text-tertiary); font-weight: 400; font-style: italic; }
+    .score-item.overall { grid-column: 1 / -1; background: var(--gray-100); }
+    .score-item.overall .score-value { font-size: 18px; color: var(--primary); }
+
+    .list-title { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 8px; display:flex; align-items:center; gap:6px; }
+    ul.plain { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+    ul.plain li { font-size: 13px; line-height: 1.55; color: var(--text-secondary); padding-left: 16px; position: relative; }
+    ul.plain li::before { content: '—'; position: absolute; left: 0; color: var(--text-tertiary); }
+    .two-col { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+    .note { font-size: 12.5px; color: var(--text-tertiary); }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+        @media (max-width: 480px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            .content { padding-left: 14px; padding-right: 14px; }
+        }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title">🛠️ 자체 개발</div>
+            <div class="brand-sub">도입 평가 상세 프로파일 · 내부 인력으로 직접 개발하는 안</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🛠️ 자체 개발</h1>
+            <p class="page-subtitle">도입 평가 상세 프로파일 · 내부 인력으로 직접 개발하는 안</p>
+        </div>
+        <a class="ghost-btn" href="./BA-evaluation.html">⚖️ 종합 비교로 이동</a>
+    </div>
+
+    <div class="card">
+        <div class="card-title">📊 평가 점수 (도입평가 &gt; 종합 비교와 실시간 공유)</div>
+        <div class="score-grid" id="scoreGrid"></div>
+        <p class="note" style="margin-top:12px;">값을 수정하려면 <a href="./BA-evaluation.html" style="color:var(--primary);font-weight:600;">도입평가 &gt; 종합 비교</a> 화면에서 관리자로 입력하세요. 이 페이지는 그 값을 읽어서 보여줍니다.</p>
+    </div>
+
+    <div class="two-col">
+        <div class="card">
+            <div class="list-title">✅ 장점</div>
+            <ul class="plain" id="prosList"></ul>
+        </div>
+        <div class="card">
+            <div class="list-title">⚠️ 단점</div>
+            <ul class="plain" id="consList"></ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="list-title">🚩 주요 리스크</div>
+        <ul class="plain" id="risksList"></ul>
+    </div>
+
+    <div class="card" style="margin-bottom:0;">
+        <div class="list-title">🧭 권고</div>
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;" id="recoText"></p>
+    </div>
+</main>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    const PROGRAM_ID = 'inhouse';
+    const PROS = ['요구사항을 100% 반영하는 커스터마이징이 가능함', '외부 라이선스 비용이 없음 (인건비/인프라 비용만 발생)', '내부 데이터를 완전히 통제할 수 있어 보안·규정 준수에 유리함', '기존 사내 시스템과의 연동이 자유로움'];
+    const CONS = ['개발 기간이 상대적으로 길어짐 (통상 6개월 이상)', '초기 인력 투입 규모가 큼', '오픈 이후에도 유지보수를 전담할 인력이 계속 필요함', '검증된 상용 사례가 없어 품질 리스크가 상대적으로 큼'];
+    const RISKS = ['핵심 개발자 이탈 시 프로젝트 지연 및 지식 단절 위험 (리스크 현황 AC 참고)', '요구사항 변경이 잦을 경우 예산·일정 초과 가능성', '초기 버전의 버그/미완성 기능으로 인한 초기 사용자 불만 가능성'];
+    const RECO = '장기적으로 커스터마이징 요구가 크고, 내부 IT 역량과 유지보수 인력을 안정적으로 확보할 수 있을 때 적합한 선택입니다. 단기간에 표준 기능만 필요하다면 상용 솔루션(파일럿 프로그램) 대비 상대적으로 불리할 수 있습니다.';
+
+    const EVAL_CRITERIA = [
+        { key: 'feature', ko: '기능 충족도' },
+        { key: 'initCost', ko: '초기 도입 비용' },
+        { key: 'maintCost', ko: '유지보수 비용' },
+        { key: 'buildTime', ko: '구축 기간' },
+        { key: 'customization', ko: '커스터마이징 자유도' },
+        { key: 'support', ko: '기술 지원' },
+        { key: 'security', ko: '데이터 보안' },
+        { key: 'overall', ko: '종합 점수' },
+    ];
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+    async function fetchDashboardSettings(){
+        try {
+            const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+            if (!sb) return null;
+            const { data, error } = await sb.rpc('get_dashboard_settings');
+            if (error) throw error;
+            return data || {};
+        } catch(e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+    }
+
+    function loadLocalPrograms() {
+        try { const raw = localStorage.getItem('evalPrograms'); if (raw) return JSON.parse(raw); } catch(e) {}
+        return null;
+    }
+    function loadLocalValues() {
+        try { const raw = localStorage.getItem('evalValues'); return raw ? JSON.parse(raw) : {}; } catch(e) { return {}; }
+    }
+
+    function renderScores(values) {
+        const v = (values && values[PROGRAM_ID]) || {};
+        document.getElementById('scoreGrid').innerHTML = EVAL_CRITERIA.map(c => {
+            const val = v[c.key];
+            const isOverall = c.key === 'overall';
+            return `
+                <div class="score-item ${isOverall ? 'overall' : ''}">
+                    <div class="score-label">${esc(c.ko)}</div>
+                    <div class="score-value ${val ? '' : 'empty'}">${val ? esc(val) : '입력 필요 (BA에서 입력)'}</div>
+                </div>`;
+        }).join('');
+    }
+
+    async function init() {
+        renderScores(loadLocalValues());
+        const remote = await fetchDashboardSettings();
+        if (remote && remote.dash_eval_values) {
+            try {
+                const values = JSON.parse(remote.dash_eval_values);
+                localStorage.setItem('evalValues', remote.dash_eval_values);
+                if (remote.dash_eval_programs) localStorage.setItem('evalPrograms', remote.dash_eval_programs);
+                renderScores(values);
+            } catch(e) {}
+        }
+    }
+
+    document.getElementById('prosList').innerHTML = PROS.map(p => `<li>${esc(p)}</li>`).join('');
+    document.getElementById('consList').innerHTML = CONS.map(p => `<li>${esc(p)}</li>`).join('');
+    document.getElementById('risksList').innerHTML = RISKS.map(p => `<li>${esc(p)}</li>`).join('');
+    document.getElementById('recoText').textContent = RECO;
+
+    init();
+
+    const HEADER_THEMES = {
+        A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+        B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+        C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+    };
+    function applyHeaderTheme(key){
+        const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+        Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+    }
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+</script>
+</body>
+</html>

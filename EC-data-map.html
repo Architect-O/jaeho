@@ -29,7 +29,7 @@
         .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
         .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
         .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
-        .ghost-btn{
+        .ghost-btn{white-space:nowrap;
             background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
             padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
             text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
@@ -58,7 +58,11 @@
         .note-cell { font-size: 11.5px; color: var(--text-tertiary); }
 
         @media (max-width: 768px) { .content { padding: 20px; } }
-    </style>
+            @media (max-width: 480px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            .content { padding-left: 14px; padding-right: 14px; }
+        }
+</style>
 </head>
 <body>
     <header>

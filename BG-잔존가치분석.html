@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단계별 잔존가치 분석 - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    /* 대시보드(dashboard-master.html)와 동일한 헤더 변수 — 테마 선택 시 이 페이지의 상단바도 같이 바뀝니다 */
+    --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+    --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+    --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+    --border:#e8eaed; --primary:#16324f;
+    --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+    --danger:#ef4444; --danger-soft:#fef2f2; --info:#3b82f6; --info-soft:#eff6ff;
+    --gray-200:#eceef0;
+  }
+  body{font-family:'IBM Plex Sans KR','Segoe UI',sans-serif;background:var(--content-bg);color:var(--text);min-height:100vh;}
+  a{color:inherit;}
+
+  header{
+    height:56px; background:var(--header-bg); color:var(--header-text);
+    border-bottom:var(--header-border-width) solid var(--header-border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+  .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+  .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+  .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+  .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .ghost-btn{white-space:nowrap;
+    background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+    padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+    text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+  }
+  .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+  main{width:100%;padding:30px;}
+  @media (max-width:768px){ main{padding:20px;} }
+
+  .page-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+  .page-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:20px;}
+  .card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,0.03);margin-bottom:18px;}
+  .card-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+  .info-box{background:var(--info-soft);border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;font-size:12.5px;color:#1e40af;line-height:1.6;margin-bottom:18px;}
+  .info-box b{color:#1e3a8a;}
+
+  .slider-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .slider-row input[type=range]{flex:1;min-width:200px;accent-color:var(--primary);height:6px;}
+  .slider-pct{font-size:26px;font-weight:700;color:var(--primary);min-width:70px;text-align:right;}
+  .slider-hint{font-size:11.5px;color:var(--text-tertiary);margin-top:8px;}
+
+  .compare-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .compare-table th, .compare-table td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:middle;}
+  .compare-table th{background:#f8f9fa;font-size:11px;text-transform:uppercase;color:var(--text-secondary);white-space:nowrap;}
+  .compare-table tr td:first-child{font-weight:600;background:#fcfcfd;}
+  .compare-table td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .num-input{width:100%;min-width:90px;font:inherit;font-size:12.5px;color:var(--text);border:1px solid var(--border);background:#fff;padding:5px 6px;border-radius:5px;text-align:right;}
+  .num-input:disabled{border-color:transparent;background:transparent;color:var(--text-secondary);}
+
+  .bar-track{width:100%;height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden;position:relative;margin-top:4px;}
+  .bar-fill-cost{position:absolute;left:0;top:0;height:100%;background:var(--warning);}
+  .bar-fill-residual{position:absolute;left:0;top:0;height:100%;background:var(--success);}
+  .bar-legend{display:flex;gap:12px;font-size:10.5px;color:var(--text-tertiary);margin-top:4px;}
+  .bar-legend span{display:inline-flex;align-items:center;gap:4px;}
+  .dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+
+  .loss-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:700;}
+  .loss-low{background:var(--success-soft);color:#047857;}
+  .loss-mid{background:var(--warning-soft);color:#b45309;}
+  .loss-high{background:var(--danger-soft);color:#b91c1c;}
+        @media (max-width: 480px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            main { padding-left: 14px; padding-right: 14px; }
+        }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo" id="brandLogo">J</div>
+    <div class="brand-info">
+      <div class="brand-title" id="brandTitle">📉 단계별 잔존가치 분석</div>
+      <div class="brand-sub" id="brandSub">진행률을 옮기면서 지금 중단할 경우의 누적비용·잔존가치·손실률을 확인합니다</div>
+    </div>
+  </div>
+  <div class="hbtns">
+    <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+  </div>
+</header>
+
+<main>
+  <div id="residualContent"></div>
+</main>
+
+<script>
+  if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+  const myUsername = sessionStorage.getItem('username');
+  const myPw = sessionStorage.getItem('pw');
+  const isAdmin = sessionStorage.getItem('role') === 'admin';
+
+  /* ===== 헤더 테마 — dashboard-master.html / settings.html과 동일한 값 ===== */
+  const HEADER_THEMES = {
+    A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+    B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+    C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+  };
+  function applyHeaderTheme(key){
+    const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+    Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+  }
+  applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+
+  /* ===== 언어 — dashboard-master.html과 동일한 L() 도우미 ===== */
+  let currentLang = localStorage.getItem('dashLang') || 'ko';
+  function L(ko, en) {
+    if (currentLang === 'en') return en;
+    if (currentLang === 'both') return ko + ' · ' + en;
+    return ko;
+  }
+  function renderHeaderTexts(){
+    document.getElementById('brandTitle').textContent = '📉 ' + L('단계별 잔존가치 분석', 'Phased Residual Value Analysis');
+    document.getElementById('brandSub').textContent = L('진행률을 옮기면서 지금 중단할 경우의 누적비용·잔존가치·손실률을 확인합니다', 'Drag the progress slider to see cumulative cost, residual value, and loss ratio if stopped now');
+    document.querySelector('.hbtns .ghost-btn').textContent = '← ' + L('메뉴로', 'Menu');
+  }
+  renderHeaderTexts();
+
+  /* ===== Supabase 연동: 조회는 누구나, 저장은 관리자만 (BA-evaluation.html과 동일 패턴) ===== */
+  async function fetchDashboardSettings(){
+    try {
+      const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+      if (!sb) return null;
+      const { data, error } = await sb.rpc('get_dashboard_settings');
+      if (error) throw error;
+      return data || {};
+    } catch(e) { console.warn('공유 설정 조회 실패(로컬 값 사용):', e); return null; }
+  }
+  async function saveDashboardSetting(key, value){
+    try {
+      const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+      if (!sb || !myUsername || !myPw) return { success:false, message:'로그인 정보가 없습니다.' };
+      const { data, error } = await sb.rpc('admin_update_setting', { p_admin_username: myUsername, p_admin_password: myPw, p_key: key, p_value: value });
+      if (error) throw error;
+      return data;
+    } catch(e) { console.error('공유 설정 저장 실패:', e); return { success:false, message: e.message }; }
+  }
+  async function syncFromCloud(){
+    const remote = await fetchDashboardSettings();
+    if (!remote) return;
+    if (remote.dash_theme) { localStorage.setItem('dashTheme', remote.dash_theme); applyHeaderTheme(remote.dash_theme); }
+    if (remote.dash_lang) { currentLang = remote.dash_lang; localStorage.setItem('dashLang', currentLang); renderHeaderTexts(); }
+    if (remote.dash_eval_programs) localStorage.setItem('evalPrograms', remote.dash_eval_programs);
+    if (remote.dash_eval_residual) localStorage.setItem('evalResidual', remote.dash_eval_residual);
+  }
+
+  let _residualSaveTimer = null;
+  function scheduleResidualCloudSave() {
+    if (!isAdmin) return;
+    clearTimeout(_residualSaveTimer);
+    _residualSaveTimer = setTimeout(persistResidualToCloud, 800);
+  }
+  async function persistResidualToCloud() {
+    if (!isAdmin) return;
+    await saveDashboardSetting('dash_eval_residual', JSON.stringify(loadResidual()));
+  }
+
+  function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function won(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+
+  /* ===== 프로그램 목록 — BA-evaluation.html의 evalPrograms를 그대로 읽는다(같은 origin localStorage 공유) ===== */
+  function loadEvalPrograms() {
+    try {
+      const raw = localStorage.getItem('evalPrograms');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return [
+      { id: 'inhouse', name: L('자체 개발', 'In-house'), icon: '🛠️' },
+      { id: 'p1', name: L('파일럿: 프로그램 1', 'Pilot: Program 1'), icon: '🧪' },
+      { id: 'p2', name: L('파일럿: 프로그램 2', 'Pilot: Program 2'), icon: '🧪' },
+    ];
+  }
+
+  /* ===== 2026-09-18 신규: 단계별 잔존가치 분석(BG) =====
+     설계 근거: Claude Project 문서 `모듈_도입평가_고도화.md` 6절.
+     프로그램별로 "시작점(0%)"과 "끝점(100%)"의 누적비용·잔존가치 두 쌍만 입력받고,
+     그 사이는 선형보간(linear interpolation)한다. 전역 슬라이더 하나로 모든 프로그램의
+     "지금 이 진행률에서 멈추면?" 시나리오를 실시간으로 계산해서 보여준다.
+     저장 형태: evalResidual = { [pid]: { cost0, cost100, res0, res100 } } */
+  function loadResidual() {
+    try { const raw = localStorage.getItem('evalResidual'); return raw ? JSON.parse(raw) : {}; }
+    catch (e) { return {}; }
+  }
+  function saveResidual(obj) { localStorage.setItem('evalResidual', JSON.stringify(obj)); }
+  function getEntry(residual, pid) {
+    return Object.assign({ cost0: 0, cost100: 0, res0: 0, res100: 0 }, residual[pid] || {});
+  }
+  function updateResidualField(pid, field, val) {
+    if (!isAdmin) return;
+    const residual = loadResidual();
+    residual[pid] = getEntry(residual, pid);
+    residual[pid][field] = Number(val) || 0;
+    saveResidual(residual);
+    scheduleResidualCloudSave();
+    updateComputedCells();
+  }
+
+  function computeAt(entry, pct) {
+    const t = pct / 100;
+    const cost = entry.cost0 + (entry.cost100 - entry.cost0) * t;
+    const residual = entry.res0 + (entry.res100 - entry.res0) * t;
+    const loss = cost > 0 ? Math.max(0, (cost - residual) / cost * 100) : 0;
+    return { cost, residual, loss };
+  }
+  function lossBadgeClass(loss) {
+    if (loss >= 60) return 'loss-high';
+    if (loss >= 30) return 'loss-mid';
+    return 'loss-low';
+  }
+
+  let sliderPct = 100; // 기본값: 완료 시점 기준으로 처음 표시
+
+  function sliderCardHTML() {
+    return `
+      <div class="card">
+        <div class="card-title">🎚️ ${L('진행률 슬라이더', 'Progress Slider')}</div>
+        <div class="slider-row">
+          <input type="range" id="progressSlider" min="0" max="100" step="1" value="${sliderPct}"
+                 oninput="onSliderInput(this.value)">
+          <div class="slider-pct" id="sliderPctLabel">${sliderPct}%</div>
+        </div>
+        <div class="slider-hint">${L('이 시점에서 프로젝트를 중단한다면 각 프로그램의 누적비용·잔존가치·손실률이 아래와 같이 계산됩니다(시작·끝점 값을 선형보간).', 'If the project stopped at this point, cumulative cost, residual value, and loss ratio for each program are computed below by linearly interpolating the start/end values.')}</div>
+      </div>`;
+  }
+
+  function residualTableHTML() {
+    const programs = loadEvalPrograms();
+    const residual = loadResidual();
+    const dis = isAdmin ? '' : 'disabled';
+    const rows = programs.map(p => {
+      const entry = getEntry(residual, p.id);
+      return `
+        <tr>
+          <td>${p.icon || '🧪'} ${esc(p.name)}</td>
+          <td class="num"><input type="number" class="num-input" value="${entry.cost0}" ${dis}
+                 onchange="updateResidualField('${p.id}','cost0', this.value)"></td>
+          <td class="num"><input type="number" class="num-input" value="${entry.cost100}" ${dis}
+                 onchange="updateResidualField('${p.id}','cost100', this.value)"></td>
+          <td class="num"><input type="number" class="num-input" value="${entry.res0}" ${dis}
+                 onchange="updateResidualField('${p.id}','res0', this.value)"></td>
+          <td class="num"><input type="number" class="num-input" value="${entry.res100}" ${dis}
+                 onchange="updateResidualField('${p.id}','res100', this.value)"></td>
+          <td class="num" id="calc-cost-${p.id}" style="font-weight:700;"></td>
+          <td class="num" id="calc-residual-${p.id}" style="font-weight:700;color:#047857;"></td>
+          <td class="num" id="calc-loss-${p.id}"></td>
+        </tr>
+        <tr>
+          <td colspan="8" style="background:#fcfcfd;padding-top:4px;padding-bottom:10px;">
+            <div class="bar-track" id="bar-track-${p.id}">
+              <div class="bar-fill-cost" id="bar-cost-${p.id}" style="width:0%;"></div>
+              <div class="bar-fill-residual" id="bar-residual-${p.id}" style="width:0%;"></div>
+            </div>
+            <div class="bar-legend">
+              <span><span class="dot" style="background:var(--warning);"></span>${L('누적비용', 'Cumulative Cost')}</span>
+              <span><span class="dot" style="background:var(--success);"></span>${L('잔존가치', 'Residual Value')}</span>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    return `
+      <div class="card" style="overflow-x:auto;">
+        <div class="card-title">📊 ${L('프로그램별 시작·끝점 값 및 현재 시점 계산 결과', 'Per-program start/end values and computed result at current point')}</div>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th style="min-width:140px;">${L('프로그램', 'Program')}</th>
+              <th>${L('시작(0%) 비용', 'Cost @0%')}</th>
+              <th>${L('완료(100%) 비용', 'Cost @100%')}</th>
+              <th>${L('시작(0%) 잔존가치', 'Residual @0%')}</th>
+              <th>${L('완료(100%) 잔존가치', 'Residual @100%')}</th>
+              <th>${L('현재 누적비용', 'Current Cost')}</th>
+              <th>${L('현재 잔존가치', 'Current Residual')}</th>
+              <th>${L('손실률', 'Loss Ratio')}</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${!isAdmin ? `<p style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px;">${L('값을 수정하려면 관리자로 로그인하세요.', 'Log in as admin to edit values.')}</p>` : ''}
+      </div>`;
+  }
+
+  function govInfoBoxHTML() {
+    return `
+      <div class="info-box">
+        <b>ℹ️ ${L('참고: 정부지원사업 존속의무', 'Reference: Government Support Program Sustainment Duty')}</b><br>
+        ${L('정부지원(스마트공장 보급·확산 등) 방식으로 도입된 ERP/서버는 완료 후 통상 5년간 결과물을 유지해야 하고, 그 기간 실사용 로그 제출이 요구됩니다. 이 화면은 중도 중단 시 잔존가치를 가늠해보는 내부 참고용 도구이며, 실제 정부 평가 결과와는 무관합니다. 자세한 근거는 Claude 프로젝트 문서 &lt;모듈_도입평가_고도화.md&gt; 4-2절을 참고하세요.',
+          'ERP/server results introduced via a government support program (e.g. Smart Factory diffusion) typically must be sustained for 5 years post-completion, with actual-usage logs required during that period. This screen is an internal reference tool for estimating residual value if the project were stopped early, and is unrelated to actual government evaluation outcomes. See section 4-2 of the Claude project doc "모듈_도입평가_고도화.md" for background.')}
+      </div>`;
+  }
+
+  function refreshResidualScreen() {
+    document.getElementById('residualContent').innerHTML = `
+      <div class="page-title">📉 ${L('단계별 잔존가치 분석', 'Phased Residual Value Analysis')}</div>
+      <div class="page-subtitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <span>${L('실시간으로 공유되는 잔존가치 분석 데이터입니다.', 'Live shared residual value analysis data.')}</span>
+          <button class="ghost-btn" onclick="syncFromCloud().then(refreshResidualScreen)" style="flex-shrink:0;">🔄 ${L('새로고침', 'Refresh')}</button>
+      </div>
+      ${govInfoBoxHTML()}
+      ${sliderCardHTML()}
+      ${residualTableHTML()}
+    `;
+    updateComputedCells();
+  }
+
+  function onSliderInput(val) {
+    sliderPct = Number(val);
+    const label = document.getElementById('sliderPctLabel');
+    if (label) label.textContent = sliderPct + '%';
+    updateComputedCells();
+  }
+
+  function updateComputedCells() {
+    const programs = loadEvalPrograms();
+    const residual = loadResidual();
+    programs.forEach(p => {
+      const entry = getEntry(residual, p.id);
+      const { cost, residual: res, loss } = computeAt(entry, sliderPct);
+      const maxBase = Math.max(entry.cost100, entry.cost0, cost, res, 1);
+      const costCell = document.getElementById('calc-cost-' + p.id);
+      const resCell = document.getElementById('calc-residual-' + p.id);
+      const lossCell = document.getElementById('calc-loss-' + p.id);
+      const barCost = document.getElementById('bar-cost-' + p.id);
+      const barRes = document.getElementById('bar-residual-' + p.id);
+      if (costCell) costCell.textContent = won(Math.round(cost));
+      if (resCell) resCell.textContent = won(Math.round(res));
+      if (lossCell) lossCell.innerHTML = `<span class="loss-badge ${lossBadgeClass(loss)}">${loss.toFixed(1)}%</span>`;
+      if (barCost) barCost.style.width = Math.min(100, (cost / maxBase) * 100) + '%';
+      if (barRes) barRes.style.width = Math.min(100, (res / maxBase) * 100) + '%';
+    });
+  }
+
+  /* ===== 초기 렌더: 로컬 캐시로 즉시 표시 → 최신 공유 데이터로 갱신 ===== */
+  refreshResidualScreen();
+  syncFromCloud().then(refreshResidualScreen);
+
+  /* 다른 탭에서 테마/언어/프로그램 목록/잔존가치 데이터가 바뀌면 이 페이지도 동기화 */
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C');
+    if (e.key === 'dashLang') { currentLang = e.newValue || 'ko'; renderHeaderTexts(); refreshResidualScreen(); }
+    if (e.key === 'evalPrograms' || e.key === 'evalResidual') refreshResidualScreen();
+  });
+</script>
+</body>
+</html>
