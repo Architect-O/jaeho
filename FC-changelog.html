@@ -68,6 +68,10 @@
         .doc-file-row .btn { font-size: 10.5px; padding: 2px 6px; }
         .attach-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 8px; background:var(--gray-100); border-radius:6px; margin-bottom:4px; font-size:12.5px; }
         .attach-item .remove-btn { color: var(--danger); cursor:pointer; font-weight:700; background:none; border:none; font-size:13px; line-height:1; }
+        .drop-zone { border:2px dashed var(--border); border-radius:8px; padding:16px; text-align:center; font-size:12px; color:var(--text-tertiary); cursor:pointer; transition:all .15s; margin-bottom:8px; }
+        .drop-zone.drag-over { border-color: var(--primary); background: var(--info-soft); color: var(--text); }
+        .drop-zone input[type="file"] { display:none; }
+        .pending-files-list { margin-top:8px; }
         .meta { color: var(--text-secondary); white-space: nowrap; }
         .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
         .empty-state { padding: 50px 20px; text-align:center; color: var(--text-tertiary); font-size: 13px; }
@@ -130,7 +134,11 @@
                 </div>
                 <div class="full">
                     <label class="form-label">파일 (여러 개 선택 가능)</label>
-                    <input type="file" class="form-input" id="docFile" multiple>
+                    <div class="drop-zone" id="dropZone" onclick="document.getElementById('docFile').click()">
+                        📎 여기에 파일을 끌어다 놓거나 클릭해서 선택하세요
+                        <input type="file" id="docFile" multiple>
+                    </div>
+                    <div class="pending-files-list" id="pendingFilesList"></div>
                     <div class="form-hint" id="fileHint"></div>
                 </div>
             </div>
@@ -173,6 +181,7 @@
 
         let CURRENT_DOCS = [];
         let editingId = null;
+        let PENDING_FILES = [];
 
         if (isAdmin) { document.getElementById('uploadToggleBtn').style.display = 'inline-flex'; }
 
@@ -192,6 +201,23 @@
         function publicUrl(filePath) {
             if (!sb) return '#';
             return sb.storage.from(BUCKET).getPublicUrl(filePath).data.publicUrl;
+        }
+
+        async function downloadFile(filePath, fileName) {
+            try {
+                const { data, error } = await sb.storage.from(BUCKET).download(filePath);
+                if (error) throw error;
+                const blobUrl = URL.createObjectURL(data);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = fileName || '';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                alert('다운로드 실패: ' + (e.message || e));
+            }
         }
 
         function renderEditAttachments(doc) {
@@ -243,11 +269,59 @@
             return uploaded;
         }
 
+        function renderPendingFiles() {
+            const list = document.getElementById('pendingFilesList');
+            if (!list) return;
+            if (PENDING_FILES.length === 0) { list.innerHTML = ''; return; }
+            list.innerHTML = PENDING_FILES.map((f, idx) => `
+                <div class="attach-item">
+                    <span>📄 ${esc(f.name)} <span class="meta">(${fmtSize(f.size)})</span></span>
+                    <button type="button" class="remove-btn" onclick="removePendingFile(${idx})" title="목록에서 제거">✕</button>
+                </div>`).join('');
+        }
+
+        function handleFilesAdded(fileList) {
+            for (const f of fileList) {
+                if (!PENDING_FILES.some(p => p.name === f.name && p.size === f.size && p.lastModified === f.lastModified)) {
+                    PENDING_FILES.push(f);
+                }
+            }
+            renderPendingFiles();
+        }
+
+        function removePendingFile(idx) {
+            PENDING_FILES.splice(idx, 1);
+            renderPendingFiles();
+        }
+
+        (function setupDropZone() {
+            const zone = document.getElementById('dropZone');
+            const input = document.getElementById('docFile');
+            if (!zone || !input) return;
+            input.addEventListener('change', () => {
+                handleFilesAdded(input.files);
+                input.value = '';
+            });
+            ['dragenter', 'dragover'].forEach(evt => zone.addEventListener(evt, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                zone.classList.add('drag-over');
+            }));
+            ['dragleave', 'drop'].forEach(evt => zone.addEventListener(evt, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                zone.classList.remove('drag-over');
+            }));
+            zone.addEventListener('drop', (e) => {
+                if (e.dataTransfer && e.dataTransfer.files) handleFilesAdded(e.dataTransfer.files);
+            });
+        })();
+
         function openCreatePanel() {
             editingId = null;
             document.getElementById('docTitle').value = '';
             document.getElementById('docDesc').value = '';
             document.getElementById('docFile').value = '';
+            PENDING_FILES = [];
+            renderPendingFiles();
             document.getElementById('editAttachmentsWrap').style.display = 'none';
             document.getElementById('editAttachmentsList').innerHTML = '';
             document.getElementById('panelModeLabel').textContent = '새 문서 등록';
@@ -263,6 +337,8 @@
             document.getElementById('docTitle').value = doc.title || '';
             document.getElementById('docDesc').value = doc.description || '';
             document.getElementById('docFile').value = '';
+            PENDING_FILES = [];
+            renderPendingFiles();
             renderEditAttachments(doc);
             document.getElementById('panelModeLabel').textContent = '문서 수정';
             document.getElementById('uploadSubmitBtn').textContent = '저장';
@@ -314,7 +390,7 @@
                     <div class="doc-file-row">
                         <span>📎 ${esc(f.file_name)} (${fmtSize(f.file_size)})</span>
                         <a class="btn btn-secondary btn-small" href="${publicUrl(f.file_path)}" target="_blank" rel="noopener">👁 보기</a>
-                        <a class="btn btn-secondary btn-small" href="${publicUrl(f.file_path)}" download="${esc(f.file_name)}">⬇ 다운로드</a>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="downloadFile('${esc(f.file_path)}','${esc(f.file_name)}')">⬇ 다운로드</button>
                     </div>`).join('');
                 return `
                     <tr>
@@ -343,7 +419,7 @@
             const statusEl = document.getElementById('uploadStatus');
             const btn = document.getElementById('uploadSubmitBtn');
             const title = titleEl.value.trim();
-            const files = Array.from(fileEl.files || []);
+            const files = PENDING_FILES.slice();
 
             if (!title) { statusEl.textContent = '제목을 입력해주세요.'; statusEl.className = 'upload-status err'; return; }
             if (!editingId && files.length === 0) { statusEl.textContent = '파일을 선택해주세요.'; statusEl.className = 'upload-status err'; return; }
@@ -400,6 +476,8 @@
                     statusEl.className = 'upload-status ok';
                 }
 
+                PENDING_FILES = [];
+                renderPendingFiles();
                 await loadDocs();
                 setTimeout(() => toggleUploadPanel(false), 600);
             } catch (e) {
