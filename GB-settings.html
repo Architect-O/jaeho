@@ -72,6 +72,36 @@
             header { padding-left: 14px; padding-right: 14px; }
             main { padding-left: 14px; padding-right: 14px; }
         }
+
+  /* ===== 아이콘 스타일 미리보기 칩 (menu.html의 아이콘 칩 시스템과 동일한 규칙, 2026-09-23) =====
+     각 카드에 data-icon-style="..."를 직접 달아 5개를 동시에 나란히 미리보기 — menu.html에서는 이 값이
+     <html>에 하나만 붙지만, 규칙 자체(자손 선택자)는 동일하게 동작함. */
+  .icon-chip { display:inline-flex; align-items:center; justify-content:center; border-radius:10px; flex-shrink:0; position:relative; box-sizing:border-box; }
+  .icon-svg { width:60%; height:60%; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .preview-icon-chip { width:44px; height:44px; }
+  .icon-chip[data-hue="dashboard"] { --hue:#6366f1; --hue-from:#818cf8; --hue-to:#4f46e5; --hue-bg:#eef2ff; --hue-fg:#4338ca; }
+  [data-icon-style="gradient"] .icon-chip { background:linear-gradient(135deg,var(--hue-from),var(--hue-to)); box-shadow:0 4px 10px -3px var(--hue); }
+  [data-icon-style="gradient"] .icon-chip .icon-svg { stroke:#ffffff; }
+  [data-icon-style="pastel"] .icon-chip { background:var(--hue-bg); }
+  [data-icon-style="pastel"] .icon-chip .icon-svg { stroke:var(--hue-fg); }
+  [data-icon-style="glass"] .icon-chip { background:#ffffff; border:1px solid rgba(15,23,42,0.08); box-shadow:0 1px 2px rgba(15,23,42,0.05), 0 8px 18px -8px rgba(15,23,42,0.2); }
+  [data-icon-style="glass"] .icon-chip .icon-svg { stroke:#1e293b; }
+  [data-icon-style="minimal"] .icon-chip .icon-svg { stroke:currentColor; }
+  [data-icon-style="prada"] .icon-chip {
+      background:linear-gradient(160deg,#242424 0%,#050505 65%); border:1px solid #3d3a35; border-radius:6px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.09), 0 8px 16px -8px rgba(0,0,0,0.6);
+  }
+  [data-icon-style="prada"] .icon-chip .icon-svg { stroke:#f2ede6; stroke-width:1.4; }
+  [data-icon-style="prada"] .icon-chip::after {
+      content:''; position:absolute; top:-4px; right:-4px; width:0; height:0;
+      border-left:4px solid transparent; border-right:4px solid transparent; border-top:6px solid #c7c2b8;
+      filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));
+  }
+  .icon-style-card {
+      display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 14px; border-radius:12px;
+      cursor:pointer; font-family:inherit; min-width:104px; background:#fff;
+  }
+  .icon-style-card.dark-card { background:#0a0a0a; }
 </style>
 </head>
 <body>
@@ -100,6 +130,11 @@
     <div style="margin-bottom:18px;">
       <div style="font-size:12.5px;font-weight:600;margin-bottom:8px;">색상 테마</div>
       <div id="themeSwatches" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:12.5px;font-weight:600;margin-bottom:8px;">아이콘 스타일</div>
+      <div id="iconStyleOptions" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
     </div>
 
     <div>
@@ -166,6 +201,7 @@
     const remote = await fetchDashboardSettings();
     if (!remote) return;
     if (remote.dash_theme) localStorage.setItem('dashTheme', remote.dash_theme);
+    if (remote.dash_icon_style) localStorage.setItem('dashIconStyle', remote.dash_icon_style);
     if (remote.dash_lang) localStorage.setItem('dashLang', remote.dash_lang);
     if (remote.dash_site_title !== undefined) localStorage.setItem('dashSiteTitle', remote.dash_site_title);
     if (remote.dash_site_subtitle !== undefined) localStorage.setItem('dashSiteSubtitle', remote.dash_site_subtitle);
@@ -194,6 +230,18 @@
   };
   const LANG_META = { ko: '한글', en: '영문 (English)', both: '한글+영문' };
 
+  /* ===== 아이콘 스타일 — menu.html의 icon-chip 시스템과 동일한 키 (dash_icon_style, 2026-09-23) =====
+     기본값(minimal)이 항상 맨 앞에 오도록 순서를 minimal → gradient → pastel → glass → prada 로 둡니다. */
+  const ICON_STYLE_META = {
+    minimal: { name: '미니멀 라인 (기본값)' },
+    gradient: { name: '그라디언트 듀오톤 (추천)' },
+    pastel: { name: '플랫 파스텔' },
+    glass: { name: '소프트 셰도우(글래스)' },
+    prada: { name: '프라다 스타일' },
+  };
+  // 미리보기용 대시보드 아이콘(Lucide layout-dashboard) — 스타일 카드 5개 모두 이 아이콘 하나로 비교
+  const ICON_PREVIEW_PATH = '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>';
+
   function renderDisplaySettings(){
     const themeWrap = document.getElementById('themeSwatches');
     const curTheme = localStorage.getItem('dashTheme') || 'C';
@@ -213,6 +261,27 @@
         setMsg('🎨 테마 적용 중...');
         const res = await saveDashboardSetting('dash_theme', btn.dataset.theme);
         setMsg(res && res.success ? '☁️ 테마가 "'+THEME_META[btn.dataset.theme].name+'"(으)로 전체 공유 저장되었습니다.' : '⚠️ 로컬에는 적용됐지만 공유 저장에 실패했습니다: '+(res&&res.message||''));
+      };
+    });
+
+    const iconWrap = document.getElementById('iconStyleOptions');
+    const curIconStyle = localStorage.getItem('dashIconStyle') || 'minimal';
+    iconWrap.innerHTML = Object.entries(ICON_STYLE_META).map(([key, meta]) => {
+      const dark = key === 'prada';
+      return `
+      <button type="button" data-icon-style-btn="${key}" ${isAdmin?'':'disabled'} class="icon-style-card${dark?' dark-card':''}" style="border:2px solid ${key===curIconStyle?'var(--primary)':'var(--border)'};cursor:${isAdmin?'pointer':'not-allowed'};${isAdmin?'':'opacity:0.6;'}">
+        <span data-icon-style="${key}"><span class="icon-chip preview-icon-chip" data-hue="dashboard"><svg class="icon-svg">${ICON_PREVIEW_PATH}</svg></span></span>
+        <div style="font-size:11px;font-weight:600;color:${dark?'#f2ede6':'var(--text)'};text-align:center;">${meta.name}</div>
+      </button>`;
+    }).join('');
+    if (isAdmin) iconWrap.querySelectorAll('button').forEach(btn=>{
+      btn.onclick = async () => {
+        const key = btn.dataset.iconStyleBtn;
+        localStorage.setItem('dashIconStyle', key);
+        renderDisplaySettings();
+        setMsg('🧩 아이콘 스타일 적용 중...');
+        const res = await saveDashboardSetting('dash_icon_style', key);
+        setMsg(res && res.success ? '☁️ 아이콘 스타일이 "'+ICON_STYLE_META[key].name+'"(으)로 전체 공유 저장되었습니다.' : '⚠️ 로컬에는 적용됐지만 공유 저장에 실패했습니다: '+(res&&res.message||''));
       };
     });
 
@@ -268,6 +337,7 @@
       siteTitle: localStorage.getItem('dashSiteTitle') || 'JAEHO ERP Suite',
       siteSubtitle: localStorage.getItem('dashSiteSubtitle') || '',
       theme: localStorage.getItem('dashTheme') || 'C',
+      iconStyle: localStorage.getItem('dashIconStyle') || 'minimal',
       lang: localStorage.getItem('dashLang') || 'ko',
     };
   }
@@ -275,6 +345,7 @@
     if (cfg.siteTitle !== undefined) localStorage.setItem('dashSiteTitle', cfg.siteTitle || 'JAEHO ERP Suite');
     if (cfg.siteSubtitle !== undefined) localStorage.setItem('dashSiteSubtitle', cfg.siteSubtitle || '');
     if (cfg.theme) localStorage.setItem('dashTheme', cfg.theme);
+    if (cfg.iconStyle) localStorage.setItem('dashIconStyle', cfg.iconStyle);
     if (cfg.lang) localStorage.setItem('dashLang', cfg.lang);
     loadSiteMeta();
     applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
@@ -414,6 +485,7 @@
   /* 다른 탭(대시보드/설정)에서 값이 바뀌면 이 페이지에도 실시간 반영 */
   window.addEventListener('storage', (e)=>{
     if (e.key==='dashTheme') { applyHeaderTheme(e.newValue||'C'); renderDisplaySettings(); }
+    if (e.key==='dashIconStyle') renderDisplaySettings();
     if (e.key==='dashLang') renderDisplaySettings();
     if (e.key==='dashSiteTitle' || e.key==='dashSiteSubtitle') loadSiteMeta();
   });

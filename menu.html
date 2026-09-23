@@ -157,7 +157,51 @@
     }
     .sb-menu a:hover { background: var(--sidebar-hover-bg); }
     .sb-menu a.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); font-weight: 600; border-left: 2px solid var(--sidebar-active-border); padding-left: 10px; }
-    .sb-icon { width: 15px; text-align: center; font-size: 13px; flex-shrink: 0; }
+    .icon-svg { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 2;
+        stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.125em; flex-shrink: 0; }
+    .sb-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* ===== 아이콘 스타일 칩 시스템 (설정 > 아이콘 스타일에서 전환 가능, 2026-09-23) =====
+       사이드바 항목·큰 안내 아이콘은 .icon-chip 으로 감싸 렌더링되고, <html data-icon-style="..."> 값에 따라
+       칩의 배경·아이콘 색이 통째로 바뀐다. 카테고리 tab바·페이지 제목 등 좁은 자리는 칩 없이 기존 라인 아이콘을 그대로 쓴다. */
+    .icon-chip { display:inline-flex; align-items:center; justify-content:center; border-radius:10px; flex-shrink:0; position:relative; box-sizing:border-box; }
+    .icon-chip .icon-svg { width:60%; height:60%; }
+    .sb-icon-chip { width:32px; height:32px; }
+    .hero-icon-chip { width:56px; height:56px; border-radius:14px; }
+
+    /* 카테고리별 색상(hue) — CATEGORIES의 8개 최상위 key와 1:1 대응. hue가 없으면(헤더 등) 아래 기본값(system 톤) 사용 */
+    :root { --hue:#64748b; --hue-from:#94a3b8; --hue-to:#475569; --hue-bg:#f8fafc; --hue-fg:#334155; }
+    .icon-chip[data-hue="dashboard"]    { --hue:#6366f1; --hue-from:#818cf8; --hue-to:#4f46e5; --hue-bg:#eef2ff; --hue-fg:#4338ca; }
+    .icon-chip[data-hue="evaluation"]   { --hue:#8b5cf6; --hue-from:#a78bfa; --hue-to:#7c3aed; --hue-bg:#f5f3ff; --hue-fg:#6d28d9; }
+    .icon-chip[data-hue="demo"]         { --hue:#f59e0b; --hue-from:#fbbf24; --hue-to:#d97706; --hue-bg:#fffbeb; --hue-fg:#b45309; }
+    .icon-chip[data-hue="schedule"]     { --hue:#0ea5e9; --hue-from:#38bdf8; --hue-to:#0284c7; --hue-bg:#f0f9ff; --hue-fg:#0369a1; }
+    .icon-chip[data-hue="lessons"]      { --hue:#f43f5e; --hue-from:#fb7185; --hue-to:#e11d48; --hue-bg:#fff1f2; --hue-fg:#be123c; }
+    .icon-chip[data-hue="architecture"] { --hue:#f97316; --hue-from:#fb923c; --hue-to:#ea580c; --hue-bg:#fff7ed; --hue-fg:#c2410c; }
+    .icon-chip[data-hue="reports"]      { --hue:#10b981; --hue-from:#34d399; --hue-to:#059669; --hue-bg:#ecfdf5; --hue-fg:#047857; }
+    .icon-chip[data-hue="system"]       { --hue:#64748b; --hue-from:#94a3b8; --hue-to:#475569; --hue-bg:#f8fafc; --hue-fg:#334155; }
+
+    /* A. 그라디언트 듀오톤 (Stripe·Linear 감성) */
+    [data-icon-style="gradient"] .icon-chip { background:linear-gradient(135deg,var(--hue-from),var(--hue-to)); box-shadow:0 4px 10px -3px var(--hue); }
+    [data-icon-style="gradient"] .icon-chip .icon-svg { stroke:#ffffff; }
+    /* B. 플랫 파스텔 (Notion·Superhuman 감성) */
+    [data-icon-style="pastel"] .icon-chip { background:var(--hue-bg); }
+    [data-icon-style="pastel"] .icon-chip .icon-svg { stroke:var(--hue-fg); }
+    /* C. 소프트 셰도우/글래스 (Vercel·Linear 감성) — 색 없이 그림자만 */
+    [data-icon-style="glass"] .icon-chip { background:#ffffff; border:1px solid rgba(15,23,42,0.08); box-shadow:0 1px 2px rgba(15,23,42,0.05), 0 8px 18px -8px rgba(15,23,42,0.2); }
+    [data-icon-style="glass"] .icon-chip .icon-svg { stroke:#1e293b; }
+    /* D. 미니멀 라인 (기본값) — 배경 없이 선만, 별도 규칙 없이 자연스러운 투명 기본값 사용 */
+    [data-icon-style="minimal"] .icon-chip .icon-svg { stroke:currentColor; }
+    /* E. 프라다 스타일 (LG Prada Phone 2007 감성) — 블랙 글로시 + 역삼각 메탈 플레이트 */
+    [data-icon-style="prada"] .icon-chip {
+        background:linear-gradient(160deg,#242424 0%,#050505 65%); border:1px solid #3d3a35; border-radius:6px;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.09), 0 8px 16px -8px rgba(0,0,0,0.6);
+    }
+    [data-icon-style="prada"] .icon-chip .icon-svg { stroke:#f2ede6; stroke-width:1.4; }
+    [data-icon-style="prada"] .icon-chip::after {
+        content:''; position:absolute; top:-4px; right:-4px; width:0; height:0;
+        border-left:4px solid transparent; border-right:4px solid transparent; border-top:6px solid #c7c2b8;
+        filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));
+    }
 
     main.content-area {
         flex: 1; min-width: 0;
@@ -254,6 +298,158 @@
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="icon-layout-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1" />
+  <rect width="7" height="5" x="14" y="3" rx="1" />
+  <rect width="7" height="9" x="14" y="12" rx="1" />
+  <rect width="7" height="5" x="3" y="16" rx="1" /></symbol>
+<symbol id="icon-microscope" viewBox="0 0 24 24"><path d="M6 18h8" />
+  <path d="M3 22h18" />
+  <path d="M14 22a7 7 0 1 0 0-14h-1" />
+  <path d="M9 14h2" />
+  <path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z" />
+  <path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3" /></symbol>
+<symbol id="icon-factory" viewBox="0 0 24 24"><path d="M12 16h.01" />
+  <path d="M16 16h.01" />
+  <path d="M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a.5.5 0 0 0-.769-.422l-4.462 2.844A.5.5 0 0 1 15 10.5v-2a.5.5 0 0 0-.769-.422L9.77 10.922A.5.5 0 0 1 9 10.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z" />
+  <path d="M8 16h.01" /></symbol>
+<symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M8 2v3" />
+  <path d="M16 2v3" />
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <path d="M3 9h18" /></symbol>
+<symbol id="icon-book-open" viewBox="0 0 24 24"><path d="M12 5v16" />
+  <path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" /></symbol>
+<symbol id="icon-drafting-compass" viewBox="0 0 24 24"><path d="m12.99 6.74 1.93 3.44" />
+  <path d="M19.136 12a10 10 0 0 1-14.271 0" />
+  <path d="m21 21-2.16-3.84" />
+  <path d="m3 21 8.02-14.26" />
+  <circle cx="12" cy="5" r="2" /></symbol>
+<symbol id="icon-files" viewBox="0 0 24 24"><path d="M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8" />
+  <path d="M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z" />
+  <path d="M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1" /></symbol>
+<symbol id="icon-settings" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+  <circle cx="12" cy="12" r="3" /></symbol>
+<symbol id="icon-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></symbol>
+<symbol id="icon-trending-up" viewBox="0 0 24 24"><path d="M16 7h6v6" />
+  <path d="m22 7-8.5 8.5-5-5L2 17" /></symbol>
+<symbol id="icon-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+  <path d="M12 9v4" />
+  <path d="M12 17h.01" /></symbol>
+<symbol id="icon-scale" viewBox="0 0 24 24"><path d="M12 3v18" />
+  <path d="m19 8 3 8a5 5 0 0 1-6 0zV7" />
+  <path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" />
+  <path d="m5 8 3 8a5 5 0 0 1-6 0zV7" />
+  <path d="M7 21h10" /></symbol>
+<symbol id="icon-trending-down" viewBox="0 0 24 24"><path d="M16 17h6v-6" />
+  <path d="m22 17-8.5-8.5-5 5L2 7" /></symbol>
+<symbol id="icon-flask-conical" viewBox="0 0 24 24"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2" />
+  <path d="M6.453 15h11.094" />
+  <path d="M8.5 2h7" /></symbol>
+<symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" />
+  <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+  <path d="M3 12A9 3 0 0 0 21 12" /></symbol>
+<symbol id="icon-book-text" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+  <path d="M8 11h8" />
+  <path d="M8 7h6" /></symbol>
+<symbol id="icon-warehouse" viewBox="0 0 24 24"><path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11" />
+  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z" />
+  <path d="M6 13h12" />
+  <path d="M6 17h12" /></symbol>
+<symbol id="icon-ship" viewBox="0 0 24 24"><path d="M12 2v2" />
+  <path d="M12 9.189V13" />
+  <path d="M19 12V6a2 2 0 00-2-2H7a2 2 0 00-2 2v6" />
+  <path d="M19.38 19A11.6 11.6 0 0021 13l-8.188-3.639a2 2 0 00-1.624 0L3 13.001a11.6 11.6 0 002.81 7.76" />
+  <path d="M2 20c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /></symbol>
+<symbol id="icon-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+  <path d="M7 2v20" />
+  <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></symbol>
+<symbol id="icon-rocket" viewBox="0 0 24 24"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" />
+  <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" />
+  <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol>
+<symbol id="icon-bar-chart-3" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16" />
+  <path d="M18 17V9" />
+  <path d="M13 17V5" />
+  <path d="M8 17v-3" /></symbol>
+<symbol id="icon-calendar-days" viewBox="0 0 24 24"><path d="M8 2v3" />
+  <path d="M16 2v3" />
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <path d="M3 9h18" />
+  <path d="M8 13h.01" />
+  <path d="M12 13h.01" />
+  <path d="M16 13h.01" />
+  <path d="M8 17h.01" />
+  <path d="M12 17h.01" />
+  <path d="M16 17h.01" /></symbol>
+<symbol id="icon-zap" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol>
+<symbol id="icon-calendar-check" viewBox="0 0 24 24"><path d="M8 2v3" />
+  <path d="M16 2v3" />
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <path d="M3 9h18" />
+  <path d="m9 15 2 2 4-4" /></symbol>
+<symbol id="icon-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" />
+  <path d="m16 9-5.5 5.5L8 12" /></symbol>
+<symbol id="icon-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+  <path d="M9 18h6" />
+  <path d="M10 22h4" /></symbol>
+<symbol id="icon-clipboard-x" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+  <path d="m14.5 11.5-5 5" />
+  <path d="m9.5 11.5 5 5" /></symbol>
+<symbol id="icon-map" viewBox="0 0 24 24"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" />
+  <path d="M15 5.764v15" />
+  <path d="M9 3.236v15" /></symbol>
+<symbol id="icon-layout-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1" />
+  <rect width="7" height="7" x="14" y="3" rx="1" />
+  <rect width="7" height="7" x="14" y="14" rx="1" />
+  <rect width="7" height="7" x="3" y="14" rx="1" /></symbol>
+<symbol id="icon-palette" viewBox="0 0 24 24"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
+  <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+  <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+  <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+  <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+<symbol id="icon-workflow" viewBox="0 0 24 24"><rect width="8" height="8" x="3" y="3" rx="2" />
+  <path d="M7 11v4a2 2 0 0 0 2 2h4" />
+  <rect width="8" height="8" x="13" y="13" rx="2" /></symbol>
+<symbol id="icon-shuffle" viewBox="0 0 24 24"><path d="m18 14 4 4-4 4" />
+  <path d="m18 2 4 4-4 4" />
+  <path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22" />
+  <path d="M2 6h1.972a4 4 0 0 1 3.6 2.2" />
+  <path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45" /></symbol>
+<symbol id="icon-puzzle" viewBox="0 0 24 24"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol>
+<symbol id="icon-newspaper" viewBox="0 0 24 24"><path d="M15 18h-5" />
+  <path d="M18 14h-8" />
+  <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2" />
+  <rect width="8" height="4" x="10" y="6" rx="1" /></symbol>
+<symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" /></symbol>
+<symbol id="icon-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" /></symbol>
+<symbol id="icon-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1" />
+  <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+  <path d="M10 12h4" /></symbol>
+<symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+  <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+  <circle cx="9" cy="7" r="4" /></symbol>
+<symbol id="icon-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+  <path d="m9 12 2 2 4-4" /></symbol>
+<symbol id="icon-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+  <path d="M3 3v5h5" />
+  <path d="M12 7v5l4 2" /></symbol>
+<symbol id="icon-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" /></symbol>
+<symbol id="icon-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+  <circle cx="12" cy="7" r="4" /></symbol>
+<symbol id="icon-construction" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="8" rx="1" />
+  <path d="M17 14v7" />
+  <path d="M7 14v7" />
+  <path d="M17 3v3" />
+  <path d="M7 3v3" />
+  <path d="M10 14 2.3 6.3" />
+  <path d="m14 6 7.7 7.7" />
+  <path d="m8 6 8 8" /></symbol>
+</svg>
+
 
 <header>
     <div class="brand">
@@ -264,8 +460,8 @@
         </div>
     </div>
     <div class="user-area">
-        <div class="user-chip">👤 <span id="username">-</span><span id="roleBadge" class="role-badge"></span></div>
-        <a class="ghost-btn" href="./GB-settings.html" id="settingsBtn" title="설정">⚙ 설정</a>
+        <div class="user-chip"><svg class="icon-svg"><use href="#icon-user"></use></svg> <span id="username">-</span><span id="roleBadge" class="role-badge"></span></div>
+        <a class="ghost-btn" href="./GB-settings.html" id="settingsBtn" title="설정"><svg class="icon-svg"><use href="#icon-settings"></use></svg> 설정</a>
         <button class="ghost-btn" id="logoutBtn" onclick="handleLogout()">로그아웃</button>
     </div>
 </header>
@@ -301,7 +497,7 @@
     function showGuestBanner() {
         const banner = document.createElement('div');
         banner.className = 'guest-banner';
-        banner.innerHTML = '⚠ 로그인 세션이 없어 <strong>미리보기(게스트) 모드</strong>로 표시 중입니다. 실제 사용 시 같은 폴더의 index.html에서 로그인해야 합니다.';
+        banner.innerHTML = icon('triangle-alert') + ' 로그인 세션이 없어 <strong>미리보기(게스트) 모드</strong>로 표시 중입니다. 실제 사용 시 같은 폴더의 index.html에서 로그인해야 합니다.';
         document.body.insertBefore(banner, document.body.firstChild);
     }
     if (isEmbeddedPreview && sessionStorage.getItem('isLoggedIn') !== 'true') showGuestBanner();
@@ -345,6 +541,7 @@
         const remote = await fetchDashboardSettings();
         if (!remote) return; // Supabase 미연결/오류 시 로컬 캐시 값을 그대로 사용
         if (remote.dash_theme) applyTheme(remote.dash_theme);
+        if (remote.dash_icon_style) applyIconStyle(remote.dash_icon_style);
         if (remote.dash_lang) { currentLang = remote.dash_lang; localStorage.setItem('dashLang', currentLang); }
         if (remote.dash_site_title !== undefined) localStorage.setItem('dashSiteTitle', remote.dash_site_title);
         if (remote.dash_site_subtitle !== undefined) localStorage.setItem('dashSiteSubtitle', remote.dash_site_subtitle);
@@ -359,7 +556,7 @@
     function renderHeaderTexts() {
         document.getElementById('siteTitle').textContent = localStorage.getItem('dashSiteTitle') || 'JAEHO ERP Suite';
         document.getElementById('siteSubtitle').textContent = localStorage.getItem('dashSiteSubtitle') || L('ERP 도입 사전단계 통합 플랫폼', 'ERP Pre-Adoption Integration Platform');
-        document.getElementById('settingsBtn').innerHTML = '⚙ ' + L('설정', 'Settings');
+        document.getElementById('settingsBtn').innerHTML = icon('settings') + ' ' + L('설정', 'Settings');
         document.getElementById('logoutBtn').textContent = L('로그아웃', 'Log out');
         document.getElementById('roleBadge').textContent = L('관리자', 'Admin');
     }
@@ -425,6 +622,29 @@
         return ko;
     }
 
+    // ===== Icon system (Lucide SVG sprite, see assets/icons/sprite.svg for source) =====
+    function icon(name, cls) {
+        if (!name) return '';
+        return '<svg class="icon-svg' + (cls ? ' ' + cls : '') + '"><use href="#icon-' + name + '"></use></svg>';
+    }
+    // 칩(배경 박스)으로 감싸는 버전 — 사이드바 항목·큰 안내 아이콘처럼 자리가 넉넉한 곳에서만 사용.
+    // hue를 넘기면 그 카테고리 색으로, 안 넘기면 시스템(무채색) 톤으로 렌더링됨.
+    function iconChip(name, hue, sizeClass) {
+        if (!name) return '';
+        var hueAttr = hue ? ' data-hue="' + hue + '"' : '';
+        var sizeCls = sizeClass ? ' ' + sizeClass : '';
+        return '<span class="icon-chip' + sizeCls + '"' + hueAttr + '>' + icon(name) + '</span>';
+    }
+
+    // ===== 아이콘 스타일(설정 > 아이콘 스타일) — gradient | pastel | glass | minimal | prada =====
+    function applyIconStyle(key) {
+        var valid = ['gradient', 'pastel', 'glass', 'minimal', 'prada'];
+        var k = valid.indexOf(key) !== -1 ? key : 'minimal';
+        document.documentElement.setAttribute('data-icon-style', k);
+        localStorage.setItem('dashIconStyle', k);
+    }
+    applyIconStyle(localStorage.getItem('dashIconStyle') || 'minimal');
+
     // ===== Menu data model =====
     // type: 'overview' | 'file' | 'placeholder'
     // 파일명 코드 규칙: 카테고리 A~G(대시보드~시스템) + 항목 순번(A,B,C...) = 두 자리 코드.
@@ -434,12 +654,12 @@
     // 구조도 다이어그램도 같이 갱신할 것 — 안 그러면 그 문서가 조용히 낡아진다
     // (2026-09-22, 8개 코드가 반영 안 된 채 방치됐던 적이 있음).
     const CATEGORIES = [
-        { key: 'dashboard', icon: '📊', label: '대시보드', labelEn: 'Dashboard', items: [
-            { key: 'overview', code: 'AA', icon: '🏠', label: '전체 현황', labelEn: 'Overview', type: 'overview' },
-            { key: 'kpi', code: 'AB', icon: '📈', label: 'KPI 모니터링', labelEn: 'KPI Monitoring', type: 'file', file: 'AB-kpi-1col.html' },
-            { key: 'risk', code: 'AC', icon: '⚠️', label: '리스크 현황', labelEn: 'Risk Status', type: 'file', file: 'AC-risk.html' },
+        { key: 'dashboard', icon: 'layout-dashboard', label: '대시보드', labelEn: 'Dashboard', items: [
+            { key: 'overview', code: 'AA', icon: 'home', label: '전체 현황', labelEn: 'Overview', type: 'overview' },
+            { key: 'kpi', code: 'AB', icon: 'trending-up', label: 'KPI 모니터링', labelEn: 'KPI Monitoring', type: 'file', file: 'AB-kpi-1col.html' },
+            { key: 'risk', code: 'AC', icon: 'triangle-alert', label: '리스크 현황', labelEn: 'Risk Status', type: 'file', file: 'AC-risk.html' },
         ]},
-        { key: 'evaluation', icon: '🔬', label: '도입 평가', labelEn: 'Adoption Evaluation', items: [
+        { key: 'evaluation', icon: 'microscope', label: '도입 평가', labelEn: 'Adoption Evaluation', items: [
             // 2026-09-22: 도입평가 카테고리를 "도입평가"(점수·비교용)와 "데모 제작"(실제 동작
             // 가상 ERP)으로 분리함 — 성격이 다른 두 그룹이 사이드 하나에 섞여 있던 걸 사용자가
             // 지적. BE/BH/BI/BJ(4개 사업군 파일럿)는 아래 새 'demo' 카테고리로 옮김.
@@ -454,12 +674,12 @@
             // 상태이므로, 실제 내용을 올리기 전까지는 클릭 시 그 옛 화면이 뜬다(빈 화면 아님).
             // 순서: BA(종합 비교, 맨 앞) → BG(단계별 잔존가치 분석) → BC/BD(파일럿1/2, 자리 예약)
             // → (동적 프로그램들, 맨 뒤).
-            { key: 'eval-compare', code: 'BA', icon: '⚖️', label: '종합 비교', labelEn: 'Comparison', type: 'file', file: 'BA-evaluation.html' },
-            { key: 'eval-residual', code: 'BG', icon: '📉', label: '단계별 잔존가치 분석', labelEn: 'Phased Residual Value', type: 'file', file: 'BG-잔존가치분석.html' },
-            { key: 'eval-pilot1', code: 'BC', icon: '🧪', label: '파일럿1', labelEn: 'Pilot 1', type: 'file', file: 'BC-pilot1.html' },
-            { key: 'eval-pilot2', code: 'BD', icon: '🧪', label: '파일럿2', labelEn: 'Pilot 2', type: 'file', file: 'BD-pilot2.html' },
+            { key: 'eval-compare', code: 'BA', icon: 'scale', label: '종합 비교', labelEn: 'Comparison', type: 'file', file: 'BA-evaluation.html' },
+            { key: 'eval-residual', code: 'BG', icon: 'trending-down', label: '단계별 잔존가치 분석', labelEn: 'Phased Residual Value', type: 'file', file: 'BG-잔존가치분석.html' },
+            { key: 'eval-pilot1', code: 'BC', icon: 'flask-conical', label: '파일럿1', labelEn: 'Pilot 1', type: 'file', file: 'BC-pilot1.html' },
+            { key: 'eval-pilot2', code: 'BD', icon: 'flask-conical', label: '파일럿2', labelEn: 'Pilot 2', type: 'file', file: 'BD-pilot2.html' },
         ]},
-        { key: 'demo', icon: '🏭', label: '데모 제작', labelEn: 'Demo Production', items: [
+        { key: 'demo', icon: 'factory', label: '데모 제작', labelEn: 'Demo Production', items: [
             // 2026-09-22 신설: 도입평가에서 분리됨(위 'evaluation' 카테고리 주석 참고). 원래 4개
             // 사업군(유통/보세창고운영/무역/식품제조) 실동작 가상 ERP 데모였는데, 같은 날 표준
             // 모듈 2종(기준정보·회계)을 추가하면서 이 카테고리 전용 코드 문자 'H'를 새로 배정해
@@ -470,43 +690,43 @@
             // 테스트해볼 수 있게 하려는 목적(2026-09-22 사용자 요청). 평가 점수 비교 대상이
             // 아니라 자체개발 역량을 보여주는 체험용 데모임(모듈_HA~HF 문서 참고). 항상 이
             // 순서(HA→HB→HC→HD→HE→HF)로 고정.
-            { key: 'demo-master', code: 'HA', icon: '🗂️', label: '기준정보 관리', labelEn: 'Master Data', type: 'file', file: 'HA-기준정보.html' },
-            { key: 'demo-accounting', code: 'HB', icon: '📒', label: '회계', labelEn: 'Accounting', type: 'file', file: 'HB-회계.html' },
-            { key: 'eval-p3', code: 'HC', icon: '🏭', label: '파일럿3 : 유통', labelEn: 'Pilot 3 : Distribution', type: 'file', file: 'HC-pilot3.html' },
-            { key: 'eval-p4', code: 'HD', icon: '🏗', label: '파일럿4 : 보세창고운영', labelEn: 'Pilot 4 : Bonded Warehouse Operations', type: 'file', file: 'HD-pilot4.html' },
-            { key: 'eval-p5', code: 'HE', icon: '🚢', label: '파일럿5 : 무역', labelEn: 'Pilot 5 : Trading', type: 'file', file: 'HE-pilot5.html' },
-            { key: 'eval-p6', code: 'HF', icon: '🍱', label: '파일럿6 : 식품제조', labelEn: 'Pilot 6 : Food Manufacturing', type: 'file', file: 'HF-pilot6.html' },
+            { key: 'demo-master', code: 'HA', icon: 'database', label: '기준정보 관리', labelEn: 'Master Data', type: 'file', file: 'HA-기준정보.html' },
+            { key: 'demo-accounting', code: 'HB', icon: 'book-text', label: '회계', labelEn: 'Accounting', type: 'file', file: 'HB-회계.html' },
+            { key: 'eval-p3', code: 'HC', icon: 'factory', label: '파일럿3 : 유통', labelEn: 'Pilot 3 : Distribution', type: 'file', file: 'HC-pilot3.html' },
+            { key: 'eval-p4', code: 'HD', icon: 'warehouse', label: '파일럿4 : 보세창고운영', labelEn: 'Pilot 4 : Bonded Warehouse Operations', type: 'file', file: 'HD-pilot4.html' },
+            { key: 'eval-p5', code: 'HE', icon: 'ship', label: '파일럿5 : 무역', labelEn: 'Pilot 5 : Trading', type: 'file', file: 'HE-pilot5.html' },
+            { key: 'eval-p6', code: 'HF', icon: 'utensils', label: '파일럿6 : 식품제조', labelEn: 'Pilot 6 : Food Manufacturing', type: 'file', file: 'HF-pilot6.html' },
         ]},
-        { key: 'schedule', icon: '📅', label: '일정 관리', labelEn: 'Schedule', items: [
-            { key: 'timeline', code: 'CA', icon: '🚀', label: '마일스톤', labelEn: 'Milestones', type: 'file', file: 'CA-timeline-1col.html' },
-            { key: 'progress', code: 'CB', icon: '📊', label: '단계별 진행도', labelEn: 'Progress by Phase', type: 'file', file: 'CB-progress-1col.html' },
-            { key: 'detail-schedule', code: 'CC', icon: '🗓️', label: '상세 일정', labelEn: 'Detailed Schedule', type: 'file', file: 'CC-schedule-detail.html' },
-            { key: 'events', code: 'CD', icon: '⚡', label: '중요 이벤트', labelEn: 'Key Events', type: 'file', file: 'CD-events.html' },
-            { key: 'calendar', code: 'CE', icon: '📆', label: '일정 캘린더', labelEn: 'Schedule Calendar', type: 'file', file: 'CE-calendar.html' },
+        { key: 'schedule', icon: 'calendar', label: '일정 관리', labelEn: 'Schedule', items: [
+            { key: 'timeline', code: 'CA', icon: 'rocket', label: '마일스톤', labelEn: 'Milestones', type: 'file', file: 'CA-timeline-1col.html' },
+            { key: 'progress', code: 'CB', icon: 'bar-chart-3', label: '단계별 진행도', labelEn: 'Progress by Phase', type: 'file', file: 'CB-progress-1col.html' },
+            { key: 'detail-schedule', code: 'CC', icon: 'calendar-days', label: '상세 일정', labelEn: 'Detailed Schedule', type: 'file', file: 'CC-schedule-detail.html' },
+            { key: 'events', code: 'CD', icon: 'zap', label: '중요 이벤트', labelEn: 'Key Events', type: 'file', file: 'CD-events.html' },
+            { key: 'calendar', code: 'CE', icon: 'calendar-check', label: '일정 캘린더', labelEn: 'Schedule Calendar', type: 'file', file: 'CE-calendar.html' },
         ]},
-        { key: 'lessons', icon: '📚', label: '학습 & 분석', labelEn: 'Lessons & Analysis', items: [
-            { key: 'best-practice', code: 'DC', icon: '✅', label: 'Best Practice', labelEn: 'Best Practices', type: 'file', file: 'DC-best-practice.html' },
-            { key: 'lessons-learned', code: 'DB', icon: '💡', label: '교훈 도출', labelEn: 'Lessons Learned', type: 'file', file: 'DB-lessons.html' },
-            { key: 'failures', code: 'DA', icon: '📋', label: '기존 실패사항', labelEn: 'Past Failures', type: 'file', file: 'DA-failures.html' },
-            { key: 'legacy-structure', code: 'DD', icon: '🗺️', label: '기존 ERP 구조 분석', labelEn: 'Legacy ERP Structure', type: 'file', file: 'DD-legacy-structure.html' },
+        { key: 'lessons', icon: 'book-open', label: '학습 & 분석', labelEn: 'Lessons & Analysis', items: [
+            { key: 'best-practice', code: 'DC', icon: 'circle-check', label: 'Best Practice', labelEn: 'Best Practices', type: 'file', file: 'DC-best-practice.html' },
+            { key: 'lessons-learned', code: 'DB', icon: 'lightbulb', label: '교훈 도출', labelEn: 'Lessons Learned', type: 'file', file: 'DB-lessons.html' },
+            { key: 'failures', code: 'DA', icon: 'clipboard-x', label: '기존 실패사항', labelEn: 'Past Failures', type: 'file', file: 'DA-failures.html' },
+            { key: 'legacy-structure', code: 'DD', icon: 'map', label: '기존 ERP 구조 분석', labelEn: 'Legacy ERP Structure', type: 'file', file: 'DD-legacy-structure.html' },
         ]},
-        { key: 'architecture', icon: '🏗️', label: '구축 설계', labelEn: 'Architecture', items: [
-            { key: 'arch', code: 'EA', icon: '🎨', label: '아키텍처', labelEn: 'Architecture', type: 'file', file: 'EA-architecture.html' },
-            { key: 'logic', code: 'EB', icon: '🔗', label: '도출 로직', labelEn: 'Derivation Logic', type: 'file', file: 'EB-logic.html' },
-            { key: 'data-map', code: 'EC', icon: '🗂️', label: '데이터 맵핑', labelEn: 'Data Mapping', type: 'file', file: 'EC-data-map.html' },
-            { key: 'archlab', code: 'ED', icon: '🧩', label: '데모 구축', labelEn: 'Demo Build', type: 'external', file: 'tool1/index1.html' },
+        { key: 'architecture', icon: 'drafting-compass', label: '구축 설계', labelEn: 'Architecture', items: [
+            { key: 'arch', code: 'EA', icon: 'palette', label: '아키텍처', labelEn: 'Architecture', type: 'file', file: 'EA-architecture.html' },
+            { key: 'logic', code: 'EB', icon: 'workflow', label: '도출 로직', labelEn: 'Derivation Logic', type: 'file', file: 'EB-logic.html' },
+            { key: 'data-map', code: 'EC', icon: 'shuffle', label: '데이터 맵핑', labelEn: 'Data Mapping', type: 'file', file: 'EC-data-map.html' },
+            { key: 'archlab', code: 'ED', icon: 'puzzle', label: '데모 구축', labelEn: 'Demo Build', type: 'external', file: 'tool1/index1.html' },
         ]},
-        { key: 'reports', icon: '📑', label: '문서 & 리포팅', labelEn: 'Documents & Reporting', items: [
-            { key: 'weekly-report', code: 'FA', icon: '📰', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports.html' },
-            { key: 'proposal', code: 'FB', icon: '📖', label: '사업기안서', labelEn: 'Business Proposal', type: 'file', file: 'FB-proposal.html' },
-            { key: 'changelog', code: 'FC', icon: '📝', label: '변경 이력', labelEn: 'Changelog', type: 'file', file: 'FC-changelog.html' },
-            { key: 'archive', code: 'FD', icon: '💾', label: '아카이브', labelEn: 'Archive', type: 'file', file: 'FD-archive.html' },
+        { key: 'reports', icon: 'files', label: '문서 & 리포팅', labelEn: 'Documents & Reporting', items: [
+            { key: 'weekly-report', code: 'FA', icon: 'newspaper', label: '주간 리포트', labelEn: 'Weekly Report', type: 'file', file: 'FA-reports.html' },
+            { key: 'proposal', code: 'FB', icon: 'book', label: '사업기안서', labelEn: 'Business Proposal', type: 'file', file: 'FB-proposal.html' },
+            { key: 'changelog', code: 'FC', icon: 'pencil', label: '변경 이력', labelEn: 'Changelog', type: 'file', file: 'FC-changelog.html' },
+            { key: 'archive', code: 'FD', icon: 'archive', label: '아카이브', labelEn: 'Archive', type: 'file', file: 'FD-archive.html' },
         ]},
-        { key: 'system', icon: '⚙️', label: '시스템', labelEn: 'System', items: [
-            { key: 'users', code: 'GA', icon: '👥', label: '사용자 관리', labelEn: 'User Management', type: 'file', file: 'GA-users.html', adminOnly: true },
-            { key: 'permissions', code: 'GB', icon: '🔐', label: '권한 설정', labelEn: 'Permissions', type: 'file', file: 'GB-settings.html' },
-            { key: 'layout', code: 'GC', icon: '🗺️', label: '레이아웃', labelEn: 'Layout', type: 'file', file: 'GC-layout.html' },
-            { key: 'logs', code: 'GD', icon: '⚡', label: '로그', labelEn: 'Logs', type: 'file', file: 'GD-log.html' },
+        { key: 'system', icon: 'settings', label: '시스템', labelEn: 'System', items: [
+            { key: 'users', code: 'GA', icon: 'users', label: '사용자 관리', labelEn: 'User Management', type: 'file', file: 'GA-users.html', adminOnly: true },
+            { key: 'permissions', code: 'GB', icon: 'shield-check', label: '권한 설정', labelEn: 'Permissions', type: 'file', file: 'GB-settings.html' },
+            { key: 'layout', code: 'GC', icon: 'layout-grid', label: '레이아웃', labelEn: 'Layout', type: 'file', file: 'GC-layout.html' },
+            { key: 'logs', code: 'GD', icon: 'history', label: '로그', labelEn: 'Logs', type: 'file', file: 'GD-log.html' },
         ]},
     ];
 
@@ -521,16 +741,16 @@
             if (raw) return JSON.parse(raw);
         } catch (e) {}
         return [
-            { id: 'inhouse', name: '자체 개발', icon: '🛠️' },
-            { id: 'p1', name: '파일럿: 프로그램 1', icon: '🧪' },
-            { id: 'p2', name: '파일럿: 프로그램 2', icon: '🧪' },
+            { id: 'inhouse', name: '자체 개발', icon: 'wrench' },
+            { id: 'p1', name: '파일럿: 프로그램 1', icon: 'flask-conical' },
+            { id: 'p2', name: '파일럿: 프로그램 2', icon: 'flask-conical' },
         ];
     }
     function getCategoryItems(cat) {
         if (cat.key !== 'evaluation') return cat.items;
         const programs = loadEvalProgramsForSidebar();
         const dynamicItems = programs.map(p => ({
-            key: 'eval-' + p.id, code: 'BF', icon: p.icon || '🧪',
+            key: 'eval-' + p.id, code: 'BF', icon: p.icon || 'flask-conical',
             label: p.name || '(이름 없음)', labelEn: p.name || '(unnamed)',
             type: 'file', file: 'BF-eval-detail.html', pid: p.id,
         }));
@@ -591,7 +811,7 @@
         const bar = document.getElementById('categoryBar');
         bar.innerHTML = CATEGORIES.map(cat => `
             <button class="cat-btn ${cat.key === currentCategory ? 'active' : ''}" data-cat="${cat.key}">
-                ${cat.icon} ${L(cat.label, cat.labelEn)}
+                ${icon(cat.icon)} ${L(cat.label, cat.labelEn)}
             </button>
         `).join('');
         bar.querySelectorAll('.cat-btn').forEach(btn => {
@@ -607,13 +827,13 @@
             const items = getCategoryItems(cat).filter(i => !i.adminOnly || isAdmin);
             return `
                 <div class="sb-section">
-                    <div class="sb-section-title">${cat.icon} ${L(cat.label, cat.labelEn)}</div>
+                    <div class="sb-section-title">${icon(cat.icon)} ${L(cat.label, cat.labelEn)}</div>
                     <ul class="sb-menu">
                         ${items.map(i => `
                             <li>
                                 <a href="#" data-cat="${cat.key}" data-item="${i.key}"
                                    class="${cat.key === currentCategory && i.key === currentItem ? 'active' : ''}">
-                                    <span class="sb-icon">${i.icon}</span>${L(i.label, i.labelEn)}
+                                    <span class="sb-icon">${iconChip(i.icon, cat.key, 'sb-icon-chip')}</span>${L(i.label, i.labelEn)}
                                 </a>
                             </li>
                         `).join('')}
@@ -715,7 +935,7 @@
                 <div class="launch-box" style="text-align:center;">
                     <strong>${L(item.label, item.labelEn)}은(는) 새 창에서 열립니다.</strong>
                     <p>아래 버튼을 눌러 새 탭에서 열어주세요.</p>
-                    <button class="launch-btn" onclick="window.open('${item.file}', '_blank')">🧩 ${L(item.label, item.labelEn)} 새 창에서 열기</button>
+                    <button class="launch-btn" onclick="window.open('${item.file}', '_blank')">${icon('puzzle')} ${L(item.label, item.labelEn)} 새 창에서 열기</button>
                 </div>
             `;
             return;
@@ -772,10 +992,10 @@
 
     function placeholderHTML(cat, item) {
         return `
-            <div class="page-title">${item.icon} ${L(item.label, item.labelEn)}</div>
+            <div class="page-title">${icon(item.icon)} ${L(item.label, item.labelEn)}</div>
             <div class="page-subtitle">${L(cat.label, cat.labelEn)} · ${L(item.label, item.labelEn)}</div>
             <div class="placeholder-box">
-                <div class="big-icon">🚧</div>
+                <div class="big-icon">${iconChip('construction', cat.key, 'hero-icon-chip')}</div>
                 <div class="title">${L('아직 준비 중인 화면입니다', 'This screen is not ready yet')}</div>
                 <div class="desc">${L('이 자리는 나중에 실제 콘텐츠 파일로 교체될 예정입니다. 지금은 메뉴 구조만 먼저 확정해두는 단계입니다.', 'This placeholder will be replaced with real content later. For now, only the menu structure is being finalized.')}</div>
             </div>
@@ -789,7 +1009,7 @@
 
     function overviewHTML() {
         return `
-            <div class="page-title">📊 ${L('ERP 구축 진행 현황', 'ERP Implementation Status')}</div>
+            <div class="page-title">${icon('bar-chart-3')} ${L('ERP 구축 진행 현황', 'ERP Implementation Status')}</div>
             <div class="page-subtitle">${L('전사 ERP 도입 프로젝트의 전체 진행 상황을 한눈에 확인합니다.', 'A single view of the company-wide ERP adoption project status.')}</div>
 
             <div class="grid">
@@ -826,7 +1046,7 @@
             </div>
 
             <div class="section-block">
-                <div class="section-block-title">🚀 ${L('주요 마일스톤', 'Key Milestones')}</div>
+                <div class="section-block-title">${icon('rocket')} ${L('주요 마일스톤', 'Key Milestones')}</div>
                 <div class="card">
                     <table class="mini-table">
                         <thead><tr><th>Phase</th><th>${L('기간', 'Duration')}</th><th>${L('상태', 'Status')}</th></tr></thead>
@@ -842,7 +1062,7 @@
             </div>
 
             <div class="section-block">
-                <div class="section-block-title">📰 ${L('최근 리포트', 'Recent Reports')}</div>
+                <div class="section-block-title">${icon('newspaper')} ${L('최근 리포트', 'Recent Reports')}</div>
                 <div class="card">
                     <table class="mini-table">
                         <thead><tr><th>${L('날짜', 'Date')}</th><th>${L('제목', 'Title')}</th><th>${L('타입', 'Type')}</th></tr></thead>
@@ -868,6 +1088,7 @@
     // 새로고침 없이 즉시 반영되도록 감지합니다.
     window.addEventListener('storage', (e) => {
         if (e.key === 'dashTheme') applyTheme(e.newValue || 'C');
+        if (e.key === 'dashIconStyle') applyIconStyle(e.newValue || 'minimal');
         if (e.key === 'dashLang') {
             currentLang = e.newValue || 'ko';
             renderHeaderTexts();
