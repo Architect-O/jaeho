@@ -63,7 +63,11 @@
         tbody tr:hover { background: var(--gray-100); }
         .doc-title { font-weight: 600; color: var(--text); }
         .doc-desc { font-size: 11.5px; color: var(--text-tertiary); margin-top: 3px; }
-        .doc-file { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; font-family: monospace; }
+        .doc-files-list { margin-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+        .doc-file-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-tertiary); font-family: monospace; flex-wrap: wrap; }
+        .doc-file-row .btn { font-size: 10.5px; padding: 2px 6px; }
+        .attach-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 8px; background:var(--gray-100); border-radius:6px; margin-bottom:4px; font-size:12.5px; }
+        .attach-item .remove-btn { color: var(--danger); cursor:pointer; font-weight:700; background:none; border:none; font-size:13px; line-height:1; }
         .meta { color: var(--text-secondary); white-space: nowrap; }
         .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
         .empty-state { padding: 50px 20px; text-align:center; color: var(--text-tertiary); font-size: 13px; }
@@ -137,9 +141,13 @@
                         <option value="기타">기타</option>
                     </select>
                 </div>
+                <div class="full" id="editAttachmentsWrap" style="display:none;">
+                    <label class="form-label">첨부된 파일</label>
+                    <div id="editAttachmentsList"></div>
+                </div>
                 <div class="full">
-                    <label class="form-label">파일</label>
-                    <input type="file" class="form-input" id="docFile">
+                    <label class="form-label">파일 (여러 개 선택 가능)</label>
+                    <input type="file" class="form-input" id="docFile" multiple>
                     <div class="form-hint" id="fileHint"></div>
                 </div>
                 <div class="full">
@@ -207,6 +215,55 @@
             return sb.storage.from(BUCKET).getPublicUrl(filePath).data.publicUrl;
         }
 
+        function renderEditAttachments(doc) {
+            const wrap = document.getElementById('editAttachmentsWrap');
+            const list = document.getElementById('editAttachmentsList');
+            const files = (doc.document_files || []).slice().sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+            if (files.length === 0) {
+                wrap.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+            wrap.style.display = 'block';
+            list.innerHTML = files.map(f => `
+                <div class="attach-item">
+                    <span>📎 ${esc(f.file_name)} <span class="meta">(${fmtSize(f.file_size)})</span></span>
+                    <button type="button" class="remove-btn" onclick="removeAttachment('${f.id}','${esc(f.file_path)}')" title="이 파일만 삭제">✕</button>
+                </div>`).join('');
+        }
+
+        async function removeAttachment(fileId, filePath) {
+            if (!confirm('이 첨부파일만 삭제하시겠습니까? 문서 자체는 유지됩니다.')) return;
+            const { data, error } = await sb.rpc('admin_delete_document_file', {
+                p_admin_username: myUsername,
+                p_admin_password: myPw,
+                p_file_id: fileId
+            });
+            if (error || !data || data.success === false) {
+                alert('삭제 실패: ' + (error ? error.message : (data && data.message) || '알 수 없는 오류'));
+                return;
+            }
+            await sb.storage.from(BUCKET).remove([filePath]);
+            await loadDocs();
+            const doc = CURRENT_DOCS.find(d => d.id === editingId);
+            if (doc) renderEditAttachments(doc);
+        }
+
+        async function uploadFilesToStorage(fileList) {
+            const uploaded = [];
+            for (const file of fileList) {
+                const safeName = file.name.replace(/[^A-Za-z0-9.\-]/g, '_');
+                const filePath = `${CATEGORY}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeName}`;
+                const { error: upErr } = await sb.storage.from(BUCKET).upload(filePath, file, { upsert: false });
+                if (upErr) {
+                    for (const u of uploaded) await sb.storage.from(BUCKET).remove([u.file_path]);
+                    throw upErr;
+                }
+                uploaded.push({ file_name: file.name, file_path: filePath, file_size: file.size, mime_type: file.type || null });
+            }
+            return uploaded;
+        }
+
         function toggleUploadPanel(force) {
             const panel = document.getElementById('uploadPanel');
             const open = (force === undefined) ? !panel.classList.contains('open') : force;
@@ -225,10 +282,12 @@
             editingId = null;
             document.getElementById('panelModeLabel').textContent = '새 문서 등록';
             document.getElementById('uploadSubmitBtn').textContent = '업로드';
-            document.getElementById('fileHint').textContent = '';
+            document.getElementById('fileHint').textContent = '파일을 여러 개 선택하면 한 문서에 전부 첨부됩니다.';
             document.getElementById('docTitle').value = '';
             document.getElementById('docDesc').value = '';
             document.getElementById('docFile').value = '';
+            document.getElementById('editAttachmentsWrap').style.display = 'none';
+            document.getElementById('editAttachmentsList').innerHTML = '';
             document.getElementById('docTag').value = '주간보고';
             document.getElementById('docReportDate').value = new Date().toISOString().slice(0, 10);
             toggleUploadPanel(true);
@@ -245,7 +304,8 @@
             document.getElementById('docFile').value = '';
             document.getElementById('docTag').value = doc.tag || '주간보고';
             document.getElementById('docReportDate').value = doc.report_date || (doc.created_at ? doc.created_at.slice(0, 10) : '');
-            document.getElementById('fileHint').textContent = '파일을 새로 고르지 않으면 기존 파일(' + (doc.file_name || '') + ')이 그대로 유지됩니다.';
+            renderEditAttachments(doc);
+            document.getElementById('fileHint').textContent = '여기서 파일을 고르면 기존 첨부파일에 추가됩니다(교체 아님).';
             toggleUploadPanel(true);
         }
 
@@ -255,13 +315,14 @@
             if (!sb) { empty.style.display = 'block'; empty.textContent = 'Supabase 연결이 설정되지 않았습니다.'; return; }
             let { data, error } = await sb
                 .from('documents')
-                .select('*')
+                .select('*, document_files(*)')
                 .eq('category', CATEGORY)
                 .order('report_date', { ascending: false, nullsFirst: false })
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .order('sort_order', { foreignTable: 'document_files', ascending: true });
             if (error) {
                 // report_date 컬럼이 아직 없는 DB(마이그레이션 v4 미적용)에서도 목록은 보이도록 폴백
-                const fallback = await sb.from('documents').select('*').eq('category', CATEGORY).order('created_at', { ascending: false });
+                const fallback = await sb.from('documents').select('*, document_files(*)').eq('category', CATEGORY).order('created_at', { ascending: false });
                 data = fallback.data; error = fallback.error;
             }
             if (error) {
@@ -280,24 +341,28 @@
             }
             empty.style.display = 'none';
             tbody.innerHTML = data.map(doc => {
-                const url = publicUrl(doc.file_path);
                 const tag = doc.tag || '기타';
+                const files = doc.document_files || [];
+                const filesHtml = files.map(f => `
+                    <div class="doc-file-row">
+                        <span>📎 ${esc(f.file_name)} (${fmtSize(f.file_size)})</span>
+                        <a class="btn btn-secondary btn-small" href="${publicUrl(f.file_path)}" target="_blank" rel="noopener">👁 보기</a>
+                        <a class="btn btn-secondary btn-small" href="${publicUrl(f.file_path)}" download="${esc(f.file_name)}">⬇ 다운로드</a>
+                    </div>`).join('');
                 return `
                     <tr>
                         <td class="meta">${fmtDate(doc.report_date || doc.created_at)}</td>
                         <td>
                             <span class="doc-title">${esc(doc.title)}</span>
                             ${doc.description ? `<div class="doc-desc">${esc(doc.description)}</div>` : ''}
-                            ${doc.file_name ? `<div class="doc-file">📎 ${esc(doc.file_name)}</div>` : ''}
+                            <div class="doc-files-list">${filesHtml}</div>
                         </td>
                         <td><span class="tag-badge tag-${esc(tag)}">${esc(tag)}</span></td>
                         <td class="meta">${esc(doc.uploaded_by || '-')}</td>
                         <td>
                             <div class="row-actions">
-                                <a class="btn btn-secondary btn-small" href="${url}" target="_blank" rel="noopener">👁 보기</a>
-                                <a class="btn btn-secondary btn-small" href="${url}" download="${esc(doc.file_name)}">⬇ 다운로드</a>
                                 ${isAdmin ? `<button class="btn btn-secondary btn-small" onclick="startEdit('${doc.id}')">✎ 수정</button>` : ''}
-                                ${isAdmin ? `<button class="btn btn-danger btn-small" onclick="deleteDoc('${doc.id}','${esc(doc.file_path)}')">삭제</button>` : ''}
+                                ${isAdmin ? `<button class="btn btn-danger btn-small" onclick="deleteDoc('${doc.id}')">삭제</button>` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -313,10 +378,10 @@
             const statusEl = document.getElementById('uploadStatus');
             const btn = document.getElementById('uploadSubmitBtn');
             const title = titleEl.value.trim();
-            const file = fileEl.files[0];
+            const files = Array.from(fileEl.files || []);
 
             if (!title) { statusEl.textContent = '제목을 입력해주세요.'; statusEl.className = 'upload-status err'; return; }
-            if (!editingId && !file) { statusEl.textContent = '파일을 선택해주세요.'; statusEl.className = 'upload-status err'; return; }
+            if (!editingId && files.length === 0) { statusEl.textContent = '파일을 선택해주세요.'; statusEl.className = 'upload-status err'; return; }
             if (!sb) { statusEl.textContent = 'Supabase 연결이 설정되지 않았습니다.'; statusEl.className = 'upload-status err'; return; }
 
             btn.disabled = true;
@@ -325,62 +390,50 @@
 
             try {
                 if (editingId) {
-                    let fileFields = { p_file_name: null, p_file_path: null, p_file_size: null, p_mime_type: null };
-                    let replaceFile = false;
-                    if (file) {
-                        const safeName = file.name.replace(/[^A-Za-z0-9.\-]/g, '_');
-                        const filePath = `${CATEGORY}/${Date.now()}_${safeName}`;
-                        const { error: upErr } = await sb.storage.from(BUCKET).upload(filePath, file, { upsert: false });
-                        if (upErr) throw upErr;
-                        fileFields = { p_file_name: file.name, p_file_path: filePath, p_file_size: file.size, p_mime_type: file.type || null };
-                        replaceFile = true;
-                    }
-
-                    const { data: rpcData, error: rpcErr } = await sb.rpc('admin_update_document', {
+                    const { data: metaData, error: metaErr } = await sb.rpc('admin_update_document_meta', {
                         p_admin_username: myUsername,
                         p_admin_password: myPw,
                         p_id: editingId,
                         p_title: title,
                         p_description: descEl.value.trim() || null,
-                        ...fileFields,
                         p_tag: tagEl.value,
-                        p_report_date: reportDateEl.value || null,
-                        p_replace_file: replaceFile
+                        p_report_date: reportDateEl.value || null
                     });
-                    if (rpcErr) throw rpcErr;
-                    if (!rpcData || rpcData.success === false) {
-                        if (replaceFile) await sb.storage.from(BUCKET).remove([fileFields.p_file_path]);
-                        throw new Error((rpcData && rpcData.message) || '수정 실패');
-                    }
-                    if (replaceFile && rpcData.old_file_path) {
-                        await sb.storage.from(BUCKET).remove([rpcData.old_file_path]);
+                    if (metaErr) throw metaErr;
+                    if (!metaData || metaData.success === false) throw new Error((metaData && metaData.message) || '수정 실패');
+
+                    if (files.length > 0) {
+                        const uploaded = await uploadFilesToStorage(files);
+                        const { data: addData, error: addErr } = await sb.rpc('admin_add_document_files', {
+                            p_admin_username: myUsername,
+                            p_admin_password: myPw,
+                            p_document_id: editingId,
+                            p_files: uploaded
+                        });
+                        if (addErr) throw addErr;
+                        if (!addData || addData.success === false) {
+                            for (const u of uploaded) await sb.storage.from(BUCKET).remove([u.file_path]);
+                            throw new Error((addData && addData.message) || '파일 추가 실패');
+                        }
                     }
 
                     statusEl.textContent = '수정 완료!';
                     statusEl.className = 'upload-status ok';
                 } else {
-                    const safeName = file.name.replace(/[^A-Za-z0-9.\-]/g, '_');
-                    const filePath = `${CATEGORY}/${Date.now()}_${safeName}`;
-
-                    const { error: upErr } = await sb.storage.from(BUCKET).upload(filePath, file, { upsert: false });
-                    if (upErr) throw upErr;
-
-                    const { data: rpcData, error: rpcErr } = await sb.rpc('admin_insert_document', {
+                    const uploaded = await uploadFilesToStorage(files);
+                    const { data: rpcData, error: rpcErr } = await sb.rpc('admin_create_document', {
                         p_admin_username: myUsername,
                         p_admin_password: myPw,
                         p_category: CATEGORY,
                         p_title: title,
                         p_description: descEl.value.trim() || null,
-                        p_file_name: file.name,
-                        p_file_path: filePath,
-                        p_file_size: file.size,
-                        p_mime_type: file.type || null,
+                        p_files: uploaded,
                         p_tag: tagEl.value,
                         p_report_date: reportDateEl.value || null
                     });
                     if (rpcErr) throw rpcErr;
                     if (!rpcData || rpcData.success === false) {
-                        await sb.storage.from(BUCKET).remove([filePath]);
+                        for (const u of uploaded) await sb.storage.from(BUCKET).remove([u.file_path]);
                         throw new Error((rpcData && rpcData.message) || '등록 실패');
                     }
 
@@ -400,9 +453,11 @@
             }
         }
 
-        async function deleteDoc(id, filePath) {
-            if (!confirm('이 문서를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return;
+        async function deleteDoc(id) {
+            if (!confirm('이 문서를 삭제하시겠습니까? 첨부된 파일도 전부 함께 삭제되며 되돌릴 수 없습니다.')) return;
             if (!sb) return;
+            const doc = CURRENT_DOCS.find(d => d.id === id);
+            const filePaths = doc ? (doc.document_files || []).map(f => f.file_path) : [];
             const { data, error } = await sb.rpc('admin_delete_document', {
                 p_admin_username: myUsername,
                 p_admin_password: myPw,
@@ -412,7 +467,7 @@
                 alert('삭제 실패: ' + (error ? error.message : (data && data.message) || '알 수 없는 오류'));
                 return;
             }
-            await sb.storage.from(BUCKET).remove([filePath]);
+            if (filePaths.length > 0) await sb.storage.from(BUCKET).remove(filePaths);
             await loadDocs();
         }
 
