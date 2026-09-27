@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HJ-원료역추적 (INT-a 원료역추적 확장) - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<script src="./js/lotSourceTrace.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+        --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 18px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .note-card { background: var(--info-soft); border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 12.5px; color: #1e40af; line-height:1.6; margin-bottom: 18px; }
+    .note-card a { color: #1e40af; font-weight: 700; text-decoration: underline; }
+    .note-card code { background: rgba(30,64,175,0.08); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+
+    /* 표 공통 */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+    th { padding: 10px 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10.5px; color: var(--text-secondary); white-space:nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:hover { background: var(--gray-100); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .empty-state { padding: 40px 20px; text-align:center; color: var(--text-tertiary); font-size: 13px; }
+
+    .badge { display:inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space:nowrap; }
+    .badge-ok { background: var(--success-soft); color: var(--success); }
+    .badge-warn { background: var(--warning-soft); color: #b45309; }
+    .badge-info { background: var(--info-soft); color: var(--info); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); }
+    .badge-dim { background: var(--gray-100); color: var(--text-secondary); }
+
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; display:inline-flex; align-items:center; gap:6px; min-height: 34px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:disabled { background: var(--gray-300); color: var(--text-tertiary); cursor: not-allowed; }
+    .btn-secondary { background: var(--gray-100); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger-soft); color: var(--danger); }
+    .btn-small { padding: 6px 11px; font-size: 11px; min-height: 30px; }
+    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; display:block; }
+    .form-input, .form-select, .form-textarea {
+        width:100%; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font:inherit; font-size:13px; background:#fff; color:var(--text);
+    }
+    .form-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title">🧬 원료 역추적</div>
+            <div class="brand-sub">라운드6-B · INT-a 원료역추적 확장 (임시 코드 HJ — 메뉴 정식 배정 전)</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🧬 원료 역추적 (파일럿 간 Lot 출처 태깅·조회)</h1>
+            <p class="page-subtitle">HC/HD/HE/HF 4개 파일럿의 Lot에 다른 파일럿 전표를 출처로 태깅하고, 파일럿 경계를 넘는 전체 체인을 조회합니다.</p>
+        </div>
+    </div>
+
+    <div class="note-card">
+        ℹ️ <b>이 파일은 아직 <code>menu.html</code> 사이드 메뉴에 정식으로 연결되지 않았습니다</b> — HI(경영분석)와 같은 이유로, 메뉴 등록(어느 카테고리·어떤 코드로 넣을지)은 여러 방향이 있어 사용자 확인 후 진행하기로 했습니다(자세한 내용은 전달드린 README 참고). 지금은 이 파일을 직접 열거나 로그인 후 주소창에 파일명을 입력해 확인할 수 있습니다.
+    </div>
+
+    <div id="tabContent"><div id="lstRoot"></div></div>
+</main>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    const myUsername = sessionStorage.getItem('username') || '';
+    const myPw = sessionStorage.getItem('pw') || '';
+    const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
+    const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+
+    // 원료 역추적(INT-a 확장) — js/lotSourceTrace.js, round6_3way_inta_c3_migration.sql (2026-09-27, 대형로드맵 라운드6-B)
+    if (window.LotSourceTrace) {
+        window.LotSourceTrace.init({ sb, username: myUsername, pw: myPw, isAdmin });
+        window.LotSourceTrace.render();
+    }
+</script>
+</body>
+</html>

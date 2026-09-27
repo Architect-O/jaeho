@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>파일럿7: 콜드체인 모니터링 (가상 ERP 데모) - JAEHO ERP Suite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/supabaseClient.js"></script>
+<script src="./js/coldChainHold.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --header-bg:#ffffff; --header-text:#16324f; --header-border:#16324f; --header-border-width:2px;
+        --header-btn-border:#d7dee4; --header-btn-hover-bg:#f2f5f7; --logo-bg:#16324f; --logo-text:#ffffff;
+        --content-bg:#ffffff; --card-bg:#ffffff; --text:#1f2328; --text-secondary:#6b7280; --text-tertiary:#9ca3af;
+        --border:#e8eaed; --primary: var(--logo-bg);
+        --success:#10b981; --success-soft:#ecfdf5; --warning:#f59e0b; --warning-soft:#fffbeb;
+        --info:#3b82f6; --info-soft:#eff6ff; --danger:#ef4444; --danger-soft:#fef2f2;
+        --gray-100:#f8f9fa; --gray-200:#eceef0; --gray-300:#dfe3e7;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    body { font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--content-bg); color: var(--text); }
+    a { color: inherit; }
+    header{
+        height:56px; background:var(--header-bg); color:var(--header-text);
+        border-bottom:var(--header-border-width) solid var(--header-border);
+        display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+        transition:background .2s,color .2s,border-color .2s;
+    }
+    .brand{display:flex;align-items:center;gap:10px;}
+    .brand-logo{width:28px;height:28px;background:var(--logo-bg);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--logo-text);font-weight:700;font-size:13px;flex-shrink:0;}
+    .brand-info{display:flex;flex-direction:column;line-height:1.25;}
+    .brand-title{font-size:14px;font-weight:600;color:var(--header-text);}
+    .brand-sub{font-size:11px;color:var(--header-text);opacity:0.65;}
+    .hbtns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ghost-btn{white-space:nowrap;
+        background:transparent;border:1px solid var(--header-btn-border);color:var(--header-text);
+        padding:6px 12px;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer;
+        text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;
+    }
+    .ghost-btn:hover{background:var(--header-btn-hover-bg);}
+
+    .content { width: 100%; padding: 30px; background: var(--content-bg); overflow-y: auto; }
+    .page-header { margin-bottom: 18px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+    .card { background: var(--card-bg); border-radius: 10px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 20px; margin-bottom: 18px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .note-card { background: var(--info-soft); border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 12.5px; color: #1e40af; line-height:1.6; margin-bottom: 18px; }
+    .note-card a { color: #1e40af; font-weight: 700; text-decoration: underline; }
+
+    .tab-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+    .tab-btn {
+        padding: 10px 16px; min-height: 38px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
+        background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .filter-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom: 14px; }
+    .filter-btn {
+        padding: 6px 13px; font-size: 12px; font-weight: 600; border-radius: 20px; border: 1px solid var(--border);
+        background: var(--gray-100); color: var(--text-secondary); cursor:pointer; font-family:inherit;
+    }
+    .filter-btn.active { background: var(--primary); color:#fff; border-color: var(--primary); }
+
+    .summary-row { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    @media (max-width: 700px) { .summary-row { grid-template-columns: 1fr; } }
+    .summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .summary-label { font-size: 11.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px; }
+    .summary-value { font-size: 22px; font-weight: 700; color: var(--text); }
+    .summary-value.warn { color: #b45309; }
+    .summary-value.danger { color: var(--danger); }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--gray-100); border-top: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+    th { padding: 10px 12px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10.5px; color: var(--text-secondary); white-space:nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:hover { background: var(--gray-100); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .empty-state { padding: 40px 20px; text-align:center; color: var(--text-tertiary); font-size: 13px; }
+
+    .badge { display:inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space:nowrap; }
+    .badge-ok { background: var(--success-soft); color: var(--success); }
+    .badge-warn { background: var(--warning-soft); color: #b45309; }
+    .badge-info { background: var(--info-soft); color: var(--info); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); }
+    .badge-dim { background: var(--gray-100); color: var(--text-secondary); }
+
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; display:inline-flex; align-items:center; gap:6px; min-height: 34px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: var(--gray-100); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger-soft); color: var(--danger); }
+    .btn-small { padding: 6px 11px; font-size: 11px; min-height: 30px; }
+    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+    .form-panel { display:none; background: var(--gray-100); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+    .form-panel.open { display:block; }
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; display:block; }
+    .form-input, .form-select, .form-textarea {
+        width:100%; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font:inherit; font-size:13px; background:#fff; color:var(--text);
+    }
+    .form-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+    .form-status { font-size:12px; margin-top:8px; }
+    .form-status.err { color: var(--danger); }
+    .form-status.ok { color: var(--success); }
+
+    #detailOverlay { display:none; position:fixed; inset:0; background:rgba(15,23,32,0.55); z-index:999; padding:24px; overflow-y:auto; }
+    #detailOverlay.open { display:flex; justify-content:center; align-items:flex-start; }
+    .detail-sheet { background:#fff; width:100%; max-width:780px; border-radius:10px; padding:32px 36px; }
+    .detail-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px; border-bottom: 2px solid #16324f; padding-bottom: 14px; }
+    .detail-head h2 { font-size: 19px; color:#16324f; }
+    .detail-head .doc-no { font-size: 12px; color:#6b7280; margin-top:4px; }
+    .detail-meta { display:grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 12.5px; margin-bottom: 18px; }
+    .detail-meta .k { color:#6b7280; }
+    .detail-subtitle { font-size: 13px; font-weight:700; color: var(--text); margin: 18px 0 10px; }
+
+    @media (max-width: 768px) { .content { padding: 20px; } }
+        @media (max-width: 480px) {
+            header { padding-left: 14px; padding-right: 14px; }
+            .content { padding-left: 14px; padding-right: 14px; }
+        }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-logo" id="brandLogo">J</div>
+        <div class="brand-info">
+            <div class="brand-title">🌡 파일럿7: 콜드체인 모니터링</div>
+            <div class="brand-sub">자체 참고 가상 ERP · 커스터디 세션 기반 온도 이력 관제 데모</div>
+        </div>
+    </div>
+    <div class="hbtns">
+        <a class="ghost-btn" href="./menu.html">← 메뉴로</a>
+    </div>
+</header>
+
+<main class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🌡 파일럿7 — 콜드체인 모니터링 가상 ERP</h1>
+            <p class="page-subtitle">기존 4개 파일럿(유통·보세창고·무역·식품제조)의 입출고 프로세스에 콜드체인 로직을 각각 내장하는 대신, 별도 모듈로 분리해 온도 이력만 전담 관제하는 데모입니다.</p>
+        </div>
+        <a class="ghost-btn" href="./BA-evaluation.html">⚖️ 종합 비교로 이동</a>
+    </div>
+
+    <div class="note-card">
+        🌡 <b>"온도계 부착·회수" 모델</b> — 화물의 콜드체인 이력은 Lot처럼 회사 전체를 영구히 따라가지 않고, <b>한 보관 주체(노드)가 화물을 인수한 순간부터 다음 주체에게 넘기는 순간까지</b>만 기록됩니다(= 커스터디 세션). 배송 이후의 콜드체인은 인수한 노드에서 완전히 새로운 세션으로 다시 시작됩니다. 기존 4개 파일럿의 <b>확정(반입/수입/생산입고 확정 = 세션 시작, 반출/판매출고 확정 = 세션 종료)</b> 이벤트에 자연스럽게 대응되며, 담당자가 여기서 파일럿 코드 + 전표번호를 직접 입력해 세션을 열고 닫는 <b>수동 연동 방식</b>입니다 — 기존 4개 파일럿의 화면·RPC는 전혀 변경하지 않았습니다. 재고 자체를 소유하지 않는 관찰자(observer) 모듈이므로 Lot/ledger 원복 로직도 필요 없습니다.
+    </div>
+
+    <div class="tab-bar" id="tabBar"></div>
+    <div id="tabContent"></div>
+</main>
+
+<div id="detailOverlay">
+    <div class="detail-sheet" id="detailSheet"></div>
+</div>
+
+<script>
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') { window.location.href = './index.html'; }
+
+    const myUsername = sessionStorage.getItem('username') || '';
+    const myPw = sessionStorage.getItem('pw') || '';
+    const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
+    const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+    // Lot 보류 제안(C-3) 탭 — js/coldChainHold.js, round6_3way_inta_c3_migration.sql (2026-09-27, 대형로드맵 라운드6-C)
+    if (window.ColdChainHold) window.ColdChainHold.init({ sb, username: myUsername, pw: myPw, isAdmin, onChange: loadAll });
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+    function fmtNum(n) { const v = Number(n) || 0; return v.toLocaleString('ko-KR'); }
+    function fmtTemp(n) { if (n == null) return '-'; const v = Number(n); return (v > 0 ? '+' : '') + v.toFixed(1) + '℃'; }
+    function fmtDate(iso) {
+        if (!iso) return '-';
+        const d = new Date(iso);
+        return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    const SESSION_STATUS_LABEL = { open: '진행중', closed: '종료됨', canceled: '취소됨' };
+    const SESSION_STATUS_BADGE = { open: 'badge-ok', closed: 'badge-info', canceled: 'badge-dim' };
+    const EXCURSION_STATUS_LABEL = { open: '미해결', resolved: '처리완료' };
+    const EXCURSION_STATUS_BADGE = { open: 'badge-danger', resolved: 'badge-ok' };
+    const SEVERITY_LABEL = { warning: '경고', critical: '심각' };
+    const SEVERITY_BADGE = { warning: 'badge-warn', critical: 'badge-danger' };
+
+    let ZONES = [];
+    let SESSIONS = [];
+    let EXCURSIONS = [];
+    let currentTab = 'sessions';
+    let sessionFilter = 'open';
+    let excursionFilter = 'open';
+
+    const TABS = [
+        { key: 'sessions', label: '🌡 세션 현황' },
+        { key: 'excursions', label: '⚠️ 이탈 알림' },
+        { key: 'zones', label: '🗂 온도구역 관리' },
+        { key: 'holdsuggest', label: '🧊 Lot 보류 제안' },
+    ];
+
+    function renderTabBar() {
+        document.getElementById('tabBar').innerHTML = TABS.map(t => `
+            <button type="button" class="tab-btn ${t.key === currentTab ? 'active' : ''}" onclick="switchTab('${t.key}')">${t.label}</button>
+        `).join('');
+    }
+    function switchTab(key) { currentTab = key; renderTabBar(); renderTabContent(); }
+
+    function renderTabContent() {
+        const el = document.getElementById('tabContent');
+        if (currentTab === 'sessions') el.innerHTML = sessionsHTML();
+        else if (currentTab === 'excursions') el.innerHTML = excursionsHTML();
+        else if (currentTab === 'zones') el.innerHTML = zonesHTML();
+        else if (currentTab === 'holdsuggest') { el.innerHTML = '<div id="ccHoldRoot"></div>'; if (window.ColdChainHold) window.ColdChainHold.render(); }
+    }
+
+    /* ══════════════════ 세션 현황 ══════════════════ */
+    function sessionsHTML() {
+        const openCount = SESSIONS.filter(s => s.status === 'open').length;
+        const openExcursionTotal = SESSIONS.reduce((s, r) => s + Number(r.open_excursion_count || 0), 0);
+        const closedToday = SESSIONS.filter(s => s.closed_at && s.closed_at.slice(0, 10) === new Date().toISOString().slice(0, 10)).length;
+
+        const filtered = sessionFilter === 'all' ? SESSIONS : SESSIONS.filter(s => s.status === sessionFilter);
+        const filters = [
+            { key: 'open', label: '진행중' }, { key: 'closed', label: '종료됨' },
+            { key: 'canceled', label: '취소됨' }, { key: 'all', label: '전체' },
+        ];
+
+        const rows = filtered.length ? filtered.map(s => {
+            const lastTempOut = s.last_temp != null && (Number(s.last_temp) < Number(s.temp_min) || Number(s.last_temp) > Number(s.temp_max));
+            const canManage = isAdmin && s.status === 'open';
+            return `
+                <tr>
+                    <td>${esc(s.session_no)}</td>
+                    <td>${esc(s.pilot_code)} · ${esc(s.doc_ref)}</td>
+                    <td>${esc(s.item_desc)}${s.qty != null ? `<br><span style="font-size:10.5px;color:var(--text-tertiary);">${fmtNum(s.qty)} ${esc(s.unit || '')}</span>` : ''}</td>
+                    <td>${esc(s.zone_name)}<br><span style="font-size:10.5px;color:var(--text-tertiary);">${fmtTemp(s.temp_min)} ~ ${fmtTemp(s.temp_max)}</span></td>
+                    <td class="num" style="${lastTempOut ? 'color:var(--danger);font-weight:700;' : ''}">${s.last_temp != null ? fmtTemp(s.last_temp) : '-'}</td>
+                    <td>${s.open_excursion_count > 0 ? `<span class="badge badge-danger">이탈 ${s.open_excursion_count}건</span>` : '<span class="badge badge-dim">-</span>'}</td>
+                    <td><span class="badge ${SESSION_STATUS_BADGE[s.status]}">${SESSION_STATUS_LABEL[s.status]}</span></td>
+                    <td>${fmtDate(s.opened_at)}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn btn-secondary btn-small" onclick="openSessionDetail('${s.id}')">상세보기</button>
+                            ${canManage ? `<button class="btn btn-primary btn-small" onclick="closeSession('${s.id}')">종료</button>` : ''}
+                            ${canManage ? `<button class="btn btn-danger btn-small" onclick="cancelSession('${s.id}')">취소</button>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('') : `<tr><td colspan="9"><div class="empty-state">해당 조건의 세션이 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="summary-row">
+                <div class="summary-card"><div class="summary-label">진행중인 세션</div><div class="summary-value">${openCount}건</div></div>
+                <div class="summary-card"><div class="summary-label">미해결 이탈 이벤트</div><div class="summary-value ${openExcursionTotal ? 'danger' : ''}">${openExcursionTotal}건</div></div>
+                <div class="summary-card"><div class="summary-label">오늘 종료된 세션</div><div class="summary-value">${closedToday}건</div></div>
+            </div>
+            <div class="card">
+                <div class="card-title">
+                    <span>🌡 커스터디 세션</span>
+                    ${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="toggleOpenForm()">+ 새 세션 열기</button>` : ''}
+                </div>
+                <div class="form-panel" id="openFormPanel">
+                    <div class="form-grid">
+                        <div><label class="form-label">파일럿 코드</label><input class="form-input" id="sessPilotCode" placeholder="예: HC, HD, HE, HF"></div>
+                        <div><label class="form-label">참조 전표번호</label><input class="form-input" id="sessDocRef" placeholder="예: BI-20260923-003"></div>
+                        <div><label class="form-label">온도구역</label>
+                            <select class="form-select" id="sessZoneSelect">
+                                <option value="">선택하세요</option>
+                                ${ZONES.map(z => `<option value="${z.id}">${esc(z.zone_name)} (${fmtTemp(z.temp_min)} ~ ${fmtTemp(z.temp_max)})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div><label class="form-label">화물/품목 설명</label><input class="form-input" id="sessItemDesc" placeholder="예: 냉동만두 10박스"></div>
+                        <div><label class="form-label">수량 (선택)</label><input class="form-input" type="number" min="0" id="sessQty" placeholder="선택 입력"></div>
+                        <div><label class="form-label">단위 (선택)</label><input class="form-input" id="sessUnit" placeholder="예: BOX, EA"></div>
+                        <div class="full"><label class="form-label">비고 (선택)</label><input class="form-input" id="sessNote" placeholder="선택 입력"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="toggleOpenForm(false)">취소</button>
+                        <button type="button" class="btn btn-primary" onclick="submitOpenSession()">세션 열기</button>
+                    </div>
+                    <div class="form-status" id="openFormStatus"></div>
+                </div>
+                <div class="filter-bar">
+                    ${filters.map(f => `<button type="button" class="filter-btn ${sessionFilter === f.key ? 'active' : ''}" onclick="setSessionFilter('${f.key}')">${f.label}</button>`).join('')}
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>세션번호</th><th>파일럿·전표</th><th>화물</th><th>구역</th><th>최근온도</th><th>이탈</th><th>상태</th><th>개시일</th><th>동작</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    }
+
+    function setSessionFilter(key) { sessionFilter = key; renderTabContent(); }
+
+    function toggleOpenForm(force) {
+        const panel = document.getElementById('openFormPanel');
+        const willOpen = force !== undefined ? force : !panel.classList.contains('open');
+        panel.classList.toggle('open', willOpen);
+        if (willOpen) document.getElementById('openFormStatus').textContent = '';
+    }
+
+    async function submitOpenSession() {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('openFormStatus');
+        const pilotCode = document.getElementById('sessPilotCode').value.trim();
+        const docRef = document.getElementById('sessDocRef').value.trim();
+        const zoneId = document.getElementById('sessZoneSelect').value;
+        const itemDesc = document.getElementById('sessItemDesc').value.trim();
+        const qty = document.getElementById('sessQty').value;
+        const unit = document.getElementById('sessUnit').value.trim();
+        const note = document.getElementById('sessNote').value.trim();
+        if (!pilotCode || !docRef || !zoneId || !itemDesc) {
+            statusEl.textContent = '파일럿 코드·참조 전표번호·온도구역·화물 설명은 필수입니다.';
+            statusEl.className = 'form-status err';
+            return;
+        }
+        if (!sb || !myUsername || !myPw) { statusEl.textContent = '로그인 정보가 없습니다.'; statusEl.className = 'form-status err'; return; }
+        statusEl.textContent = '저장 중...'; statusEl.className = 'form-status';
+        try {
+            const { data, error } = await sb.rpc('cc_admin_open_session', {
+                p_admin_username: myUsername, p_admin_password: myPw,
+                p_pilot_code: pilotCode, p_doc_ref: docRef, p_zone_id: zoneId, p_item_desc: itemDesc,
+                p_qty: qty === '' ? null : parseFloat(qty), p_unit: unit || null, p_note: note || null,
+            });
+            if (error) throw error;
+            if (data && data.success) {
+                statusEl.textContent = '✅ ' + data.session_no + ' 세션이 열렸습니다.';
+                statusEl.className = 'form-status ok';
+                toggleOpenForm(false);
+                await loadAll();
+            } else {
+                statusEl.textContent = '❌ ' + ((data && data.message) || '저장 실패');
+                statusEl.className = 'form-status err';
+            }
+        } catch (e) {
+            statusEl.textContent = '❌ 저장 실패: ' + e.message;
+            statusEl.className = 'form-status err';
+        }
+    }
+
+    async function closeSession(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 세션을 종료(온도계 회수)할까요? 종료 이후에는 온도를 더 이상 기록할 수 없습니다.')) return;
+        const note = prompt('종료 메모를 입력하세요 (선택 입력):', '') || '';
+        try {
+            const { data, error } = await sb.rpc('cc_admin_close_session', { p_admin_username: myUsername, p_admin_password: myPw, p_session_id: id, p_note: note || null });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); } else alert('종료 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('종료 실패: ' + e.message); }
+    }
+
+    async function cancelSession(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 세션을 취소할까요? (실수로 잘못 연 세션 등)')) return;
+        const reason = prompt('취소 사유를 입력하세요 (선택 입력):', '') || '';
+        try {
+            const { data, error } = await sb.rpc('cc_admin_cancel_session', { p_admin_username: myUsername, p_admin_password: myPw, p_session_id: id, p_reason: reason || null });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); } else alert('취소 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('취소 실패: ' + e.message); }
+    }
+
+    /* ══════════════════ 세션 상세 (온도 기록 입력/이력 + 이탈 목록) ══════════════════ */
+    async function openSessionDetail(id) {
+        document.getElementById('detailSheet').innerHTML = `<div class="empty-state">불러오는 중...</div>`;
+        document.getElementById('detailOverlay').classList.add('open');
+        try {
+            const { data, error } = await sb.rpc('cc_get_session_detail', { p_session_id: id });
+            if (error) throw error;
+            renderSessionDetail(data);
+        } catch (e) {
+            document.getElementById('detailSheet').innerHTML = `<div class="empty-state">불러오기 실패: ${esc(e.message)}</div>`;
+        }
+    }
+    function closeSessionDetail() { document.getElementById('detailOverlay').classList.remove('open'); }
+
+    function renderSessionDetail(data) {
+        const s = data.session;
+        const logs = data.temp_logs || [];
+        const excursions = data.excursions || [];
+        const canLog = isAdmin && s.status === 'open';
+
+        const logRows = logs.length ? logs.map(l => {
+            const out = Number(l.temp_value) < Number(s.temp_min) || Number(l.temp_value) > Number(s.temp_max);
+            return `<tr><td>${fmtDate(l.logged_at)}</td><td class="num" style="${out ? 'color:var(--danger);font-weight:700;' : ''}">${fmtTemp(l.temp_value)}</td><td>${esc(l.logged_by || '-')}</td><td>${esc(l.note || '-')}</td></tr>`;
+        }).join('') : `<tr><td colspan="4"><div class="empty-state">기록된 온도가 없습니다.</div></td></tr>`;
+
+        const exRows = excursions.length ? excursions.map(ex => `
+            <tr>
+                <td>${fmtDate(ex.detected_at)}</td>
+                <td class="num" style="color:var(--danger);font-weight:700;">${fmtTemp(ex.temp_value)}</td>
+                <td>${fmtTemp(ex.threshold_min)} ~ ${fmtTemp(ex.threshold_max)}</td>
+                <td><span class="badge ${SEVERITY_BADGE[ex.severity]}">${SEVERITY_LABEL[ex.severity]}</span></td>
+                <td><span class="badge ${EXCURSION_STATUS_BADGE[ex.status]}">${EXCURSION_STATUS_LABEL[ex.status]}</span></td>
+                <td>${esc(ex.action_taken || '-')}</td>
+                <td>${(isAdmin && ex.status === 'open') ? `<button class="btn btn-primary btn-small" onclick="resolveExcursionFromDetail('${ex.id}', '${s.id}')">처리</button>` : '-'}</td>
+            </tr>`).join('') : `<tr><td colspan="7"><div class="empty-state">이탈 이벤트가 없습니다.</div></td></tr>`;
+
+        document.getElementById('detailSheet').innerHTML = `
+            <div class="detail-head">
+                <div><h2>세션 상세 — ${esc(s.session_no)}</h2><div class="doc-no">${esc(s.pilot_code)} · ${esc(s.doc_ref)}</div></div>
+                <button class="btn btn-secondary" onclick="closeSessionDetail()">닫기</button>
+            </div>
+            <div class="detail-meta">
+                <div><span class="k">화물:</span> ${esc(s.item_desc)}${s.qty != null ? ' (' + fmtNum(s.qty) + ' ' + esc(s.unit || '') + ')' : ''}</div>
+                <div><span class="k">구역:</span> ${esc(s.zone_name)} (${fmtTemp(s.temp_min)} ~ ${fmtTemp(s.temp_max)})</div>
+                <div><span class="k">상태:</span> <span class="badge ${SESSION_STATUS_BADGE[s.status]}">${SESSION_STATUS_LABEL[s.status]}</span></div>
+                <div><span class="k">개시:</span> ${fmtDate(s.opened_at)} (${esc(s.opened_by || '-')})</div>
+                <div><span class="k">종료:</span> ${s.closed_at ? fmtDate(s.closed_at) + ' (' + esc(s.closed_by || '-') + ')' : '-'}</div>
+                <div style="grid-column:1/-1;"><span class="k">비고:</span> ${esc(s.note || '-')}</div>
+            </div>
+
+            ${canLog ? `
+            <div class="detail-subtitle">🌡 온도 기록 입력</div>
+            <div class="form-grid" style="margin-bottom:10px;">
+                <div><label class="form-label">온도(℃)</label><input class="form-input" type="number" step="0.1" id="tempValueInput" placeholder="예: 3.5"></div>
+                <div><label class="form-label">메모 (선택)</label><input class="form-input" id="tempNoteInput" placeholder="선택 입력"></div>
+            </div>
+            <div class="form-actions" style="margin-bottom:6px;">
+                <button type="button" class="btn btn-primary btn-small" onclick="submitTempLog('${s.id}')">기록 추가</button>
+            </div>
+            <div class="form-status" id="tempFormStatus"></div>` : ''}
+
+            <div class="detail-subtitle">📈 온도 기록 이력</div>
+            <div class="table-responsive">
+                <table><thead><tr><th>기록시각</th><th>온도</th><th>기록자</th><th>메모</th></tr></thead><tbody>${logRows}</tbody></table>
+            </div>
+
+            <div class="detail-subtitle">⚠️ 이 세션의 이탈 이벤트</div>
+            <div class="table-responsive">
+                <table><thead><tr><th>발생시각</th><th>온도</th><th>허용범위</th><th>심각도</th><th>상태</th><th>조치내용</th><th>동작</th></tr></thead><tbody>${exRows}</tbody></table>
+            </div>`;
+    }
+
+    async function submitTempLog(sessionId) {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('tempFormStatus');
+        const val = document.getElementById('tempValueInput').value;
+        const note = document.getElementById('tempNoteInput').value.trim();
+        if (val === '' || isNaN(parseFloat(val))) { statusEl.textContent = '온도값을 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        statusEl.textContent = '저장 중...'; statusEl.className = 'form-status';
+        try {
+            const { data, error } = await sb.rpc('cc_admin_add_temp_log', {
+                p_admin_username: myUsername, p_admin_password: myPw,
+                p_session_id: sessionId, p_temp_value: parseFloat(val), p_note: note || null,
+            });
+            if (error) throw error;
+            if (data && data.success) {
+                statusEl.textContent = data.excursion_id ? `⚠️ 기록되었으나 허용범위를 벗어나 이탈(${SEVERITY_LABEL[data.severity]}) 이벤트가 생성되었습니다.` : '✅ 기록되었습니다.';
+                statusEl.className = data.excursion_id ? 'form-status err' : 'form-status ok';
+                document.getElementById('tempValueInput').value = '';
+                document.getElementById('tempNoteInput').value = '';
+                await loadAll();
+                await openSessionDetail(sessionId);
+            } else {
+                statusEl.textContent = '❌ ' + ((data && data.message) || '기록 실패');
+                statusEl.className = 'form-status err';
+            }
+        } catch (e) {
+            statusEl.textContent = '❌ 기록 실패: ' + e.message;
+            statusEl.className = 'form-status err';
+        }
+    }
+
+    async function resolveExcursionFromDetail(excursionId, sessionId) {
+        if (!isAdmin) return;
+        const action = prompt('조치 내용을 입력하세요 (필수):', '') || '';
+        if (!action.trim()) { alert('조치 내용을 입력해야 처리할 수 있습니다.'); return; }
+        try {
+            const { data, error } = await sb.rpc('cc_admin_resolve_excursion', { p_admin_username: myUsername, p_admin_password: myPw, p_excursion_id: excursionId, p_action_taken: action });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); await openSessionDetail(sessionId); }
+            else alert('처리 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('처리 실패: ' + e.message); }
+    }
+
+    /* ══════════════════ 이탈 알림 ══════════════════ */
+    function excursionsHTML() {
+        const filtered = excursionFilter === 'all' ? EXCURSIONS : EXCURSIONS.filter(e => e.status === excursionFilter);
+        const filters = [{ key: 'open', label: '미해결' }, { key: 'resolved', label: '처리완료' }, { key: 'all', label: '전체' }];
+
+        const rows = filtered.length ? filtered.map(ex => `
+            <tr>
+                <td>${esc(ex.session_no)}<br><span style="font-size:10.5px;color:var(--text-tertiary);">${esc(ex.pilot_code)} · ${esc(ex.doc_ref)}</span></td>
+                <td>${esc(ex.item_desc)}</td>
+                <td>${esc(ex.zone_name)}</td>
+                <td class="num" style="color:var(--danger);font-weight:700;">${fmtTemp(ex.temp_value)}</td>
+                <td>${fmtTemp(ex.threshold_min)} ~ ${fmtTemp(ex.threshold_max)}</td>
+                <td><span class="badge ${SEVERITY_BADGE[ex.severity]}">${SEVERITY_LABEL[ex.severity]}</span></td>
+                <td><span class="badge ${EXCURSION_STATUS_BADGE[ex.status]}">${EXCURSION_STATUS_LABEL[ex.status]}</span></td>
+                <td>${fmtDate(ex.detected_at)}</td>
+                <td>${(isAdmin && ex.status === 'open') ? `<button class="btn btn-primary btn-small" onclick="resolveExcursion('${ex.id}')">처리</button>` : (ex.action_taken ? esc(ex.action_taken) : '-')}</td>
+            </tr>`).join('') : `<tr><td colspan="9"><div class="empty-state">해당 조건의 이탈 이벤트가 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="card">
+                <div class="card-title"><span>⚠️ 온도 이탈 이벤트</span></div>
+                <div class="filter-bar">
+                    ${filters.map(f => `<button type="button" class="filter-btn ${excursionFilter === f.key ? 'active' : ''}" onclick="setExcursionFilter('${f.key}')">${f.label}</button>`).join('')}
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>세션</th><th>화물</th><th>구역</th><th>기록온도</th><th>허용범위</th><th>심각도</th><th>상태</th><th>발생시각</th><th>조치</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <p style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px;">이탈 이벤트는 온도 기록이 구역 허용범위를 벗어날 때 자동 생성됩니다 (허용범위를 2℃ 이하로 벗어나면 경고, 그 이상이면 심각).</p>
+            </div>`;
+    }
+    function setExcursionFilter(key) { excursionFilter = key; renderTabContent(); }
+    async function resolveExcursion(id) {
+        if (!isAdmin) return;
+        const action = prompt('조치 내용을 입력하세요 (필수):', '') || '';
+        if (!action.trim()) { alert('조치 내용을 입력해야 처리할 수 있습니다.'); return; }
+        try {
+            const { data, error } = await sb.rpc('cc_admin_resolve_excursion', { p_admin_username: myUsername, p_admin_password: myPw, p_excursion_id: id, p_action_taken: action });
+            if (error) throw error;
+            if (data && data.success) { await loadAll(); } else alert('처리 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('처리 실패: ' + e.message); }
+    }
+
+    /* ══════════════════ 온도구역 관리 ══════════════════ */
+    function zonesHTML() {
+        const rows = ZONES.length ? ZONES.map(z => `
+            <tr>
+                <td>${esc(z.zone_code)}</td><td>${esc(z.zone_name)}</td>
+                <td class="num">${fmtTemp(z.temp_min)} ~ ${fmtTemp(z.temp_max)}</td>
+                <td><span class="badge ${z.status === 'active' ? 'badge-ok' : 'badge-dim'}">${z.status === 'active' ? '사용중' : '비활성'}</span></td>
+                <td>${isAdmin ? `<div class="row-actions">
+                    <button class="btn btn-secondary btn-small" onclick='openZoneForm(${JSON.stringify(z).replace(/&/g, "&amp;").replace(/'/g, "&#39;")})'>수정</button>
+                    <button class="btn btn-danger btn-small" onclick="deleteZone('${z.id}')">삭제</button>
+                </div>` : ''}</td>
+            </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state">등록된 온도구역이 없습니다.</div></td></tr>`;
+
+        return `
+            <div class="card">
+                <div class="card-title"><span>🗂 온도구역 마스터</span>${isAdmin ? `<button type="button" class="btn btn-primary btn-small" onclick="openZoneForm()">+ 구역 등록</button>` : ''}</div>
+                <div class="form-panel" id="zoneFormPanel">
+                    <div class="form-grid">
+                        <input type="hidden" id="zoneId">
+                        <div><label class="form-label">구역코드</label><input class="form-input" id="zoneCode" placeholder="예: CZ-04"></div>
+                        <div><label class="form-label">구역명</label><input class="form-input" id="zoneName" placeholder="예: 초저온구역 (-30~-25℃)"></div>
+                        <div><label class="form-label">최저온도(℃)</label><input class="form-input" type="number" step="0.1" id="zoneTempMin" value="0"></div>
+                        <div><label class="form-label">최고온도(℃)</label><input class="form-input" type="number" step="0.1" id="zoneTempMax" value="5"></div>
+                        <div><label class="form-label">상태</label>
+                            <select class="form-select" id="zoneStatus"><option value="active">사용중</option><option value="inactive">비활성</option></select>
+                        </div>
+                    </div>
+                    <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="closeZoneForm()">취소</button><button type="button" class="btn btn-primary" onclick="submitZone()">저장</button></div>
+                    <div class="form-status" id="zoneFormStatus"></div>
+                </div>
+                <div class="table-responsive"><table><thead><tr><th>코드</th><th>구역명</th><th>허용범위</th><th>상태</th><th>동작</th></tr></thead><tbody>${rows}</tbody></table></div>
+            </div>`;
+    }
+
+    function openZoneForm(z) {
+        document.getElementById('zoneId').value = z ? z.id : '';
+        document.getElementById('zoneCode').value = z ? z.zone_code : '';
+        document.getElementById('zoneName').value = z ? z.zone_name : '';
+        document.getElementById('zoneTempMin').value = z ? z.temp_min : 0;
+        document.getElementById('zoneTempMax').value = z ? z.temp_max : 5;
+        document.getElementById('zoneStatus').value = z ? z.status : 'active';
+        document.getElementById('zoneFormStatus').textContent = '';
+        document.getElementById('zoneFormPanel').classList.add('open');
+    }
+    function closeZoneForm() { document.getElementById('zoneFormPanel').classList.remove('open'); }
+    async function submitZone() {
+        if (!isAdmin) return;
+        const statusEl = document.getElementById('zoneFormStatus');
+        const id = document.getElementById('zoneId').value || null;
+        const code = document.getElementById('zoneCode').value.trim();
+        const name = document.getElementById('zoneName').value.trim();
+        const tMin = parseFloat(document.getElementById('zoneTempMin').value);
+        const tMax = parseFloat(document.getElementById('zoneTempMax').value);
+        if (!code || !name) { statusEl.textContent = '구역코드와 구역명을 입력하세요.'; statusEl.className = 'form-status err'; return; }
+        if (isNaN(tMin) || isNaN(tMax) || tMin > tMax) { statusEl.textContent = '온도 범위를 올바르게 입력하세요 (최저 ≤ 최고).'; statusEl.className = 'form-status err'; return; }
+        try {
+            const { data, error } = await sb.rpc('cc_admin_upsert_zone', {
+                p_admin_username: myUsername, p_admin_password: myPw, p_id: id,
+                p_zone_code: code, p_zone_name: name, p_temp_min: tMin, p_temp_max: tMax,
+                p_status: document.getElementById('zoneStatus').value,
+            });
+            if (error) throw error;
+            if (data && data.success) { closeZoneForm(); await loadAll(); }
+            else { statusEl.textContent = '❌ ' + (data.message || '저장 실패'); statusEl.className = 'form-status err'; }
+        } catch (e) { statusEl.textContent = '❌ ' + e.message; statusEl.className = 'form-status err'; }
+    }
+    async function deleteZone(id) {
+        if (!isAdmin) return;
+        if (!confirm('이 구역을 삭제할까요? (이미 세션에서 사용 중이면 삭제할 수 없습니다)')) return;
+        try {
+            const { data, error } = await sb.rpc('cc_admin_delete_zone', { p_admin_username: myUsername, p_admin_password: myPw, p_id: id });
+            if (error) throw error;
+            if (data && data.success) await loadAll(); else alert('삭제 실패: ' + ((data && data.message) || '알 수 없는 오류'));
+        } catch (e) { alert('삭제 실패: ' + e.message); }
+    }
+
+    /* ══════════════════ 데이터 로드 ══════════════════ */
+    async function loadAll() {
+        if (!sb) { document.getElementById('tabContent').innerHTML = '<div class="card"><div class="empty-state">Supabase 설정이 필요합니다.</div></div>'; return; }
+        try {
+            const [zonesRes, sessionsRes, excursionsRes] = await Promise.all([
+                sb.rpc('cc_get_zones'),
+                sb.rpc('cc_get_sessions', { p_status: null, p_limit: 300 }),
+                sb.rpc('cc_get_excursions', { p_status: null, p_limit: 300 }),
+            ]);
+            ZONES = zonesRes.data || [];
+            SESSIONS = sessionsRes.data || [];
+            EXCURSIONS = excursionsRes.data || [];
+        } catch (e) {
+            console.error('데이터 로드 실패:', e);
+        }
+        renderTabContent();
+    }
+
+    renderTabBar();
+    loadAll();
+
+    /* ══════════════════ 헤더 테마 (공용) ══════════════════ */
+    const HEADER_THEMES = {
+        A: { 'header-bg':'#0b1830', 'header-text':'#f4ede0', 'header-border':'#0b1830', 'header-border-width':'1px', 'header-btn-border':'rgba(255,255,255,0.3)', 'header-btn-hover-bg':'rgba(255,255,255,0.12)', 'logo-bg':'#c9a227', 'logo-text':'#0b1830' },
+        B: { 'header-bg':'#ffffff', 'header-text':'#1e293b', 'header-border':'#e2e8f0', 'header-border-width':'1px', 'header-btn-border':'#e2e8f0', 'header-btn-hover-bg':'#f1f5f9', 'logo-bg':'#2563eb', 'logo-text':'#ffffff' },
+        C: { 'header-bg':'#ffffff', 'header-text':'#16324f', 'header-border':'#16324f', 'header-border-width':'2px', 'header-btn-border':'#d7dee4', 'header-btn-hover-bg':'#f2f5f7', 'logo-bg':'#16324f', 'logo-text':'#ffffff' },
+    };
+    function applyHeaderTheme(key) {
+        const t = HEADER_THEMES[key] || HEADER_THEMES.C;
+        Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+    }
+    applyHeaderTheme(localStorage.getItem('dashTheme') || 'C');
+    window.addEventListener('storage', (e) => { if (e.key === 'dashTheme') applyHeaderTheme(e.newValue || 'C'); });
+</script>
+</body>
+</html>

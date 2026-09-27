@@ -6,6 +6,7 @@
 <title>파일럿: 프로그램 3 (가상 ERP 데모) - JAEHO ERP Suite</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabaseClient.js"></script>
+<script src="./js/purchase3way.js"></script>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -180,6 +181,8 @@
     const myPw = sessionStorage.getItem('pw') || '';
     const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
     const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+    // 구매 3-way match 탭 — js/purchase3way.js, round6_3way_inta_c3_migration.sql (2026-09-27, 대형로드맵 라운드6-A)
+    if (window.Purchase3Way) window.Purchase3Way.init({ sb, username: myUsername, pw: myPw, isAdmin, onChange: loadAll });
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
     function fmtNum(n) { const v = Number(n) || 0; return v.toLocaleString('ko-KR'); }
@@ -216,6 +219,7 @@
         { key: 'purchase', label: '📥 구매/입고' },
         { key: 'outbound', label: '📤 출고' },
         { key: 'master', label: '🗂 품목·거래처 관리' },
+        { key: 'p3way', label: '🔍 구매 3-way match' },
     ];
 
     function renderTabBar() {
@@ -235,6 +239,7 @@
         else if (currentTab === 'purchase') el.innerHTML = docsHTML('purchase');
         else if (currentTab === 'outbound') el.innerHTML = docsHTML('outbound');
         else if (currentTab === 'master') el.innerHTML = masterHTML();
+        else if (currentTab === 'p3way') { el.innerHTML = '<div id="p3wRoot"></div>'; if (window.Purchase3Way) window.Purchase3Way.render(); }
 
         if (currentTab === 'purchase' || currentTab === 'outbound') bindDocFormEvents(currentTab);
     }

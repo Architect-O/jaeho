@@ -6,6 +6,7 @@
 <title>HB-회계 (표준 모듈: 회계/재무 데모) - JAEHO ERP Suite</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabaseClient.js"></script>
+<script src="./js/costAccounting.js"></script>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -179,6 +180,8 @@
     const myPw = sessionStorage.getItem('pw') || '';
     const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
     const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+    // 원가·회계심화 탭 — js/costAccounting.js, acc_cost_center_migration.sql + acc_advanced_migration.sql (2026-09-26, 대형로드맵 라운드3)
+    if (window.CostAccounting) window.CostAccounting.init({ sb, username: myUsername, pw: myPw, isAdmin, onChange: loadAll });
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
     function fmtNum(n) { const v = Number(n) || 0; return v.toLocaleString('ko-KR'); }
@@ -201,6 +204,7 @@
         { key: 'journal', label: '✍️ 분개 입력' },
         { key: 'ledger', label: '📖 총계정원장' },
         { key: 'trial', label: '⚖️ 시산표' },
+        { key: 'costacct', label: '💼 원가·회계심화' },
     ];
 
     function renderTabBar() {
@@ -219,6 +223,7 @@
         else if (currentTab === 'journal') el.innerHTML = journalHTML();
         else if (currentTab === 'ledger') el.innerHTML = ledgerHTML();
         else if (currentTab === 'trial') el.innerHTML = trialHTML();
+        else if (currentTab === 'costacct') { el.innerHTML = '<div id="costAcctRoot"></div>'; if (window.CostAccounting) window.CostAccounting.render(); }
     }
 
     /* ══════════════════ 요약 카드 ══════════════════ */

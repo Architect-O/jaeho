@@ -6,6 +6,7 @@
 <title>파일럿6: 식품제조 (가상 ERP 데모) - JAEHO ERP Suite</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabaseClient.js"></script>
+<script src="./js/haccp.js"></script>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -177,6 +178,8 @@
     const myPw = sessionStorage.getItem('pw') || '';
     const isAdmin = (sessionStorage.getItem('role') || '').toLowerCase() === 'admin';
     const sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+    // 품질관리·스마트HACCP 탭 — js/haccp.js, hf_haccp_migration.sql (2026-09-27, 대형로드맵 라운드5)
+    if (window.HACCP) window.HACCP.init({ sb, username: myUsername, pw: myPw, isAdmin, onChange: loadAll });
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
     function fmtNum(n) { const v = Number(n) || 0; return v.toLocaleString('ko-KR'); }
@@ -203,6 +206,7 @@
         { key: 'production', label: '🏭 생산입고' },
         { key: 'shipment', label: '🚚 출고' },
         { key: 'master', label: '🗂 거래처·품목·생산라인 관리' },
+        { key: 'haccp', label: '🧪 품질관리·HACCP' },
     ];
 
     function renderTabBar() {
@@ -218,6 +222,7 @@
         else if (currentTab === 'production') el.innerHTML = docsHTML('production');
         else if (currentTab === 'shipment') el.innerHTML = docsHTML('shipment');
         else if (currentTab === 'master') el.innerHTML = masterHTML();
+        else if (currentTab === 'haccp') { el.innerHTML = '<div id="haccpRoot"></div>'; if (window.HACCP) window.HACCP.render(); }
     }
 
     /* ══════════════════ 재고 현황 ══════════════════ */

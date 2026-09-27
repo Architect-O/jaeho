@@ -125,6 +125,63 @@
         // deleted: true 로 표시된 항목은 실제로 폴더에서 삭제되어 더 이상 존재하지 않는 파일입니다.
         const LOG_ENTRIES = [
             {
+                date: '2026-09-27', time: '09:30', badge: 'new',
+                title: 'HG(파일럿7·콜드체인 모니터링) 신규 화면 배포 + HG/HI/HJ menu.html 정식 등록 (대형 로드맵 라운드6-C 마무리)',
+                desc: `그동안 SQL·설계 문서(<code>모듈_HG콜드체인모니터링.md</code>)까지만 완성되고 실제 화면 파일이 사이트에 없던 HG를 HD-pilot4.html 보일러플레이트 재사용으로 신규 제작(탭 3개: 🌡세션 현황 / ⚠️이탈 알림 / 🗂온도구역 관리) 후, 라운드6-C의 "Lot 보류 제안" 탭(<code>coldChainHold.js</code>, critical 온도이탈 → 연결된 파일럿 Lot 후보를 보여주고 담당자가 검토·명시적 적용해야만 실제 보류되는 제안 방식)을 <code>patch_round6c.py</code>로 추가 — 최종 탭 4개(세션현황/이탈알림/온도구역관리/Lot 보류제안).
+
+이와 함께 그동안 배포만 되고 <code>menu.html</code>에는 미등록 상태였던 <b>HI(경영분석 리포트)</b>·<b>HJ(원료 역추적)</b> 독립 페이지도 이번에 함께 정식 등록. HG/HH/HI/HJ 4개 빈 코드 중 3개 확정 배정(HG=콜드체인, HI=경영분석, HJ=원료역추적, 사용자 확인 완료 — HH는 여전히 비어있음), "데모 제작" 카테고리에 배치. 아이콘: HG=<code>thermometer</code>(신규 심볼 추가), HI=<code>bar-chart-3</code>(기존 재사용), HJ=<code>history</code>(기존 재사용).
+
+**서버**: HG는 <code>coldchain_migration.sql</code>(2026-09-23 검증 완료) + <code>round6_3way_inta_c3_migration.sql</code>의 C-3 부분. 근거: <code>모듈_HG콜드체인모니터링.md</code>, <code>모듈_라운드6_구매3way_원료역추적_C3.md</code>.
+
+**검증**: node --check(HG-pilot7.html 인라인 스크립트, coldChainHold.js, 패치 후 menu.html 인라인 스크립트), 태그 균형 검사(HG 파일 전체 OK, menu.html의 script 태그 4/3 불일치는 기존에 이미 문서화된 리터럴 문자열 false-positive — 이번 패치와 무관), jsdom + mock Supabase 이벤트 시뮬레이션(HG 4개 탭 순차 전환 + Lot 보류제안 필터 3종, menu.html 초기 렌더링에서 HG/HI/HJ 사이드 메뉴 항목과 신규 아이콘 정상 노출 확인) 전부 통과.
+
+**함께 갱신**: <code>GC-layout.html</code> Mermaid 다이어그램에 HG/HI/HJ 노드 3개 추가(운영지침 3-1절 교차 갱신 규칙).`,
+                files: ['HG-pilot7.html', 'js/coldChainHold.js', 'menu.html', 'GC-layout.html']
+            },
+
+            {
+                date: '2026-09-27', time: '08:10', badge: 'new',
+                title: 'HC(유통) — "구매 3-way match" 탭 신규 추가 (대형 로드맵 라운드6-A)',
+                desc: `발주(PO) → 입고(GR, 기존 입고전표 탭과 연동) → 매입송장(Invoice) 3단계를 대사하는 화면. 서브탭 4개: 발주(PO, 줄-추가 방식 라인빌더) / 입고 등록(발주 기준, 1줄씩) / 매입송장(1줄씩) / 3-way match 리포트(품목별 발주·입고·청구 수량과 단가를 비교해 완전일치·부분·과다청구·단가불일치 등 판정 배지 표시). 입고 등록 화면은 draft 입고전표만 생성하고, 실제 재고 반영은 기존 "입고전표" 탭의 확정 버튼을 그대로 쓰도록 설계(확정 RPC 중복 구현 없음).
+
+**서버**: <code>round6_3way_inta_c3_migration.sql</code>(p3_purchase_orders/p3_purchase_order_lines/p3_purchase_invoices/p3_purchase_invoice_lines + RPC 8종 + 3-way match 집계 RPC). 근거: 프로젝트 문서 <code>모듈_라운드6_구매3way_원료역추적_C3.md</code>.
+
+**검증**: node --check(패치 후 HC-pilot3.html 인라인 스크립트 전체), 태그 균형 검사, jsdom + mock Supabase 이벤트 시뮬레이션(발주 줄 추가·저장 빈폼 방어 포함 서브탭 전환) 전부 통과.`,
+                files: ['HC-pilot3.html', 'js/purchase3way.js']
+            },
+            {
+                date: '2026-09-27', time: '08:05', badge: 'new',
+                title: 'HF(식품제조) — "품질관리·HACCP" 탭 신규 추가 (대형 로드맵 라운드5)',
+                desc: `식약처 HACCP 인증신청 서류 수준의 7개 서브탭: 제품설명서(Plan, 버전관리) / 제조공정도·위해요소분석(공정단계별 위해요소 등록·위험도 계산) / CCP 관리기준서(유의미 위해요소에 CCP 지정) / 모니터링·개선조치(CCP 한계기준 이탈 시 개선조치 기록) / 검증기록 / 선행요건관리 PRP(8개 영역, 완제품과 무관한 독립 기준서+점검기록) / 인증서류 조립본(위 6개를 한 화면으로 모아보기). 완제품 선택 → Plan(버전) 선택 공통 상단 피커에 6개 서브탭이 종속(PRP만 독립).
+
+**서버**: <code>hf_haccp_migration.sql</code>(9개 테이블, RPC 약 20종). 근거: 프로젝트 문서 <code>모듈_품질관리_스마트HACCP.md</code>.
+
+**설계 판단**: 모니터링 기록의 작업지시(wo_id) 연결과 개선조치의 Lot 연결은 이번 화면에서 생략(RPC는 옵션으로 지원, null로 남을 뿐 — 필요 시 후속 작업으로 드롭다운 추가 가능).
+
+**검증**: node --check, 태그 균형 검사, jsdom + mock Supabase 이벤트 시뮬레이션(7개 서브탭 순차 전환 포함) 전부 통과 — 완제품 목록이 빈 상태에서 방어적 안내가 정상 동작함을 재확인.`,
+                files: ['HF-pilot6.html', 'js/haccp.js']
+            },
+            {
+                date: '2026-09-27', time: '08:00', badge: 'new',
+                title: 'HB(회계) — "원가·회계심화" 탭 신규 추가 (대형 로드맵 라운드3)',
+                desc: `서브탭 6개: 코스트센터·배부(배부기준·배부규칙·배부 실행·코스트센터 요약) / 결산처리(기간 마감·재오픈) / 자금관리(자금계획 등록·실현·자금현황 조회) / 고정자산(등록·월 감가상각 실행·상각일정 조회·처분) / 부가세(세금계산서 등록·기간별 요약) / 예산(예산 등록·예산 대비 실적 조회).
+
+**서버**: <code>acc_cost_center_migration.sql</code> + <code>acc_advanced_migration.sql</code>. 근거: 프로젝트 문서 <code>모듈_원가관리_회계심화.md</code>.
+
+**검증**: node --check(패치 후 HB-회계.html 인라인 스크립트 전체), 태그 균형 검사, jsdom + mock Supabase 이벤트 시뮬레이션(6개 서브탭 전환·주요 폼 빈값 방어) 전부 통과.`,
+                files: ['HB-회계.html', 'js/costAccounting.js']
+            },
+            {
+                date: '2026-09-27', time: '07:55', badge: 'new',
+                title: '경영분석 BI 리포트 · 원료 역추적(INT-a 확장) — 독립 페이지 2종 배치 (menu.html 등록은 보류)',
+                desc: `대형 로드맵 라운드4(경영분석 BI)·라운드6-B(원료역추적)는 특정 파일럿 하나에 속하지 않는 화면이라 독립 HTML 페이지로 만들었다: <code>HI-경영분석.html</code>(요약카드 6개 + 매출손익/AR·AP aging/현금흐름예측/코스트센터/예산대비실적/사업군손익/연결재무 8개 접이식 섹션, 단일 RPC <code>biz_get_management_dashboard</code> 호출)과 <code>HJ-원료역추적.html</code>(HC/HD/HE/HF 4개 파일럿에 걸친 Lot 출처 태깅 + <code>int_get_cross_pilot_lot_trace</code>로 파일럿 경계를 넘는 전체 체인 조회).
+
+**menu.html 등록 보류 이유**: 두 화면 모두 임시 코드(HI/HJ)만 파일명·화면 배지에 붙였고, 정식 코드·카테고리 배정은 사용자 확인이 필요한 설계 결정으로 남겨둠(운영지침 3-3절 참고) — 지금은 로그인 후 주소창에 파일명을 직접 입력해 확인 가능. 사이드바에서는 아직 보이지 않음.
+
+**검증**: node --check, 태그 균형 검사, jsdom 이벤트 시뮬레이션 전부 통과.`,
+                files: ['HI-경영분석.html', 'HJ-원료역추적.html', 'js/managementDashboard.js', 'js/lotSourceTrace.js']
+            },
+            {
                 date: '2026-09-23', time: '05:30', badge: 'new',
                 title: '아이콘 스타일 스위처 — 5종 시각 스타일을 설정에서 선택 가능하게 (테마+스타일 조합)',
                 desc: `사용자 요청: "이미지 스타일을 실리콘밸리 유니콘 스타일 없을까. 표본 몇개로 선택가능하게 보여줘" → 아이콘 시스템 파일럿(직전 항목)에서 도입한 Lucide 아이콘에 적용할 수 있는 시각 스타일 5종을 Design 아티팩트 캔버스로 만들어 실제 menu.html 아이콘 6개를 놓고 비교 시안을 보여드림.
